@@ -23,3 +23,23 @@ last_commit <- new.env()
 #      history line is just printing something or opening help? rather not)
 #  7. put the commit in the storage space
 #  8. store all new objects and the commit object in the storage space
+
+#' A callback run after each top-level expression is evaluated.
+#'  
+#' From \link{\code{addTaskCallback}}: if the data argument was
+#' specified in the call to addTaskCallback, that value is given as the
+#' fifth argument.
+#'
+#' @param expression Expression for the top-level task.
+#' @param result Result of the top-level task.
+#' @param successful A logical value indicating whether it was
+#'        successfully completed or not (always \code{TRUE} at present).
+#' @param printed A logical value indicating whether the result was
+#'        printed or not.
+#'
+#' @return A logical value indicating whether to keep this function in
+#'         the list of active callback.
+update_current_commit <- function (expression, result, successful, printed)
+{
+  TRUE
+}
