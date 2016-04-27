@@ -1,0 +1,18 @@
+Package: experiment
+Type: Package
+Title: Track experimentator's work.
+Version: 0.1
+Date: 2016-04-26
+Author: Lukasz A. Bartnik <l.bartnik@gmail.com>
+Maintainer: Lukasz A. Bartnik <l.bartnik@gmail.com>
+Description: Keep track of all the work done when working with R.
+    Extract full execution path to create any object in the history
+    of the current session.
+License: GPL3
+Imports:
+    digest
+Suggests:
+    testthat,
+    knitr
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1
