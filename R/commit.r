@@ -1,9 +1,46 @@
-
 #' State object.
 #' 
-#' Stores handles to all objects in the global namespace at the time of
-#' the last commit.
-last_commit <- new.env()
+#' \describe{
+#'   \item{last}{Stores handles to all objects in the global namespace
+#'     at the time of the last commit.}
+#'   \item{tracking}{whether we are in the tracking state}
+#'   \item{old_prompt}{prompt as set when loading the package}
+#' }
+#' 
+state <- new.env()
+state$tracking   <- TRUE
+state$last       <- list()
+state$old_prompt <- ''
+
+
+
+#' Set tracking mode to ON/OFF.
+#' 
+#' @export
+#' 
+tracking_on <- function () {
+  state$tracking <- TRUE
+  update_prompt(state$tracking)
+}
+
+
+#' @name tracking_on
+#' @export
+tracking_off <- function () {
+  state$tracking <- FALSE
+  update_prompt(state$tracking)
+}
+
+
+#' Updates the prompt according to \code{state$tracking}.
+#' 
+update_prompt <- function (on_off) {
+  if (on_off)
+    options(prompt = "tracking > ")
+  else
+    options(prompt = "not tracking > ")
+}
+
 
 
 # Creating a new commit/checkout:
