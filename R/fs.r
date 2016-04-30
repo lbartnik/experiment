@@ -36,8 +36,10 @@ add_object <- function (cl, obj)
   path <- file.path(cl$path, make_path(id))
   
   # remove hash attribute before saving
-  if (!file.exists(path))
+  if (!file.exists(path)) {
+    dir.create(dirname(path), recursive = T, showWarnings = T, mode = "0700")
     saveRDS(`attr<-`(obj, hash_attribute_name, NULL), path)
+  }
   
   invisible(id)
 }
@@ -45,7 +47,7 @@ add_object <- function (cl, obj)
 
 
 make_path <- function (id) {
-  file.path(substr(id, 0, 2), substr(id, 2, 4), paste0(id, '.rds'))
+  file.path(substr(id, 1, 2), substr(id, 3, 4), paste0(id, '.rds'))
 }
 
 
