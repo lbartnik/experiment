@@ -29,12 +29,16 @@ is_collection <- function (x) {
 #' @param obj An object to be added.
 #' @return Invisibly a hash of \code{obj}.
 #' 
-add_object <- function (cl, obj) {
+add_object <- function (cl, obj)
+{
   stopifnot(is_collection(cl))
   id <- hash(obj)
   path <- file.path(cl$path, make_path(id))
+  
+  # remove hash attribute before saving
   if (!file.exists(path))
-    saveRDS(obj, path)
+    saveRDS(`attr<-`(obj, hash_attribute_name, NULL), path)
+  
   invisible(id)
 }
 

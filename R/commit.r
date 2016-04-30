@@ -80,3 +80,15 @@ update_current_commit <- function (expression, result, successful, printed)
 {
   TRUE
 }
+
+
+#' Add hash attribute to each object in environment.
+#' 
+#' @param env Environment to process.
+update_with_hash <- function (env)
+{
+  lapply(ls(envir = env), function(name) {
+    attr(env[[name]], hash_attribute_name) <- hash(env[[name]])
+  })
+  invisible()
+}
