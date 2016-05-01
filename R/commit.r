@@ -1,28 +1,6 @@
 
 # --- interactive part of keeping track of commits ---------------------
 
-#' State object.
-#' 
-#' \describe{
-#'   \item{last}{Stores handles to all objects in the global namespace
-#'     at the time of the last commit.}
-#'   \item{tracking}{whether we are in the tracking state}
-#'   \item{old_prompt}{prompt as set when loading the package}
-#'   \item{stash}{local. file-system-based, object cache}
-#' }
-#' 
-state <- new.env()
-
-
-initiate_state <- function ()
-{
-  state$tracking   <- TRUE
-  state$last       <- empty_commit()
-  state$old_prompt <- ''
-  state$stash      <- collection(tempdir(), .create = TRUE)
-}
-
-
 #' Set tracking mode to ON/OFF.
 #' 
 #' @export
