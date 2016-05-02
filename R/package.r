@@ -16,7 +16,7 @@ initiate_state <- function ()
   state$tracking   <- TRUE
   state$last       <- empty_commit()
   state$old_prompt <- ''
-  state$stash      <- collection(tempdir(), .create = TRUE)
+  state$stash      <- storage(tempdir(), .create = TRUE)
   state$task_callback_id <- NA
 }
 

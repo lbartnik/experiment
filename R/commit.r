@@ -72,12 +72,13 @@ update_current_commit <- function (expr, result, successful, printed)
       update_with_hash(globalenv())
       new_commit <- commit_from(globalenv(), state$last, expr)
       if (!commits_equal(new_commit, state$last)) {
-        eapply(globalenv(), function(x)add_object(state$stash, x))
-        add_object(state$stash, new_commit)
+        eapply(globalenv(), function(x) add_object(state$stash, hash(x), x))
+        add_object(state$stash, hash(new_commit), new_commit)
         state$last <- new_commit
       }
     },
-    error = function(e) warning('could not create a commit: ', e$message, call. = FALSE)
+    error = function(e) warning('could not create a commit: ',
+                                e$message, call. = FALSE)
   )
   
   TRUE

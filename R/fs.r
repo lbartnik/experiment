@@ -1,39 +1,39 @@
 # store any R object in a RDS file and access it by its hash code
 
 
-#' Initialize/create a new/open existing collection.
+#' Initialize/create a new/open existing storage.
 #' 
 #' @param path Path to the folder.
-#' @param .create Create the collection if it is not under \code{path}.
-collection <- function (path, .create = FALSE)
+#' @param .create Create the storage if it is not under \code{path}.
+storage <- function (path, .create = FALSE)
 {
   if (!dir.exists(path)) {
     if (!.create)
-      stop('collection does not exist but .create is FALSE', call. = FALSE)
+      stop('storage does not exist but .create is FALSE', call. = FALSE)
     if (!dir.create(path, recursive = TRUE))
       stop('cannot create directory ', path, call. = FALSE)
   }
   
-  structure(list(path = path), class = 'collection')
+  structure(list(path = path), class = 'storage')
 }
 
 
-is_collection <- function (x) {
-  inherits(x, 'collection')
+is_storage <- function (x) {
+  inherits(x, 'storage')
 }
 
 
-#' Add an object to a collection.
+#' Add an object to a storage.
 #' 
-#' @param cl Collection object.
+#' @param st Storage object.
+#' @param id Add object under this identifier.
 #' @param obj An object to be added.
 #' @return Invisibly a hash of \code{obj}.
 #' 
-add_object <- function (cl, obj)
+add_object <- function (st, id, obj)
 {
-  stopifnot(is_collection(cl))
-  id <- hash(obj)
-  path <- file.path(cl$path, make_path(id))
+  stopifnot(is_storage(st))
+  path <- file.path(st$path, make_path(id))
   
   # remove hash attribute before saving
   if (!file.exists(path)) {

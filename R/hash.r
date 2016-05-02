@@ -15,11 +15,9 @@ hash_attribute_name <- 'experiment::hash'
 #' @importFrom digest digest
 hash <- function (obj) {
   if (has_hash(obj))
-    return(get_hash(obj))
+    return(attr(obj, hash_attribute_name))
   digest(obj, algo='md5')
 }
 
 
 has_hash <- function (x) hash_attribute_name %in% names(attributes(x))
-
-get_hash <- function (x) attr(x, hash_attribute_name)
