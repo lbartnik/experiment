@@ -28,9 +28,10 @@ is_storage <- function (x) {
 #' @param st Storage object.
 #' @param id Add object under this identifier.
 #' @param obj An object to be added.
+#' @param tags Tags that describe \code{obj}.
 #' @return Invisibly a hash of \code{obj}.
 #' 
-add_object <- function (st, id, obj)
+add_object <- function (st, id, obj, tags)
 {
   stopifnot(is_storage(st))
   path <- file.path(st$path, make_path(id))
@@ -38,7 +39,8 @@ add_object <- function (st, id, obj)
   # remove hash attribute before saving
   if (!file.exists(path)) {
     dir.create(dirname(path), recursive = T, showWarnings = T, mode = "0700")
-    saveRDS(`attr<-`(obj, hash_attribute_name, NULL), path)
+    saveRDS(`attr<-`(obj, hash_attribute_name, NULL), paste0(path, '.rds'))
+    saveRDS(tags, paste0(path, '_tags.rds'))
   }
   
   invisible(id)

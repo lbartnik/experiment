@@ -14,6 +14,7 @@ Load the package.
 
 ```{r}
 library(experiment)
+library(magrittr)
 ```
 
 Build the first model.
@@ -33,11 +34,15 @@ Try one more model.
 ```{r}
 ```
 
+
 Find all three models, extract them from the local stash, and compare
 them in one plot.
 
 ```{r}
+restore(inherits('lm')) %>%
+  lapply(function(x) plot(length(coef(x)), summary(x)$adj.r.squared))
 ```
+
 
 Finally, decide which model to put in the persistent storage.
 This call will preserve the model object, the input data, and
