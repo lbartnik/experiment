@@ -69,13 +69,14 @@ update_current_commit <- function (expr, result, successful, printed)
     return(TRUE)
   
   tryCatch({
-      update_with_hash(globalenv())
-      new_commit <- commit_from(globalenv(), state$last, expr)
-      if (!commits_equal(new_commit, state$last)) {
-        eapply(globalenv(), function(x) add_object(state$stash, hash(x), x))
-        add_object(state$stash, hash(new_commit), new_commit)
-        state$last <- new_commit
-      }
+      cmt <- create_commit(globalenv(), expr)
+      lapply(names(cmt), function (name) {
+        obj <- get(name, envir = globalenv(), inherits = FALSE)
+        hsh <- cmt$objects[[name]]
+        store_object(state$stash, hsh, obj)
+      })
+      state$last_commit_id <- store_object(state$stash, hash(cmt), cmt,
+                                           list(parent = state$last_commit_id))
     },
     error = function(e) warning('could not create a commit: ',
                                 e$message, call. = FALSE)
@@ -84,18 +85,6 @@ update_current_commit <- function (expr, result, successful, printed)
   TRUE
 }
 
-
-#' Add hash attribute to each object in environment.
-#' 
-#' @param env Environment to process.
-update_with_hash <- function (env)
-{
-  lapply(ls(envir = env), function(name) {
-    obj <- env[[name]]
-    attr(env[[name]], hash_attribute_name) <- hash(obj)
-  })
-  invisible()
-}
 
 
 # --- actual commit-related code ---------------------------------------
@@ -114,36 +103,9 @@ empty_commit <- function()
 #' @param env Environment to process.
 #' @return A commit object.
 #' 
-commit_from <- function (env, parent, history)
+create_commit <- function (env, history)
 {
-  stopifnot(is_commit(parent))
-  
-  nms <- sort(ls(envir = env))
-  hsh <- lapply(nms, function(n) attr(env[[n]], hash_attribute_name,
-                                      exact = TRUE))
-  # make sure all objects have hash attribute assigned
-  stopifnot(all(!vapply(hsh, is.null, logical(1))))
-  
-  obj <- data.frame(name = nms, hash = unlist(hsh), stringsAsFactors = FALSE)
-  cmt <- structure(list(objects = obj, history = history, hash = '',
-                        parent = parent$hash),
-                   class = 'commit')
-  cmt$hash <- hash(cmt)
-  cmt
+  lst <- eapply(env, hash)
+  lst <- lst[sort(names(lst))]
+  structure(list(objects = lst, history = history), class = 'commit')
 }
-
-
-#' Compare two commit objects.
-#' 
-#' @param a First commit.
-#' @param b Second commit.
-#' @return \code{TRUE} if commits have the same lists of objects.
-#' 
-commits_equal <- function (a, b)
-{
-  stopifnot(is_commit(a) && is_commit(b))
-  if (nrow(a$objects) != nrow(b$objects))
-    return(FALSE)
-  identical(a$objects[sort(a$objects$name), ], b$objects[sort(b$objects$name), ])
-}
-

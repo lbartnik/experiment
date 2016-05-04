@@ -13,11 +13,12 @@ state <- new.env()
 
 initiate_state <- function ()
 {
-  state$tracking   <- TRUE
-  state$last       <- empty_commit()
-  state$old_prompt <- ''
-  state$stash      <- storage(tempdir(), .create = TRUE)
+  state$tracking       <- TRUE
+  state$last_commit_id <- empty_commit()
+  state$old_prompt     <- ''
+  state$stash          <- storage(tempdir(), .create = TRUE)
   state$task_callback_id <- NA
+  state$old_prompt     <- ''
 }
 
 TRACE_NONE <- 0
@@ -27,10 +28,11 @@ TRACE_NONE <- 0
 {
   initiate_state()
   options(experiment.trace = TRACE_NONE)
+  options(experiment.set_prompt = FALSE)
   
-  if (interactive()) {
+  if (interactive() && as.logical(getOption("experiment.set_prompt"))) {
     state$task_callback_id <- addTaskCallback(update_current_commit)
-    options(old_prompt = getOption("prompt"))
+    state$old_prompt <- getOption("prompt")
     update_prompt(state$tracking)
   }
 }
@@ -43,6 +45,6 @@ TRACE_NONE <- 0
       removeTaskCallback(state$task_callback_id)
       state$task_callback_id <- NA
     }
-    options(prompt = getOption("old_prompt"), old_prompt = NULL)
+    options(prompt = state$old_prompt)
   }
 }

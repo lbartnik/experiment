@@ -31,15 +31,17 @@ is_storage <- function (x) {
 #' @param tags Tags that describe \code{obj}.
 #' @return Invisibly a hash of \code{obj}.
 #' 
-add_object <- function (st, id, obj, tags)
+store_object <- function (st, id, obj, tags = list())
 {
   stopifnot(is_storage(st))
+  stopifnot(is.list(tags))
+  
   path <- file.path(st$path, make_path(id))
   
   # remove hash attribute before saving
   if (!file.exists(path)) {
-    dir.create(dirname(path), recursive = T, showWarnings = T, mode = "0700")
-    saveRDS(`attr<-`(obj, hash_attribute_name, NULL), paste0(path, '.rds'))
+    dir.create(dirname(path), recursive = T, showWarnings = F, mode = "0700")
+    saveRDS(obj, paste0(path, '.rds'))
     saveRDS(tags, paste0(path, '_tags.rds'))
   }
   
