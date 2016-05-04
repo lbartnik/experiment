@@ -73,7 +73,8 @@ update_current_commit <- function (expr, result, successful, printed)
       lapply(names(cmt), function (name) {
         obj <- get(name, envir = globalenv(), inherits = FALSE)
         hsh <- cmt$objects[[name]]
-        store_object(state$stash, hsh, obj)
+        tgs <- auto_tags(obj)
+        store_object(state$stash, hsh, obj, tgs)
       })
       state$last_commit_id <- store_object(state$stash, hash(cmt), cmt,
                                            list(parent = state$last_commit_id))
@@ -93,7 +94,7 @@ is_commit <- function(x) inherits(x, 'commit')
 
 empty_commit <- function()
   structure(
-    list(objects = data.frame(), history = NA, hash = '', parent = NA),
+    list(objects = list(), history = expression()),
     class = 'commit'
   )
 

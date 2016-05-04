@@ -18,7 +18,7 @@ initiate_state <- function ()
   state$old_prompt     <- ''
   state$stash          <- storage(tempdir(), .create = TRUE)
   state$task_callback_id <- NA
-  state$old_prompt     <- ''
+  state$old_prompt       <- NA
 }
 
 TRACE_NONE <- 0
@@ -27,8 +27,13 @@ TRACE_NONE <- 0
 .onLoad <- function (libname, pkgname)
 {
   initiate_state()
-  options(experiment.trace = TRACE_NONE)
-  options(experiment.set_prompt = FALSE)
+  
+  op <- options()
+  op.experiment <- list(experiment.trace = TRACE_NONE,
+                        experiment.set_prompt = FALSE)
+  toset <- !(names(op.experiment) %in% names(op))
+  if (any(toset))
+    options(op.experiment[toset])
   
   if (interactive() && as.logical(getOption("experiment.set_prompt"))) {
     state$task_callback_id <- addTaskCallback(update_current_commit)
@@ -45,6 +50,7 @@ TRACE_NONE <- 0
       removeTaskCallback(state$task_callback_id)
       state$task_callback_id <- NA
     }
-    options(prompt = state$old_prompt)
+    if (!is.na(state$old_prompt))
+      options(prompt = state$old_prompt)
   }
 }
