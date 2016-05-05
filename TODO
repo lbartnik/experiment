@@ -1,0 +1,7 @@
+* move objects to permanent storage
+* extract code that creates a given object when moving objects to
+  permanent storage
+* UI:
+  - show history of commits
+  - print commits
+  - do not print commits in stashed()
