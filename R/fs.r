@@ -23,6 +23,12 @@ is_storage <- function (x) {
 }
 
 
+
+make_path <- function (id) {
+  file.path(substr(id, 1, 2), substr(id, 3, 4), id)
+}
+
+
 #' Add an object to a storage.
 #' 
 #' @param st Storage object.
@@ -50,8 +56,23 @@ store_object <- function (st, id, obj, tags = list())
 
 
 
-make_path <- function (id) {
-  file.path(substr(id, 1, 2), substr(id, 3, 4), paste0(id, '.rds'))
+restore_file <- function (st, id, ext)
+{
+  stopifnot(is_storage(st))
+  path <- paste0(file.path(st$path, make_path(id)), ext)
+  if (!file.exists(path)) {
+    stop('object id not found in storage', call. = FALSE)
+  }
+  readRDS(path)
 }
 
+restore_object <- function (st, id) restore_file(st, id, '.rds')
 
+restore_tags <- function (st, id) restore_file(st, id, '_tags.rds')
+
+
+
+count_objects <- function (st)
+{
+  length(list.files(st$path, "[^s].rds$", recursive = TRUE))
+}
