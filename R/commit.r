@@ -14,7 +14,7 @@ store_commit <- function (env, parent_id, history, storage)
   nms <- ls(envir = env)
   obj <- lapply(nms, function (name) {
     ob <- env[[name]]
-    store_object(storage, hash(ob), ob, list(name = name))
+    store_object(storage, hash(ob), ob, auto_tags(ob, name = name))
   })
   names(obj) <- nms
   
