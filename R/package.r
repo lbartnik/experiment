@@ -13,9 +13,9 @@ state <- new.env()
 
 initiate_state <- function ()
 {
-  state$tracking       <- TRUE
-  state$last_commit_id <- NA
-  state$stash          <- storage(tempdir(), .create = TRUE)
+  state$tracking         <- TRUE
+  state$last_commit_id   <- NA
+  state$stash            <- storage(file.path(tempdir(), 'experiment-stash'), .create = TRUE)
   state$task_callback_id <- NA
   state$old_prompt       <- NA
 }
