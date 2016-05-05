@@ -18,10 +18,12 @@ store_commit <- function (env, parent_id, history, storage)
   })
   names(obj) <- nms
   
-  parent_commit <- restore_object(storage, parent_id)
-  if (hash(parent_commit$objects) == hash(obj))
-    return(parent_id)
+  if (!is.na(parent_id)) {
+    parent_commit <- restore_object(storage, parent_id)
+    if (hash(parent_commit$objects) == hash(obj))
+      return(parent_id)
+  }
   
   commit <- structure(list(objects = obj, history = history), class = 'commit')
-  store_object(storage, hash(commit), commit, list(parent = parent_id))
+  store_object(storage, hash(commit), commit, auto_tags(commit, .parent = parent_id))
 }
