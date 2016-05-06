@@ -33,7 +33,7 @@ update_prompt <- function (on_off) {
 #' @export
 stashed <- function ()
 {
-  lapply(restore_objects_by(state$stash, class != 'commit'), function (tags) {
+  lapply(restore_tags_by(state$stash, class != 'commit'), function (tags) {
     cat(paste(names(tags), as.character(tags), sep = ":", collapse = " "), '\n')
   })
   invisible()
@@ -57,6 +57,13 @@ commits <- function ()
 }
 
 
+#' @importFrom lazyeval lazy_dots
+#' @export
+stash_restore <- function (...) {
+  dots <- lazy_dots(...)
+  restore_objects_by(state$stash, dots = dots)
+}
+
 
 # Creating a new commit/checkout:
 #
@@ -76,6 +83,15 @@ commits <- function ()
 #  7. put the commit in the storage space
 #  8. store all new objects and the commit object in the storage space
 
+
+#' @export
+update_current_commit <- function (env, history)
+{
+  state$last_commit_id <-
+    store_commit(env, state$last_commit_id, history, state$stash)
+}
+
+
 #' A callback run after each top-level expression is evaluated.
 #'  
 #' From \link{\code{addTaskCallback}}: if the data argument was
@@ -91,7 +107,8 @@ commits <- function ()
 #'
 #' @return A logical value indicating whether to keep this function in
 #'         the list of active callback.
-update_current_commit <- function (expr, result, successful, printed)
+#'         
+task_callback <- function (expr, result, successful, printed)
 {
   if (!state$tracking || !successful)
     return(TRUE)
@@ -100,8 +117,7 @@ update_current_commit <- function (expr, result, successful, printed)
     error = function(e) warning('could not create a commit: ',
                                 e$message, call. = FALSE),
     {
-      state$last_commit_id <- store_commit(
-        globalenv(), state$last_commit_id, expr, state$stash)
+      update_current_commit(globalenv(), expr)
     }
   )
   

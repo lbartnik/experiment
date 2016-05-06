@@ -34,7 +34,7 @@ TRACE_NONE <- 0
   if (any(toset))
     options(op.experiment[toset])
   
-  state$task_callback_id <- addTaskCallback(update_current_commit)
+  state$task_callback_id <- addTaskCallback(task_callback)
   
   if (interactive() && as.logical(getOption("experiment.set_prompt"))) {
     state$old_prompt <- getOption("prompt")

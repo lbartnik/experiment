@@ -1,8 +1,11 @@
 
 auto_tags <- function (obj, env, ...)
 {
-  c(list(...), list(class = class(obj)), extract_tags(obj, env))
+  c(list(...),
+    list(class = class(obj), time = format(Sys.time(), "%F %R")),
+    extract_tags(obj, env))
 }
+
 
 extract_tags <- function (obj, env) UseMethod("extract_tags", obj)
 

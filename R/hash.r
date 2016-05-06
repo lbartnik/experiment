@@ -14,6 +14,7 @@ crc32 <- function (obj) {
 
 
 #' @importFrom stringi stri_sub
+#' @export
 shorten <- function (hash) {
   paste0(stri_sub(hash, 1, 4), stri_sub(hash, -4))
 }

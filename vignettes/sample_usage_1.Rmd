@@ -10,28 +10,54 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-Load the package.
+Load the `experiment` package. When in interactive mode, it will stash
+global environment after each successful top-level command.
 
 ```{r}
 library(experiment)
 library(magrittr)
+library(ggplot2)
 ```
+```{r include=FALSE}
+theme_set(theme_bw())
+```
+
 
 Build the first model.
 
 ```{r}
 x <- lm(Sepal.Width ~ Species, iris)
 ```
-
-
-Try another model.
-
-```{r}
+```{r stash, include=FALSE}
+# becase R Markdown is not compiled in interactive mode this needs
+# to be added after every snippet to simulate addTaskCallback
+update_current_commit(environment(), bquote(x))
 ```
 
-Try one more model.
+
+Try another model with a different name.
 
 ```{r}
+y <- lm(Sepal.Width ~ Species + Sepal.Length, iris)
+```
+```{r stash, include=FALSE}
+```
+
+
+Try one more model, overwrite the first one.
+
+```{r}
+x <- lm(Sepal.Width ~ Species + Petal.Length, iris)
+```
+```{r stash, include=FALSE}
+```
+
+
+Let's see what has been stashed so far:
+
+```{r}
+stashed()
+commits()
 ```
 
 
@@ -39,8 +65,14 @@ Find all three models, extract them from the local stash, and compare
 them in one plot.
 
 ```{r}
-restore(inherits('lm')) %>%
-  lapply(function(x) plot(length(coef(x)), summary(x)$adj.r.squared))
+stash_restore(class == 'lm') %>% {
+  x <- vapply(., function(x) length(coef(x)), numeric(1))
+  y <- vapply(., function(x) summary(x)$adj.r.squared, numeric(1))
+  n <- vapply(names(.), shorten, character(1))
+  data.frame(coef = x, adj.r.sqrd = y, id = n) %>%
+    ggplot + 
+    geom_point(aes(x = coef, y = adj.r.sqrd, colour = n))
+}
 ```
 
 

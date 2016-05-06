@@ -101,18 +101,18 @@ restore_by <- function (st, what, dots)
 
 #' @importFrom lazyeval lazy_dots
 #'
-restore_objects_by <- function (st, ...)
+restore_objects_by <- function (st, ..., dots)
 {
-  dots <- lazy_dots(...)
+  dots <- combine_dots(lazy_dots(...), dots)
   restore_by(st, 'objects', dots)
 }
 
 
 #' @importFrom lazyeval lazy_dots
 #'
-restore_tags_by <- function (st, ...)
+restore_tags_by <- function (st, ..., dots)
 {
-  dots <- lazy_dots(...)
+  dots <- combine_dots(lazy_dots(...), dots)
   restore_by(st, 'tags', dots)
 }
 
