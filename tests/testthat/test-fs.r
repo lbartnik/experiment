@@ -23,3 +23,11 @@ test_that("restoring objects", {
   expect_equal(restore_tags(st, id), list(a = 1))
 })
 
+
+test_that("errors", {
+  st <- helper_new_storage()
+  id <- 'abcdef'
+  er <- "id 'abcdef' not found in storage"
+  expect_error(restore_object(st, id), er)
+  expect_error(restore_tags(st, id), er)
+})
