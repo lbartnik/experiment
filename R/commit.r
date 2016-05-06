@@ -1,6 +1,7 @@
 
 is_commit <- function(x) inherits(x, 'commit')
 
+
 #' Convert environment into a commit.
 #' 
 #' @param env Environment to be stored.
@@ -11,11 +12,13 @@ is_commit <- function(x) inherits(x, 'commit')
 #' 
 store_commit <- function (env, parent_id, history, storage)
 {
-  nms <- ls(envir = env)
-  obj <- lapply(nms, function (name) {
+  # TODO also store (ordered) list of currently loaded packages
+  
+  obj <- ls(envir = env)
+  nms <- vapply(obj, function (name) {
     ob <- env[[name]]
     store_object(storage, hash(ob), ob, auto_tags(ob, env, name = name))
-  })
+  }, character(1))
   names(obj) <- nms
   
   if (!is.na(parent_id)) {

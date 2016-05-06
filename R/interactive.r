@@ -33,18 +33,28 @@ update_prompt <- function (on_off) {
 #' @export
 stashed <- function ()
 {
-  paths <- list.files(state$stash$path, "_tags.rds$", full.names = T, recursive = T)
-  lapply(paths, function (file) {
-    tags <- readRDS(file)
-    if (tags$class %in% 'commit')
-      return()
+  lapply(restore_objects_by(state$stash, class != 'commit'), function (tags) {
     cat(paste(names(tags), as.character(tags), sep = ":", collapse = " "), '\n')
   })
   invisible()
 }
 
 
-
+#' Print the history of commits in stash.
+#' 
+#' @export
+commits <- function ()
+{
+  # TODO print in the order of creation - resolve order by looking at .parent
+  cmts <- restore_objects_by(state$stash, class == 'commit')
+  idx  <- seq_along(cmts)
+  
+  mapply(function (no, cm, id) {
+    cat(no, ".", crc32(id), " :  ", paste(cm$objects, collapse = ', '), '\n', sep = "")
+  }, no = idx, cm = cmts, id = names(cmts))
+  
+  invisible()
+}
 
 
 

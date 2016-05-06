@@ -24,6 +24,20 @@ test_that("restoring objects", {
 })
 
 
+test_that("restoring by", {
+  st <- helper_new_storage()
+  for (i in 1:10)
+    store_object(st, paste0('abcdef', i), i, list(a = i, b = i+10))
+  
+  expect_equal(restore_objects_by(st, a == 1), list(abcdef1 = 1))
+  expect_equal(restore_objects_by(st, a > 8), list(abcdef10 = 10, abcdef9 = 9))
+
+  expect_equal(restore_tags_by(st, a == 1), list(abcdef1 = list(a = 1, b =11)))
+  expect_equal(restore_tags_by(st, a > 8), list(abcdef10 = list(a = 10, b = 20),
+                                                abcdef9  = list(a = 9, b = 19)))
+})
+
+
 test_that("errors", {
   st <- helper_new_storage()
   id <- 'abcdef'
@@ -31,3 +45,4 @@ test_that("errors", {
   expect_error(restore_object(st, id), er)
   expect_error(restore_tags(st, id), er)
 })
+
