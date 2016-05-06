@@ -76,3 +76,8 @@ count_objects <- function (st)
 {
   length(list.files(st$path, "[^s].rds$", recursive = TRUE))
 }
+
+
+
+
+

@@ -36,10 +36,16 @@ stashed <- function ()
   paths <- list.files(state$stash$path, "_tags.rds$", full.names = T, recursive = T)
   lapply(paths, function (file) {
     tags <- readRDS(file)
+    if (tags$class %in% 'commit')
+      return()
     cat(paste(names(tags), as.character(tags), sep = ":", collapse = " "), '\n')
   })
   invisible()
 }
+
+
+
+
 
 
 # Creating a new commit/checkout:
