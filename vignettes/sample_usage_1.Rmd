@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 
@@ -83,4 +83,19 @@ will extract the data object from the \code{lm} object and place
 a hash instead to save the persistent storage space.
 
 ```{r}
+```
+
+
+## Plot graph of commits
+
+```{r}
+invisible(restore_commit('d4b30e89'))
+z <- 1
+```
+```{r stash, include=FALSE}
+```
+
+```{r}
+commits()
+commit_graph()
 ```

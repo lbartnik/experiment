@@ -46,7 +46,9 @@ stashed <- function ()
 commits <- function ()
 {
   cmts <- restore_objects_by(state$stash, class == 'commit')
-  structure(cmts, class = 'commit_set')
+  tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
+  idx  <- order(vapply(tags, `[[`, numeric(1), 'time'))
+  structure(cmts[idx], class = 'commit_set')
 }
 
 
@@ -84,7 +86,7 @@ restore_commit <- function (id, clear = TRUE)
 
 
 #' @export
-#' @importFrom network as.network
+#' @importFrom network as.network set.vertex.attribute
 #' @importFrom ggnetwork ggnetwork geom_edges geom_nodes geom_nodelabel
 #' @importFrom ggplot2 ggplot aes
 #' 
@@ -104,7 +106,7 @@ commit_graph <- function ()
   n <- ggnetwork(n)
 
   ggplot(n, aes(x = x, y = y, xend = xend, yend = yend)) +
-    geom_edges(color = "grey", arrow = arrow(length = unit(6, "pt"), type = "closed")) +
+    geom_edges(color = "grey", arrow = arrow(length = unit(10, "pt"), type = "closed")) +
     geom_nodes(color = 'white') +
     geom_nodelabel(aes(label = vertex.name))
 }

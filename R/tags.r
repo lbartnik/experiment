@@ -2,7 +2,7 @@
 auto_tags <- function (obj, env, ...)
 {
   c(list(...),
-    list(class = class(obj), time = format(Sys.time(), "%F %R")),
+    list(class = class(obj), time = Sys.time()),
     extract_tags(obj, env))
 }
 
