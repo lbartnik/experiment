@@ -62,7 +62,7 @@ stash_restore <- function (...) {
 restore_commit <- function (id, clear = TRUE)
 {
   cmts  <- commits()
-  short <- vapply(names(cmts), crc32, character(1))
+  short <- shorten(names(cmts))
   stopifnot(id %in% short)
   
   if (clear)
@@ -82,6 +82,32 @@ restore_commit <- function (id, clear = TRUE)
   cmt
 }
 
+
+#' @export
+#' @importFrom network as.network
+#' @importFrom ggnetwork ggnetwork geom_edges geom_nodes geom_nodelabel
+#' @importFrom ggplot2 ggplot aes
+#' 
+commit_graph <- function ()
+{
+  cmts <- commits()
+  tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
+  prnt <- vapply(tags, `[[`, character(1), '.parent')
+
+  parents  <- match(prnt, names(cmts))
+  
+  m <- matrix(0, length(parents), length(parents))
+  s <- matrix(c(seq_along(parents), parents), ncol = 2)
+  m[s] <- 1
+  n <- as.network(m, directed = TRUE)
+  set.vertex.attribute(n, 'vertex.name', shorten(names(cmts)))
+  n <- ggnetwork(n)
+
+  ggplot(n, aes(x = x, y = y, xend = xend, yend = yend)) +
+    geom_edges(color = "grey", arrow = arrow(length = unit(6, "pt"), type = "closed")) +
+    geom_nodes(color = 'white') +
+    geom_nodelabel(aes(label = vertex.name))
+}
 
 
 

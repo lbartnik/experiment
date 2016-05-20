@@ -12,8 +12,6 @@
 #' 
 #' @return A combined \code{list} of lazy objects.
 #' 
-#' 
-#' @param 
 #' @importFrom lazyeval as.lazy_dots
 #' 
 combine_dots <- function (dots, dots2)
