@@ -45,15 +45,8 @@ stashed <- function ()
 #' @export
 commits <- function ()
 {
-  # TODO print in the order of creation - resolve order by looking at .parent
   cmts <- restore_objects_by(state$stash, class == 'commit')
-  idx  <- seq_along(cmts)
-  
-  mapply(function (no, cm, id) {
-    cat(no, ".", crc32(id), " :  ", paste(cm$objects, collapse = ', '), '\n', sep = "")
-  }, no = idx, cm = cmts, id = names(cmts))
-  
-  invisible()
+  structure(cmts, class = 'commit_set')
 }
 
 
@@ -63,6 +56,33 @@ stash_restore <- function (...) {
   dots <- lazy_dots(...)
   restore_objects_by(state$stash, dots = dots)
 }
+
+
+#' @export
+restore_commit <- function (id, clear = TRUE)
+{
+  cmts  <- commits()
+  short <- vapply(names(cmts), crc32, character(1))
+  stopifnot(id %in% short)
+  
+  if (clear)
+    rm(list = ls(globalenv()), envir = globalenv())
+  
+  idx <- match(id, short)
+  cmt <- cmts[[idx]]
+  tgs <- restore_tags(state$stash, names(cmts)[[idx]])
+  state$last_commit_id <- ifelse('.parent' %in% names(tgs), tgs$.parent, NA)
+  
+  obj_ids <- names(cmt$objects)
+  objects <- lapply(obj_ids, function(id)restore_object(state$stash, id))
+  names(objects) <- cmt$objects
+  
+  list2env(objects, envir = globalenv())
+  
+  cmt
+}
+
+
 
 
 # Creating a new commit/checkout:
@@ -117,7 +137,9 @@ task_callback <- function (expr, result, successful, printed)
     error = function(e) warning('could not create a commit: ',
                                 e$message, call. = FALSE),
     {
-      update_current_commit(globalenv(), expr)
+      # it's length of ls() because we don't care for hidden objects
+      if (length(ls(globalenv())))
+        update_current_commit(globalenv(), expr)
     }
   )
   

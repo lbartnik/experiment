@@ -30,3 +30,18 @@ store_commit <- function (env, parent_id, history, storage)
   commit <- structure(list(objects = obj, history = history), class = 'commit')
   store_object(storage, hash(commit), commit, auto_tags(commit, .parent = parent_id))
 }
+
+
+#' @export
+print.commit_set <- function (x)
+{
+  # TODO print in the order of creation - resolve order by looking at .parent
+  
+  mapply(function (no, cm, id) {
+    cat(no, ".", crc32(id), " :  ", paste(cm$objects, collapse = ', '), '\n', sep = "")
+  }, no = seq_along(x), cm = x, id = names(x))
+  
+  invisible(x)
+}
+
+
