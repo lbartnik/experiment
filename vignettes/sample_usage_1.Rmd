@@ -89,7 +89,7 @@ a hash instead to save the persistent storage space.
 ## Plot graph of commits
 
 ```{r}
-invisible(restore_commit('d4b30e89'))
+invisible(restore_commit('d4b3dbca'))
 z <- 1
 ```
 ```{r stash, include=FALSE}
