@@ -43,10 +43,10 @@ stashed <- function ()
 #' Print the history of commits in stash.
 #' 
 #' @export
-commits <- function ()
+commits <- function (st = state$stash)
 {
-  cmts <- restore_objects_by(state$stash, class == 'commit')
-  tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
+  cmts <- restore_objects_by(st, class == 'commit')
+  tags <- lapply(names(cmts), function(id)restore_tags(st, id))
   idx  <- order(vapply(tags, `[[`, numeric(1), 'time'))
   structure(cmts[idx], class = 'commit_set')
 }

@@ -4,7 +4,7 @@
 \alias{commits}
 \title{Print the history of commits in stash.}
 \usage{
-commits()
+commits(st = state$stash)
 }
 \description{
 Print the history of commits in stash.

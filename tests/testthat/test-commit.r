@@ -45,6 +45,6 @@ test_that("restore commit", {
   restored <- restore_commit(storage_object, id)
   
   expect_s3_class(restored, 'commit')
-  expect_named(restored, c('objects', 'history', 'parent', 'time'))
+  expect_named(restored, c('objects', 'history', 'parent', 'time', 'id'))
 })
 

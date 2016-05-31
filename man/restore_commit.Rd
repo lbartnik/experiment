@@ -11,6 +11,9 @@ restore_commit(st, id)
 
 \item{id}{Commit identifier.}
 }
+\value{
+A \code{commit} object.
+}
 \description{
 Commit read from storage has
 }

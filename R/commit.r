@@ -53,15 +53,30 @@ store_commit <- function (env, parent_id, history, storage)
 #' 
 #' @param st Storage to read from.
 #' @param id Commit identifier.
+#' 
+#' @return A \code{commit} object.
+#' 
 restore_commit <- function (st, id)
 {
   stopifnot(object_exists(st, id))
   
   commit <- c(restore_object(st, id), restore_tags(st, id))
   class(commit) <- commit$class
-  commit$class <- NULL
+  commit$class  <- NULL
+  commit$id     <- id
   
   commit
+}
+
+
+#' Print a \code{commit} object.
+#' 
+#' @export
+print.commit <- function (x)
+{
+  stopifnot(is_commit(x))
+  cat(shorten(x$id), " :  ", paste(x$objects, collapse = ', '), '\n', sep = "")
+  invisible(x)
 }
 
 
@@ -72,8 +87,9 @@ print.commit_set <- function (x)
   # TODO print in the order of creation - resolve order by looking at parent
   
   mapply(function (no, cm, id) {
-    cat(no, ".", id, " :  ", paste(cm$objects, collapse = ', '), '\n', sep = "")
-  }, no = seq_along(x), cm = x, id = shorten(names(x)))
+    cat(no, ".", sep = '')
+    print(cm)
+  }, no = seq_along(x), cm = x)
   
   invisible(x)
 }
