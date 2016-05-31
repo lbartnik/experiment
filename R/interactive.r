@@ -60,6 +60,11 @@ stash_restore <- function (...) {
 }
 
 
+#' Restore state of work from before into global environment.
+#' 
+#' @param id Commit identifier.
+#' @param clear Clear global environment before restoring the commit.
+#' 
 #' @export
 restore_commit <- function (id, clear = TRUE)
 {
@@ -67,18 +72,17 @@ restore_commit <- function (id, clear = TRUE)
   short <- shorten(names(cmts))
   stopifnot(id %in% short)
   
-  if (clear)
-    rm(list = ls(globalenv()), envir = globalenv())
-  
   idx <- match(id, short)
   cmt <- cmts[[idx]]
   tgs <- restore_tags(state$stash, names(cmts)[[idx]])
-  state$last_commit_id <- ifelse('.parent' %in% names(tgs), tgs$.parent, NA)
+  state$last_commit_id <- ifelse('.parent' %in% names(tgs), tgs$.parent, NA_character_)
   
   obj_ids <- names(cmt$objects)
   objects <- lapply(obj_ids, function(id)restore_object(state$stash, id))
   names(objects) <- cmt$objects
-  
+
+  if (clear)
+    rm(list = ls(globalenv()), envir = globalenv())
   list2env(objects, envir = globalenv())
   
   cmt
