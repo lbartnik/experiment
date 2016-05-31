@@ -80,16 +80,35 @@ print.commit <- function (x)
 }
 
 
+is_commit_set <- function (x) inherits(x, 'commit_set')
+
+
+#' Restore all commits.
+#' 
+#' @rdname restore_commit
+#' @return A \code{commit_set} object.
+restore_all_commits <- function (st)
+{
+  ids  <- names(restore_tags_by(st, class == 'commit'))
+  cmts <- lapply(ids, function(id)restore_commit(st, id))
+  names(cmts) <- ids
+  structure(cmts, class = 'commit_set')
+}
+
+
 
 #' @export
 print.commit_set <- function (x)
 {
   # TODO print in the order of creation - resolve order by looking at parent
+  stopifnot(is_commit_set(x))
   
-  mapply(function (no, cm, id) {
+  idx  <- order(vapply(x, `[[`, numeric(1), 'time'))
+
+  mapply(function (no, cm) {
     cat(no, ".", sep = '')
     print(cm)
-  }, no = seq_along(x), cm = x)
+  }, no = seq_along(x[idx]), cm = x[idx])
   
   invisible(x)
 }

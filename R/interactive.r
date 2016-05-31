@@ -43,13 +43,7 @@ stashed <- function ()
 #' Print the history of commits in stash.
 #' 
 #' @export
-commits <- function (st = state$stash)
-{
-  cmts <- restore_objects_by(st, class == 'commit')
-  tags <- lapply(names(cmts), function(id)restore_tags(st, id))
-  idx  <- order(vapply(tags, `[[`, numeric(1), 'time'))
-  structure(cmts[idx], class = 'commit_set')
-}
+commits <- function () restore_all_commits(state$stash)
 
 
 #' @importFrom lazyeval lazy_dots
@@ -68,14 +62,13 @@ stash_restore <- function (...) {
 #' @export
 checkout_commit <- function (id, clear = TRUE)
 {
-  cmts  <- commits()
+  cmts  <- restore_all_commits(state$stash)
   short <- shorten(names(cmts))
   stopifnot(id %in% short)
   
   idx <- match(id, short)
   cmt <- cmts[[idx]]
-  tgs <- restore_tags(state$stash, names(cmts)[[idx]])
-  state$last_commit_id <- ifelse('parent' %in% names(tgs), tgs$parent, NA_character_)
+  state$last_commit_id <- cmt$id
   
   obj_ids <- names(cmt$objects)
   objects <- lapply(obj_ids, function(id)restore_object(state$stash, id))
@@ -96,7 +89,7 @@ checkout_commit <- function (id, clear = TRUE)
 #' 
 commit_graph <- function ()
 {
-  cmts <- commits()
+  cmts <- restore_all_commits(state$stash)
   tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
   prnt <- vapply(tags, `[[`, character(1), 'parent')
 
