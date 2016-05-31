@@ -14,20 +14,23 @@ store_commit <- function (env, parent_id, history, storage)
 {
   # TODO also store (ordered) list of currently loaded packages
   
-  obj <- ls(envir = env)
-  nms <- vapply(obj, function (name) {
+  # generate list of objects; names are object hash sums
+  objects <- ls(envir = env, sorted = TRUE)
+  object_names <- vapply(objects, function (name) {
     ob <- env[[name]]
     store_object(storage, hash(ob), ob, auto_tags(ob, env, name = name))
   }, character(1))
-  names(obj) <- nms
+  names(objects) <- object_names
   
+  # if parent holds the same list of obejcts, don't store
   if (!is.na(parent_id)) {
     parent_commit <- restore_object(storage, parent_id)
-    if (hash(parent_commit$objects) == hash(obj))
+    if (hash(parent_commit$objects) == hash(objects))
       return(parent_id)
   }
   
-  commit <- structure(list(objects = obj, history = history), class = 'commit')
+  # store list of objects and line of history, the rest goes as tags
+  commit <- structure(list(objects = objects, history = history), class = 'commit')
   store_object(storage, hash(commit), commit,
                auto_tags(commit, parent = as.character(parent_id)))
 }

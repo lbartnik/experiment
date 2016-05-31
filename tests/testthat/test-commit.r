@@ -2,11 +2,10 @@ context("commit")
 
 
 test_that("creating commit", {
-  storage_path   <- file.path(tempdir(), 'storage')
-  storage_object <- storage(storage_path, .create = TRUE)
-  on.exit(unlink(storage_path, recursive = TRUE), add = TRUE)
-  
-  # sample environment has 3 objects; turn it into a commit
+  storage_object <- helper_new_storage()
+
+  # sample environment has 2 objects, turn it into a commit;
+  # mock restore_object because parent id is not NA
   cmt_id <- with_mock(restore_object = function (...) list(objects = list()),
     {
       e <- create_sample_env()
@@ -20,3 +19,19 @@ test_that("creating commit", {
   expect_equivalent(cmt$objects, c('a', 'b'))
   expect_equal(cmt$history, bquote(x))
 })
+
+
+test_that("the same commmit is not stored twice", {
+  storage_object <- helper_new_storage()
+  e <- create_sample_env()
+  
+  parent_id <- store_commit(e, NA_character_, bquote(x), storage_object)
+  child_id <- store_commit(e, parent_id, bquote(x), storage_object)
+  
+  expect_equal(parent_id, child_id)
+  # (one commit + two objects) * (object file + tag file) = 3 * 2 = 6
+  expect_equal(length(list.files(storage_object$path, recursive = TRUE)), 6)
+})
+
+
+
