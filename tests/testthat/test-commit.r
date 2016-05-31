@@ -26,9 +26,14 @@ test_that("the same commmit is not stored twice", {
   e <- create_sample_env()
   
   parent_id <- store_commit(e, NA_character_, bquote(x), storage_object)
-  child_id <- store_commit(e, parent_id, bquote(x), storage_object)
+  child_id_1 <- store_commit(e, parent_id, bquote(x), storage_object)
   
-  expect_equal(parent_id, child_id)
+  # reverse the list of objects, should not make any difference
+  f <- as.environment(as.list(e)[rev(seq_along(e))])
+  child_id_2 <- store_commit(f, parent_id, bquote(x), storage_object)
+  
+  expect_equal(parent_id, child_id_1)
+  expect_equal(child_id_1, child_id_2)
   # (one commit + two objects) * (object file + tag file) = 3 * 2 = 6
   expect_equal(length(list.files(storage_object$path, recursive = TRUE)), 6)
 })
