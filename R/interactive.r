@@ -75,7 +75,7 @@ restore_commit <- function (id, clear = TRUE)
   idx <- match(id, short)
   cmt <- cmts[[idx]]
   tgs <- restore_tags(state$stash, names(cmts)[[idx]])
-  state$last_commit_id <- ifelse('.parent' %in% names(tgs), tgs$.parent, NA_character_)
+  state$last_commit_id <- ifelse('parent' %in% names(tgs), tgs$parent, NA_character_)
   
   obj_ids <- names(cmt$objects)
   objects <- lapply(obj_ids, function(id)restore_object(state$stash, id))
@@ -98,7 +98,7 @@ commit_graph <- function ()
 {
   cmts <- commits()
   tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
-  prnt <- vapply(tags, `[[`, character(1), '.parent')
+  prnt <- vapply(tags, `[[`, character(1), 'parent')
 
   parents  <- match(prnt, names(cmts))
   
