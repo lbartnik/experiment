@@ -99,13 +99,16 @@ commit_graph <- function ()
   s <- matrix(c(seq_along(parents), parents), ncol = 2)
   m[s] <- 1
   n <- as.network(m, directed = TRUE)
-  set.vertex.attribute(n, 'vertex.name', shorten(names(cmts)))
+  
+  capture_print <- function(x)capture.output(print(x))
+  set.vertex.attribute(n, 'vertex.name', vapply(cmts, capture_print, character(1)))
   n <- ggnetwork(n)
 
   ggplot(n, aes(x = x, y = y, xend = xend, yend = yend)) +
     geom_edges(color = "grey", arrow = arrow(length = unit(10, "pt"), type = "closed")) +
     geom_nodes(color = 'white') +
-    geom_nodelabel(aes(label = vertex.name))
+    geom_nodelabel(aes(label = vertex.name)) +
+    xlim(-.5, 1.5)
 }
 
 
