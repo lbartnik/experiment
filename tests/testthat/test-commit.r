@@ -39,4 +39,12 @@ test_that("the same commmit is not stored twice", {
 })
 
 
+test_that("restore commit", {
+  storage_object <- helper_new_storage()
+  id <- store_commit(create_sample_env(), NA_character_, bquote(x), storage_object)
+  restored <- restore_commit(storage_object, id)
+  
+  expect_s3_class(restored, 'commit')
+  expect_named(restored, c('objects', 'history', 'parent', 'time'))
+})
 

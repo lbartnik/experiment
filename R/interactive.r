@@ -66,7 +66,7 @@ stash_restore <- function (...) {
 #' @param clear Clear global environment before restoring the commit.
 #' 
 #' @export
-restore_commit <- function (id, clear = TRUE)
+checkout_commit <- function (id, clear = TRUE)
 {
   cmts  <- commits()
   short <- shorten(names(cmts))

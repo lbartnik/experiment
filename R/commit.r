@@ -53,12 +53,15 @@ store_commit <- function (env, parent_id, history, storage)
 #' 
 #' @param st Storage to read from.
 #' @param id Commit identifier.
-read_commit <- function (st, id)
+restore_commit <- function (st, id)
 {
-  stopifnot(is_storage(st))
-  stopifnot(is.character(id))
+  stopifnot(object_exists(st, id))
   
+  commit <- c(restore_object(st, id), restore_tags(st, id))
+  class(commit) <- commit$class
+  commit$class <- NULL
   
+  commit
 }
 
 

@@ -29,8 +29,17 @@ make_path <- function (id) {
 }
 
 
+
+#' Check whether an object exists in storage.
+#' 
+#' @param st Storage to check.
+#' @param id Object identifier.
+#' @return \code{TRUE} if object exists, \code{FALSE} otherwise.
+#' 
 object_exists <- function (st, id)
 {
+  stopifnot(is_storage(st))
+  stopifnot(is.character(id))
   path <- paste0(file.path(st$path, make_path(id)), '.rds')
   file.exists(path)
 }
@@ -73,7 +82,6 @@ store_object <- function (st, id, obj, tags = list(), .overwrite = FALSE)
 
 restore_file <- function (st, id, ext)
 {
-  stopifnot(is_storage(st))
   if (!object_exists(st, id)) {
     stop("id '", id, "' not found in storage", call. = FALSE)
   }
