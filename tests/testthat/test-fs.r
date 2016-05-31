@@ -38,6 +38,14 @@ test_that("restoring by", {
 })
 
 
+test_that("restore tags do not exist", {
+  st <- helper_new_storage()
+  store_object(st, 'abcdef', 1, list(a = 1))
+  
+  expect_equivalent(restore_objects_by(st, b == 1), list())
+})
+
+
 test_that("errors", {
   st <- helper_new_storage()
   id <- 'abcdef'

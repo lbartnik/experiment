@@ -7,7 +7,9 @@ test_that("creating commit", {
   on.exit(unlink(storage_path, recursive = TRUE), add = TRUE)
   
   # sample environment has 3 objects; turn it into a commit
-  cmt_id <- with_mock(restore_object = function (...) list(objects = list()),
+  cmt_id <- with_mock(
+    restore = function (...) list(object = list(objects = list()),
+                                  tags = list(branch = 1)),
     {
       e <- create_sample_env()
       store_commit(e, 'parent_id', bquote(x), storage_object)
@@ -20,3 +22,4 @@ test_that("creating commit", {
   expect_equivalent(cmt$objects, c('a', 'b'))
   expect_equal(cmt$history, bquote(x))
 })
+

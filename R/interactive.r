@@ -40,18 +40,6 @@ stashed <- function ()
 }
 
 
-#' Print the history of commits in stash.
-#' 
-#' @export
-commits <- function ()
-{
-  cmts <- restore_objects_by(state$stash, class == 'commit')
-  tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
-  idx  <- order(vapply(tags, `[[`, numeric(1), 'time'))
-  structure(cmts[idx], class = 'commit_set')
-}
-
-
 #' @importFrom lazyeval lazy_dots
 #' @export
 stash_restore <- function (...) {
@@ -60,33 +48,10 @@ stash_restore <- function (...) {
 }
 
 
-#' Restore state of work from before into global environment.
-#' 
-#' @param id Commit identifier.
-#' @param clear Clear global environment before restoring the commit.
+#' Read the history of commits in stash.
 #' 
 #' @export
-restore_commit <- function (id, clear = TRUE)
-{
-  cmts  <- commits()
-  short <- shorten(names(cmts))
-  stopifnot(id %in% short)
-  
-  idx <- match(id, short)
-  cmt <- cmts[[idx]]
-  tgs <- restore_tags(state$stash, names(cmts)[[idx]])
-  state$last_commit_id <- ifelse('.parent' %in% names(tgs), tgs$.parent, NA_character_)
-  
-  obj_ids <- names(cmt$objects)
-  objects <- lapply(obj_ids, function(id)restore_object(state$stash, id))
-  names(objects) <- cmt$objects
-
-  if (clear)
-    rm(list = ls(globalenv()), envir = globalenv())
-  list2env(objects, envir = globalenv())
-  
-  cmt
-}
+commits <- function () read_commits(state$stash)
 
 
 #' @export
@@ -96,9 +61,8 @@ restore_commit <- function (id, clear = TRUE)
 #' 
 commit_graph <- function ()
 {
-  cmts <- commits()
-  tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
-  prnt <- vapply(tags, `[[`, character(1), '.parent')
+  cmts <- read_commits(state$stash)
+  prnt <- vapply(cmts, `[[`, character(1), '.parent')
 
   parents  <- match(prnt, names(cmts))
   

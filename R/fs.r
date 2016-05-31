@@ -55,34 +55,43 @@ store_object <- function (st, id, obj, tags = list())
 }
 
 
+object_exists <- function (st, id)
+{
+  path <- paste0(file.path(st$path, make_path(id)), '.rds')
+  file.exists(path)
+}
+
 
 restore_file <- function (st, id, ext)
 {
   stopifnot(is_storage(st))
-  path <- paste0(file.path(st$path, make_path(id)), ext)
-  if (!file.exists(path)) {
+  if (!object_exists(st, id)) {
     stop("id '", id, "' not found in storage", call. = FALSE)
   }
-  readRDS(path)
+  readRDS(paste0(file.path(st$path, make_path(id)), ext))
 }
 
-restore_object <- function (st, id) restore_file(st, id, '.rds')
 
-restore_tags <- function (st, id) restore_file(st, id, '_tags.rds')
+restore        <- function (st, id) list(object = restore_object(st, id),
+                                         tags   = restore_tags(st, id))
+
+restore_object <- function (st, id) restore_file(st, id, '.rds')
+restore_tags   <- function (st, id) restore_file(st, id, '_tags.rds')
 
 
 
 #' @importFrom lazyeval lazy_eval
 #' @importFrom stringi stri_replace_last_fixed
 #' 
-restore_by <- function (st, what, dots)
+restore_by_impl <- function (st, what, dots)
 {
   stopifnot(what %in% c('tags', 'objects'))
   
   paths <- sort(list.files(st$path, "_tags.rds$", full.names = T, recursive = T))
   tgs <- lapply(paths, function (file) {
-    tags <- readRDS(file)
-    if (all(unlist(lazy_eval(dots, tags))))
+    tags  <- readRDS(file)
+    match <- try(all(unlist(lazy_eval(dots, tags))), silent = TRUE)
+    if (!is_error(match) && isTRUE(match))
       return(tags)
   })
   
@@ -104,7 +113,7 @@ restore_by <- function (st, what, dots)
 restore_objects_by <- function (st, ..., dots)
 {
   dots <- combine_dots(lazy_dots(...), dots)
-  restore_by(st, 'objects', dots)
+  restore_by_impl(st, 'objects', dots)
 }
 
 
@@ -113,7 +122,17 @@ restore_objects_by <- function (st, ..., dots)
 restore_tags_by <- function (st, ..., dots)
 {
   dots <- combine_dots(lazy_dots(...), dots)
-  restore_by(st, 'tags', dots)
+  restore_by_impl(st, 'tags', dots)
+}
+
+
+#' Restore (many) objects by their tags.
+restore_by <- function (st, ..., dots)
+{
+  tags <- restore_tags_by(st, dots = combine_dots(lazy_dots(...), dots))
+  mapply(function(tags, id) {
+    list(object = restore_object(st, id), tags = tags)
+  }, tags = tags, id = names(tags), SIMPLIFY = FALSE, USE.NAMES = TRUE)
 }
 
 

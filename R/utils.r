@@ -22,3 +22,7 @@ combine_dots <- function (dots, dots2)
   }
   dots
 }
+
+
+is_error <- function (x) inherits(x, 'try-error')
+
