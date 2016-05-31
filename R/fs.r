@@ -29,18 +29,33 @@ make_path <- function (id) {
 }
 
 
+object_exists <- function (st, id)
+{
+  path <- paste0(file.path(st$path, make_path(id)), '.rds')
+  file.exists(path)
+}
+
+
+
 #' Add an object to a storage.
 #' 
 #' @param st Storage object.
 #' @param id Add object under this identifier.
 #' @param obj An object to be added.
 #' @param tags Tags that describe \code{obj}.
+#' @param .overwrite Overwrite if already exists.
+#' 
 #' @return Invisibly a hash of \code{obj}.
 #' 
-store_object <- function (st, id, obj, tags = list())
+store_object <- function (st, id, obj, tags = list(), .overwrite = FALSE)
 {
   stopifnot(is_storage(st))
   stopifnot(is.list(tags))
+  
+  if (object_exists(st, id) && !.overwrite) {
+    stop('object with this id already exists and .overwrite is FALSE',
+         call. = FALSE)
+  }
   
   path <- file.path(st$path, make_path(id))
   
@@ -59,11 +74,10 @@ store_object <- function (st, id, obj, tags = list())
 restore_file <- function (st, id, ext)
 {
   stopifnot(is_storage(st))
-  path <- paste0(file.path(st$path, make_path(id)), ext)
-  if (!file.exists(path)) {
+  if (!object_exists(st, id)) {
     stop("id '", id, "' not found in storage", call. = FALSE)
   }
-  readRDS(path)
+  readRDS(paste0(file.path(st$path, make_path(id)), ext))
 }
 
 restore_object <- function (st, id) restore_file(st, id, '.rds')

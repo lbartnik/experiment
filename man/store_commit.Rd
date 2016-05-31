@@ -19,6 +19,9 @@ store_commit(env, parent_id, history, storage)
 ID of the new commit in \code{storage}.
 }
 \description{
-Convert environment into a commit.
+A commit in the filesystem is just another regular object with two
+mandatory tags: \code{class == 'commit'} and \code{parent} that
+points to the parent commit. Thus, reading a commit from storage
+does not differ from reading any other object.
 }
 

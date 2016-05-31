@@ -1,8 +1,14 @@
 
+#' Does an object inherit from \code{commit}.
 is_commit <- function(x) inherits(x, 'commit')
 
 
 #' Convert environment into a commit.
+#' 
+#' A commit in the filesystem is just another regular object with two
+#' mandatory tags: \code{class == 'commit'} and \code{parent} that
+#' points to the parent commit. Thus, reading a commit from storage
+#' does not differ from reading any other object.
 #' 
 #' @param env Environment to be stored.
 #' @param parent_id ID of the parent commit.
@@ -14,11 +20,16 @@ store_commit <- function (env, parent_id, history, storage)
 {
   # TODO also store (ordered) list of currently loaded packages
   
+  # TODO refactor this into two functions: (1) create commit, (2) store commit
+  
   # generate list of objects; names are object hash sums
   objects <- ls(envir = env, sorted = TRUE)
   object_names <- vapply(objects, function (name) {
     ob <- env[[name]]
-    store_object(storage, hash(ob), ob, auto_tags(ob, env, name = name))
+    id <- hash(ob)
+    if (object_exists(storage, id))
+      return(id)
+    store_object(storage, id, ob, auto_tags(ob, env, name = name))
   }, character(1))
   names(objects) <- object_names
   
@@ -34,6 +45,22 @@ store_commit <- function (env, parent_id, history, storage)
   store_object(storage, hash(commit), commit,
                auto_tags(commit, parent = as.character(parent_id)))
 }
+
+
+#' Read a commit from storage.
+#' 
+#' Commit read from storage has 
+#' 
+#' @param st Storage to read from.
+#' @param id Commit identifier.
+read_commit <- function (st, id)
+{
+  stopifnot(is_storage(st))
+  stopifnot(is.character(id))
+  
+  
+}
+
 
 
 #' @export

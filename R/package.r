@@ -13,7 +13,7 @@ state <- new.env()
 
 initiate_state <- function ()
 {
-  state$tracking         <- TRUE
+  state$tracking         <- FALSE
   state$stash            <- storage(file.path(tempdir(), 'experiment-stash'), .create = TRUE)
   state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
   state$task_callback_id <- NA

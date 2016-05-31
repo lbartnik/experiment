@@ -4,7 +4,7 @@
 \alias{store_object}
 \title{Add an object to a storage.}
 \usage{
-store_object(st, id, obj, tags = list())
+store_object(st, id, obj, tags = list(), .overwrite = FALSE)
 }
 \arguments{
 \item{st}{Storage object.}
@@ -14,6 +14,8 @@ store_object(st, id, obj, tags = list())
 \item{obj}{An object to be added.}
 
 \item{tags}{Tags that describe \code{obj}.}
+
+\item{.overwrite}{Overwrite if already exists.}
 }
 \value{
 Invisibly a hash of \code{obj}.
