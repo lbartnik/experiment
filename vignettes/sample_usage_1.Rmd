@@ -88,12 +88,37 @@ a hash instead to save the persistent storage space.
 
 ## Plot graph of commits
 
+Restore a point from the past and make a change.
+
 ```{r}
 invisible(checkout_commit('d4b3dbca'))
 z <- 1
 ```
 ```{r stash, include=FALSE}
 ```
+
+Now go back to the main line and make another change.
+
+```{r}
+invisible(checkout_commit('cd992aaa'))
+v <- 2
+```
+```{r stash, include=FALSE}
+```
+
+Finally, make a change in the new "branch".
+
+```{r}
+invisible(checkout_commit('3b362778'))
+z <- 2
+```
+```{r stash, include=FALSE}
+```
+
+
+Now show all commits and their graph. X axis is ordered according
+to time when a commit has been created, Y axis is divided according to
+"branches" in the graph of commits.
 
 ```{r}
 commits()

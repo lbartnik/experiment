@@ -34,7 +34,8 @@ update_prompt <- function (on_off) {
 stashed <- function ()
 {
   lapply(restore_tags_by(state$stash, class != 'commit'), function (tags) {
-    cat(paste(names(tags), as.character(tags), sep = ":", collapse = " "), '\n')
+    char_tags <- vapply(tags, as.character, character(1))
+    cat(paste(names(tags), char_tags, sep = ":", collapse = " "), '\n')
   })
   invisible()
 }
@@ -84,14 +85,14 @@ checkout_commit <- function (id, clear = TRUE)
 
 #' @export
 #' @importFrom network as.network set.vertex.attribute
-#' @importFrom ggnetwork ggnetwork geom_edges geom_nodes geom_nodelabel
-#' @importFrom ggplot2 ggplot aes
+#' @importFrom ggnetwork ggnetwork geom_edges geom_nodes geom_nodelabel_repel theme_blank
+#' @importFrom ggplot2 aes arrow ggplot xlim
 #' 
 commit_graph <- function ()
 {
   cmts <- restore_all_commits(state$stash)
-  tags <- lapply(names(cmts), function(id)restore_tags(state$stash, id))
-  prnt <- vapply(tags, `[[`, character(1), 'parent')
+  cmts <- cmts[order(vapply(cmts, `[[`, numeric(1), 'time'))]
+  prnt <- vapply(cmts, `[[`, character(1), 'parent')
 
   parents  <- match(prnt, names(cmts))
   
@@ -99,16 +100,36 @@ commit_graph <- function ()
   s <- matrix(c(seq_along(parents), parents), ncol = 2)
   m[s] <- 1
   n <- as.network(m, directed = TRUE)
+
+  # recursively assign branch number
+  mark_branch <- function (id, br) {
+    if (!is.na(id) && is.null(cmts[[id]]$branch)) {
+      cmts[[id]]$branch <<- br
+      Recall(cmts[[id]]$parent, br)
+    }
+  }
   
+  # for each leaf assign a branch number
+  leaves <- sort(setdiff(seq_along(parents), parents))
+  lapply(leaves, function(id) mark_branch(names(cmts)[[id]], id - min(leaves)))
+  
+  # assign coordinates: time-wise rank and branch number
+  coords <- matrix(c(seq_along(cmts) * 3, vapply(cmts, `[[`, numeric(1), 'branch')),
+                   ncol = 2)
+
+  # set attributes used to pretty-print
   capture_print <- function(x)capture.output(print(x))
   set.vertex.attribute(n, 'vertex.name', vapply(cmts, capture_print, character(1)))
-  n <- ggnetwork(n)
-
+  set.vertex.attribute(n, 'branch', as.character(vapply(cmts, `[[`, numeric(1), 'branch')))
+    
+  n <- ggnetwork(n, layout = coords)
+  
   ggplot(n, aes(x = x, y = y, xend = xend, yend = yend)) +
     geom_edges(color = "grey", arrow = arrow(length = unit(10, "pt"), type = "closed")) +
-    geom_nodes(color = 'white') +
-    geom_nodelabel(aes(label = vertex.name)) +
-    xlim(-.5, 1.5)
+    geom_nodes(aes(color = branch)) +
+    geom_nodelabel_repel(aes(label = vertex.name), point.padding = unit(1, 'lines')) +
+    xlim(-.5, 1.5) +
+    theme_blank()
 }
 
 

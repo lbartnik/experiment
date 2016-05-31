@@ -10,7 +10,11 @@ Description: Keep track of all the work done when working with R.
     of the current session.
 License: GPL3
 Imports:
-    digest
+    digest,
+    ggplot2,
+    ggnetwork,
+    lazyeval,
+    stringi
 Suggests:
     testthat,
     knitr
