@@ -1,12 +1,12 @@
 context("extract")
 
+expect_assignment <- function (name, expr, exp) {
+  res <- extract_assignment(name, expr)
+  expect_equal(res, exp)
+}
+
 
 test_that("can find assignment", {
-  expect_assignment <- function (name, expr, exp) {
-    res <- extract_assignment(name, expr)
-    expect_equal(res, exp)
-  }
-
   # first is just a plain x = 1  
   expect_assignment("x", substitute(x %=% 1, list(`%=%` = quote(`=`))),   quote(1))
   expect_assignment("x", quote(x <- 2),  quote(2))
@@ -21,5 +21,15 @@ test_that("can find assignment", {
   
   expect_assignment("x", quote(x <- iris %>% select(Species) %>% lm(~Species, data = .)),
                          quote(iris %>% select(Species) %>% lm(~Species, data = .)))
+})
+
+
+test_that("extraction errors", {
+  expect_assignment("x", quote({ x <- 1 ; x <- 2}),  NULL)
+  expect_assignment("x", quote({ x <- 1 ; x = 2}),  NULL)
+
+  res <- search_for_assignment("x", quote({ x <- 1 ; x <- 2 ; x = 3}))
+  expect_equal(res, list(quote(1), quote(2), quote(3)))
+  
 })
 
