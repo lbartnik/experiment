@@ -33,3 +33,19 @@ test_that("extraction errors", {
   
 })
 
+
+test_that("parents are extracted", {
+  expect_parents <- function (expr, env, expected) {
+    parents <- extract_parents(expr, env)
+    expect_equal(env, expected)
+  }
+  
+  env <- list(a = 1, b = 2, c = 4, d = 5, e = 6, f = function(...)NULL)
+  expect_parents(quote(f(a, b, g(c, d), 3, z = e)), env, env)
+})
+
+
+
+
+
+

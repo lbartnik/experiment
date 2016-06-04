@@ -72,8 +72,10 @@ search_for_assignment <- function(name, expression)
 }
 
 
-
-
+extract_parents <- function (expression, env)
+{
+  
+}
 
 
 
