@@ -19,15 +19,30 @@ extract_assignment <- function (name, expression)
 }
 
 
-
+#' Returns \code{TRUE} if an assignment expression.
+#' 
+#' Identifies three types of assignments: \code{<-}, \code{<<-} and
+#' \code{=}. Returns \code{TRUE} is \code{x} is a \code{call} and
+#' its first element is identical with either of the three.
+#' 
+#' @param x An object to be tested.
+#' @return \code{TRUE} is \code{x} is an assignment, \code{FALSE} otherwise.
+#' 
 is_assignment <- function (x)
 {
-  identical(x[[1]], quote(`<-`)) || identical(x[[1]], quote(`=`)) ||
-    identical(x[[1]], quote(`<<-`))
+  is.call(x) &&
+    (identical(x[[1]], quote(`<-`)) || identical(x[[1]], quote(`=`)) ||
+     identical(x[[1]], quote(`<<-`)))
 }
 
 
-
+#' Recursively search for assignment to a given variable.
+#' 
+#' @param name Variable name.
+#' @param expression Expression to search in.
+#' @return An \code{expression} that produces the variable value or
+#'         \code{NULL} if could not find it.
+#'
 search_for_assignment <- function(name, expression)
 {
   recurse <- function(x) unlist(lapply(x, function(y) search_for_assignment(name, y)),
@@ -55,3 +70,11 @@ search_for_assignment <- function(name, expression)
          call. = FALSE)
   }
 }
+
+
+
+
+
+
+
+
