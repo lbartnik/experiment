@@ -99,9 +99,14 @@ extract_parents <- function (expression, env)
 
 
 
+#' @importFrom lazyeval lazy_ interp
 replace_literals <- function(expression, subst)
 {
+  stopifnot(is.list(subst))
+  stopifnot(is.language(expression))
   
+  lazy_expr <- lazy_(expression, emptyenv())
+  interp(lazy_expr, .values = subst)$expr
 }
 
 

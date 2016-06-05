@@ -73,7 +73,8 @@ test_that("user-defined parents are extracted", {
 # TODO make replacement of literals optional?
 test_that("literals are substituted", {
   expect_literals <- function (input, subst, output) {
-    result <- replace_literals(substitute(input), subst)
+    input  <- substitute(input)
+    result <- replace_literals(input, subst)
     expected <- substitute(output)
     expect_equal(result, expected)
   }
