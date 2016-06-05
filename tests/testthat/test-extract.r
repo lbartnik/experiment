@@ -46,19 +46,19 @@ test_that("user-defined parents are extracted", {
   }
 
   env <- list(a = 1)
-  expect_parent( a , env, env)
+  expect_parents( a , env, env)
   
   # function call
   env <- list(a = 1, b = 2)
-  expect_parent( f(a, b) , env, env)
+  expect_parents( f(a, b) , env, env)
   
   # missing parent
   env <- list(a = 1)
-  expect_parent( f(a, b) , env, env)
+  expect_parents( f(a, b) , env, env)
   
   # function
   env <- list(a = 1, f = function(...)NULL)
-  expect_parent( f(a) , env, env)
+  expect_parents( f(a) , env, env)
   
   # recursive calls
   env <- list(a = 1, b = 2, c = 4, d = 5, e = 6, f = function(...)NULL)

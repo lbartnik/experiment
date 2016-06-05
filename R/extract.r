@@ -74,8 +74,36 @@ search_for_assignment <- function(name, expression)
 
 extract_parents <- function (expression, env)
 {
+  find_globals <- function (expression)
+  {
+    recurse <- function(x) unlist(lapply(x, function(y) find_globals(y)),
+                                  recursive = FALSE)
+    
+    if (is.atomic(expression) || is.name(expression)) {
+      name <- as.character(expression)
+      if (name %in% names(env))
+        return(env[name])
+    }
+    else if (is.call(expression))
+      return(recurse(expression[-1]))
+    else if (is.pairlist(expression))
+      return(recurse(expression))
+    else {
+      stop("Don't know how to handle type ", typeof(expression), 
+           call. = FALSE)
+    }
+  }
+  
+  find_globals(expression)
+}
+
+
+
+replace_literals <- function(expression, subst)
+{
   
 }
+
 
 
 
