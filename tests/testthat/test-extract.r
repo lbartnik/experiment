@@ -28,9 +28,13 @@ test_that("extraction errors", {
   expect_assignment("x", quote({ x <- 1 ; x <- 2}),  NULL)
   expect_assignment("x", quote({ x <- 1 ; x = 2}),  NULL)
 
+  # more than one hit
   res <- search_for_assignment("x", quote({ x <- 1 ; x <- 2 ; x = 3}))
   expect_equal(res, list(quote(1), quote(2), quote(3)))
   
+  # no hits
+  res <- search_for_assignment("x", quote({ a <- 1 ; b <- 2 ; c = 3}))
+  expect_equal(res, list())
 })
 
 
