@@ -89,7 +89,10 @@ test_that("literals are substituted", {
 test_that("package dependencies (aka parents) are extracted", {
   skip_if_not_installed("dplyr")
   
-  expect_pkg_deps <- function (expr, deps) {}
+  expect_pkg_deps <- function (expr, deps) {
+    expr <- substitute(expr)
+    
+  }
   
   expect_pkg_deps(iris %>% filter(Sepal.Width > a),
                   list("iris", "filter"))

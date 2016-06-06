@@ -111,14 +111,28 @@ extract_parents <- function (expression, env)
 
 
 
+#' Replace literals in an expression.
+#' 
+#' Replace all occurences of a given symbol with its value. A values needs
+#' to be a single-element atomic vector.
+#' 
+#' @param expression A \code{language} object.
+#' @param literals A named \code{list} of atomic values.
+#' @return \code{expression} with respective symbols replaced with their values.
+#' 
 #' @importFrom lazyeval lazy_ interp
-replace_literals <- function(expression, subst)
+#' 
+replace_literals <- function(expression, literals)
 {
-  stopifnot(is.list(subst))
   stopifnot(is.language(expression))
   
+  stopifnot(is.list(literals))
+  stopifnot(all(nchar(names(literals)) > 0))
+  stopifnot(all(vapply(literals, is.atomic, logical(1))))
+  stopifnot(all(vapply(literals, length, numeric(1)) == 1))
+  
   lazy_expr <- lazy_(expression, emptyenv())
-  interp(lazy_expr, .values = subst)$expr
+  interp(lazy_expr, .values = literals)$expr
 }
 
 
