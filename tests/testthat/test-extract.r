@@ -42,31 +42,31 @@ test_that("user-defined parents are extracted", {
   expect_parents <- function (expr, env, expected) {
     expr    <- substitute(expr)
     parents <- extract_parents(expr, env)
-    expect_equal(env, expected)
+    expect_equal(sort(parents), sort(expected))
   }
 
   env <- list(a = 1)
-  expect_parents( a , env, env)
+  expect_parents( a , env, "a")
   
   # function call
   env <- list(a = 1, b = 2)
-  expect_parents( f(a, b) , env, env)
+  expect_parents( f(a, b) , env, names(env))
   
   # missing parent
   env <- list(a = 1)
-  expect_parents( f(a, b) , env, env)
+  expect_parents( f(a, b) , env, "a")
   
   # function
   env <- list(a = 1, f = function(...)NULL)
-  expect_parents( f(a) , env, env)
+  expect_parents( f(a) , env, names(env))
   
   # recursive calls
   env <- list(a = 1, b = 2, c = 4, d = 5, e = 6, f = function(...)NULL)
-  expect_parents( f(a, b, g(c, d), 3, z = e) , env, env)
+  expect_parents( f(a, b, g(c, d), 3, z = e) , env, names(env))
 
   # dplyr-like verbs & lazy evaluation
   env <- list(a = 1, b = 2)
-  expect_parents( iris %>% select(Species) %>% summary , env, env)
+  expect_parents( iris %>% select(Species) %>% summary , env, character())
 })
 
 
@@ -87,7 +87,9 @@ test_that("literals are substituted", {
 
 
 test_that("package dependencies (aka parents) are extracted", {
-  skip_if_not_installed(dplyr)
+  skip_if_not_installed("dplyr")
+  
+  expect_pkg_deps <- function (expr, deps) {}
   
   expect_pkg_deps(iris %>% filter(Sepal.Width > a),
                   list("iris", "filter"))

@@ -72,20 +72,32 @@ search_for_assignment <- function(name, expression)
 }
 
 
+
+#' Identify objects referenced in an expression.
+#' 
+#' Finds all objects from \code{env} referenced in \code{expression}.
+#' 
+#' @param expression Expression to process.
+#' @param env Environment to search for objects in.
+#' @return 
+#' 
 extract_parents <- function (expression, env)
 {
   find_globals <- function (expression)
   {
     recurse <- function(x) unlist(lapply(x, function(y) find_globals(y)),
-                                  recursive = FALSE)
+                                  use.names = FALSE)
     
     if (is.atomic(expression) || is.name(expression)) {
       name <- as.character(expression)
-      if (name %in% names(env))
-        return(env[name])
+      if (name %in% names(env)) name else character()
     }
-    else if (is.call(expression))
-      return(recurse(expression[-1]))
+    else if (is.call(expression)) {
+      fun_name <- as.character(expression[[1]])
+      if (!(fun_name %in% names(env)))
+        fun_name <- character()
+      return(c(fun_name, recurse(expression[-1])))
+    }
     else if (is.pairlist(expression))
       return(recurse(expression))
     else {
