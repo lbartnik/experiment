@@ -136,6 +136,37 @@ replace_literals <- function(expression, literals)
 }
 
 
+extract_imports <- function (expression, env)
+{
+  imports <- data.frame(package = "", func = "", stringsAsFactors = FALSE)[0, ]
+  
+  process_import <- function (name) {
+    obj <- get(name, envir = env)
+    print(name)
+    if (is.function(obj) && !identical(environment(obj), globalenv()))
+      imports <- rbind(imports, c(getNamespaceName(environment(obj)), name))
+  }
+  
+  find_imports <- function (expression)
+  {
+    recurse <- function(x) lapply(x, function(y) find_globals(y))
+    
+    if (is.name(expression)) {
+      process_import(as.character(expression))
+    }
+    else if (is.call(expression)) {
+      process_import(as.character(expression[[1]]))
+      recurse(expression[-1])
+    }
+    else if (is.pairlist(expression))
+      recurse(expression)
+    else if (!is.atomic(expression)) {
+      stop("Don't know how to handle type ", typeof(expression), 
+           call. = FALSE)
+    }
+  }
 
+  find_imports(expression)
+}
 
 
