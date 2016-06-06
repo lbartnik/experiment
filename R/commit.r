@@ -29,6 +29,8 @@ store_commit <- function (env, parent_id, history, storage)
     id <- hash(ob)
     if (object_exists(storage, id))
       return(id)
+    # TODO if an object is new, find the expression that will produce it
+    #      and then extract its parents
     store_object(storage, id, ob, auto_tags(ob, env, name = name))
   }, character(1))
   names(objects) <- object_names
