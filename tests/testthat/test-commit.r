@@ -49,9 +49,11 @@ test_that("store commit", {
   expect_equal(count_objects(storage_object), 3)
   
   cmt <- restore_object(storage_object, cmt_id)
-  expect_named(cmt, c('objects', 'history'))
+  expect_named(cmt, 'objects')
   expect_equivalent(cmt$objects, c('a', 'b'))
-  expect_equal(cmt$history, bquote(x))
+  
+  tgs <- restore_tags(storage_object, cmt_id)
+  expect_equal(tgs$history, bquote(x))
 })
 
 
@@ -79,6 +81,6 @@ test_that("restore commit", {
   restored <- restore_commit(storage_object, id)
   
   expect_s3_class(restored, 'commit')
-  expect_named(restored, c('objects', 'history', 'parent', 'time', 'id'))
+  expect_named(restored, c('objects', 'parent', 'history', 'time', 'id'))
 })
 

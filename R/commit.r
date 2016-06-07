@@ -50,11 +50,7 @@ store_commit <- function (env, parent_id, history, storage)
 {
   # TODO also store (ordered) list of currently loaded packages
   
-  # TODO if an object is new, find the expression that will produce it
-  #      and then extract its parents
-  
   commit <- create_commit(env, storage)
-  commit$history <- history
   
   # if parent holds the same list of obejcts, don't store
   if (!is.na(parent_id)) {
@@ -63,11 +59,16 @@ store_commit <- function (env, parent_id, history, storage)
       return(parent_id)
   }
   
+  # TODO if an object is new, find the expression that will produce it
+  #      and then extract its parents
+  
   # store list of objects and line of history, the rest goes as tags
   # TODO rename "parent" to "parents" when parents for regular object are
   #      implemented
   store_object(storage, hash(commit), commit,
-               auto_tags(commit, parent = as.character(parent_id)))
+               auto_tags(commit,
+                         parent  = as.character(parent_id),
+                         history = history))
 }
 
 
@@ -128,7 +129,7 @@ print.commit_set <- function (x)
   stopifnot(is_commit_set(x))
   
   idx  <- order(vapply(x, `[[`, numeric(1), 'time'))
-
+  
   mapply(function (no, cm) {
     cat(no, ".", sep = '')
     print(cm)
