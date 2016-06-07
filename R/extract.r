@@ -142,7 +142,6 @@ extract_imports <- function (expression, env)
   
   process_import <- function (name) {
     obj <- get(name, envir = env)
-    print(name)
     if (is.function(obj) && !identical(environment(obj), globalenv()))
       imports <- rbind(imports, c(getNamespaceName(environment(obj)), name))
   }
