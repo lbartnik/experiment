@@ -1,7 +1,24 @@
 context("commit")
 
 
-test_that("creating commit", {
+test_that("create commit", {
+  with_mock(
+    store_object  = mock('id'),
+    object_exists = mock(TRUE, FALSE),
+    {
+      env <- as.environment(list(a = 1, b = 2))
+      cm  <- create_commit(env, null_storage)
+
+      expect_s3_class(cm, 'commit')
+      expect_named(cm, 'objects')
+      expect_named(cm$object, c(hash(1), 'id'))
+      expect_equivalent(cm$objects, c('a', 'b'))
+    }
+  ) # with_mock
+})
+
+
+test_that("store commit", {
   storage_object <- helper_new_storage()
 
   # sample environment has 2 objects, turn it into a commit;

@@ -6,6 +6,12 @@
 \usage{
 is_commit(x)
 }
+\arguments{
+\item{x}{Object to be tested.}
+}
+\value{
+\code{TRUE} if \code{x} is a commit.
+}
 \description{
 Does an object inherit from \code{commit}.
 }

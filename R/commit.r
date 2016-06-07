@@ -1,5 +1,35 @@
 
+#' Create a commit object.
+#' 
+#' @param env Environment to create this commit from.
+#' @param storage Storage where newly created objects (if any) will be stored.
+#' @return A \code{commit} object.
+#' 
+create_commit <- function (env, storage)
+{
+  prepare_object <- function (name)
+  {
+    ob <- env[[name]]
+    id <- hash(ob)
+    if (object_exists(storage, id))
+      return(id)
+    store_object(storage, id, ob, auto_tags(ob, env, name = name))
+  }
+  
+  # generate list of objects; hash sums are used as names
+  object_names <- ls(envir = env, sorted = TRUE)
+  object_ids   <- vapply(object_names, prepare_object, character(1))
+  names(object_names) <- object_ids
+  
+  structure(list(objects = object_names), class = 'commit')
+}
+
+
 #' Does an object inherit from \code{commit}.
+#' 
+#' @param x Object to be tested.
+#' @return \code{TRUE} if \code{x} is a commit.
+#' 
 is_commit <- function(x) inherits(x, 'commit')
 
 
@@ -20,30 +50,22 @@ store_commit <- function (env, parent_id, history, storage)
 {
   # TODO also store (ordered) list of currently loaded packages
   
-  # TODO refactor this into two functions: (1) create commit, (2) store commit
+  # TODO if an object is new, find the expression that will produce it
+  #      and then extract its parents
   
-  # generate list of objects; names are object hash sums
-  objects <- ls(envir = env, sorted = TRUE)
-  object_names <- vapply(objects, function (name) {
-    ob <- env[[name]]
-    id <- hash(ob)
-    if (object_exists(storage, id))
-      return(id)
-    # TODO if an object is new, find the expression that will produce it
-    #      and then extract its parents
-    store_object(storage, id, ob, auto_tags(ob, env, name = name))
-  }, character(1))
-  names(objects) <- object_names
+  commit <- create_commit(env, storage)
+  commit$history <- history
   
   # if parent holds the same list of obejcts, don't store
   if (!is.na(parent_id)) {
     parent_commit <- restore_object(storage, parent_id)
-    if (hash(parent_commit$objects) == hash(objects))
+    if (hash(parent_commit$objects) == hash(commit$objects))
       return(parent_id)
   }
   
   # store list of objects and line of history, the rest goes as tags
-  commit <- structure(list(objects = objects, history = history), class = 'commit')
+  # TODO rename "parent" to "parents" when parents for regular object are
+  #      implemented
   store_object(storage, hash(commit), commit,
                auto_tags(commit, parent = as.character(parent_id)))
 }
