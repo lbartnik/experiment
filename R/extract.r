@@ -8,7 +8,9 @@
 #'
 extract_assignment <- function (name, expression)
 {
-  stopifnot(is.character(name))
+  if (is.atomic(expression)) return(expression)
+ 
+  stopifnot(is.character(name)) 
   stopifnot(is.language(expression))
   
   res <- search_for_assignment(name, expression)
@@ -109,6 +111,15 @@ extract_parents <- function (expression, env)
   find_globals(expression)
 }
 
+
+extract_literals <- function (lst)
+{
+  stopifnot(is.list(lst))
+  stopifnot(all(nchar(names(lst)) > 0))
+  
+  i <- vapply(lst, function(x) is.atomic(x) && length(x) == 1, logical(1))
+  lst[i]
+}
 
 
 #' Replace literals in an expression.

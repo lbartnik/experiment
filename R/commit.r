@@ -2,10 +2,12 @@
 #' Create a commit object.
 #' 
 #' @param env Environment to create this commit from.
+#' @param history Expression where a new object might have been created.
 #' @param storage Storage where newly created objects (if any) will be stored.
+#' 
 #' @return A \code{commit} object.
 #' 
-create_commit <- function (env, storage)
+create_commit <- function (env, history, storage)
 {
   prepare_object <- function (name)
   {
@@ -13,7 +15,28 @@ create_commit <- function (env, storage)
     id <- hash(ob)
     if (object_exists(storage, id))
       return(id)
-    store_object(storage, id, ob, auto_tags(ob, env, name = name))
+    
+    expr    <- extract_assignment(name, history)
+
+    if (is.atomic(expr)) {
+      parents <- list()
+    }
+    else if (is.language(expr)) {
+      parents <- extract_parents(expr, env)
+      expr    <- replace_literals(expr, extract_literals(env))
+    }
+    else {
+      parents <- list()
+      expr    <- NULL
+      warning("could not extract assignment and parent for object '", name, "'",
+              call. = FALSE)
+    }
+    # TODO extrct imports, too
+    
+    store_object(storage, id, ob, auto_tags(ob, env,
+                                            name       = name,
+                                            assignment = expr,
+                                            parents    = parents))
   }
   
   # generate list of objects; hash sums are used as names
@@ -50,7 +73,7 @@ store_commit <- function (env, parent_id, history, storage)
 {
   # TODO also store (ordered) list of currently loaded packages
   
-  commit <- create_commit(env, storage)
+  commit <- create_commit(env, history, storage)
   
   # if parent holds the same list of obejcts, don't store
   if (!is.na(parent_id)) {
@@ -58,10 +81,7 @@ store_commit <- function (env, parent_id, history, storage)
     if (hash(parent_commit$objects) == hash(commit$objects))
       return(parent_id)
   }
-  
-  # TODO if an object is new, find the expression that will produce it
-  #      and then extract its parents
-  
+
   # store list of objects and line of history, the rest goes as tags
   # TODO rename "parent" to "parents" when parents for regular object are
   #      implemented

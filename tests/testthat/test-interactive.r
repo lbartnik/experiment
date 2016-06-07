@@ -5,13 +5,14 @@ test_that("all commit are read", {
   e1 <- create_sample_env()
   e2 <- create_sample_env()
   e3 <- create_sample_env()
+  a  <- create_sample_assignment()
   
   e2$x <- 3
   e3$z <- 5
   
-  id1 <- store_commit(e1, NA_character_, quote(x), s)
-  id2 <- store_commit(e2, NA_character_, quote(x), s)
-  id3 <- store_commit(e3, NA_character_, quote(x), s)
+  id1 <- store_commit(e1, NA_character_, a, s)
+  id2 <- store_commit(e2, NA_character_, a, s)
+  id3 <- store_commit(e3, NA_character_, a, s)
   
   x <- restore_all_commits(s)
   x <- x[order(vapply(x, `[[`, numeric(1), 'time'))]

@@ -70,6 +70,23 @@ test_that("user-defined parents are extracted", {
 })
 
 
+test_that("literals are found", {
+  expect_literals <- function (input, expected) {
+    found <- extract_literals(input)
+    expect_equal(found, expected)
+  }
+  
+  x <- list(a = 1, b = 'x')
+  expect_literals(x, x)
+  
+  x <- list(a = 1:2, b = 'x')
+  expect_literals(x, x['b'])
+  
+  x <- list(a = 1, f = function(x)NULL)
+  expect_literals(x, x['a'])
+})
+
+
 # TODO make replacement of literals optional?
 test_that("literals are substituted", {
   expect_literals <- function (input, subst, output) {

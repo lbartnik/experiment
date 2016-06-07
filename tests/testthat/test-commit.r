@@ -7,7 +7,7 @@ test_that("create commit", {
     object_exists = mock(FALSE, cycle = TRUE),
     {
       env <- as.environment(list(a = 1, b = 2))
-      cm  <- create_commit(env, null_storage)
+      cm  <- create_commit(env, quote({a <- 1; b <- 2}), null_storage)
       
       expect_s3_class(cm, 'commit')
       expect_named(cm, 'objects')
@@ -24,7 +24,7 @@ test_that("create commit with object that exists", {
     object_exists = mock(TRUE, FALSE),
     {
       env <- as.environment(list(a = 1, b = 2))
-      cm  <- create_commit(env, null_storage)
+      cm  <- create_commit(env, quote({ b <- 2 }), null_storage)
 
       expect_s3_class(cm, 'commit')
       expect_named(cm, 'objects')
@@ -43,7 +43,8 @@ test_that("store commit", {
   cmt_id <- with_mock(restore_object = function (...) list(objects = list()),
     {
       e <- create_sample_env()
-      store_commit(e, 'parent_id', bquote(x), storage_object)
+      a <- create_sample_assignment()
+      store_commit(e, 'parent_id', a, storage_object)
     })
 
   expect_equal(count_objects(storage_object), 3)
@@ -53,20 +54,21 @@ test_that("store commit", {
   expect_equivalent(cmt$objects, c('a', 'b'))
   
   tgs <- restore_tags(storage_object, cmt_id)
-  expect_equal(tgs$history, bquote(x))
+  expect_equal(tgs$history, a)
 })
 
 
 test_that("the same commmit is not stored twice", {
   storage_object <- helper_new_storage()
   e <- create_sample_env()
+  a <- create_sample_assignment()
   
-  parent_id <- store_commit(e, NA_character_, bquote(x), storage_object)
-  child_id_1 <- store_commit(e, parent_id, bquote(x), storage_object)
+  parent_id <- store_commit(e, NA_character_, a, storage_object)
+  child_id_1 <- store_commit(e, parent_id, a, storage_object)
   
   # reverse the list of objects, should not make any difference
   f <- as.environment(as.list(e)[rev(seq_along(e))])
-  child_id_2 <- store_commit(f, parent_id, bquote(x), storage_object)
+  child_id_2 <- store_commit(f, parent_id, a, storage_object)
   
   expect_equal(parent_id, child_id_1)
   expect_equal(child_id_1, child_id_2)
@@ -77,7 +79,8 @@ test_that("the same commmit is not stored twice", {
 
 test_that("restore commit", {
   storage_object <- helper_new_storage()
-  id <- store_commit(create_sample_env(), NA_character_, bquote(x), storage_object)
+  id <- store_commit(create_sample_env(), NA_character_,
+                     create_sample_assignment(), storage_object)
   restored <- restore_commit(storage_object, id)
   
   expect_s3_class(restored, 'commit')
