@@ -3,6 +3,23 @@ context("commit")
 
 test_that("create commit", {
   with_mock(
+    store_object  = mock('id1', 'id2'),
+    object_exists = mock(FALSE, cycle = TRUE),
+    {
+      env <- as.environment(list(a = 1, b = 2))
+      cm  <- create_commit(env, null_storage)
+      
+      expect_s3_class(cm, 'commit')
+      expect_named(cm, 'objects')
+      expect_named(cm$object, c('id1', 'id2'))
+      expect_equivalent(cm$objects, c('a', 'b'))
+    }
+  )
+})
+
+
+test_that("create commit with object that exists", {
+  with_mock(
     store_object  = mock('id'),
     object_exists = mock(TRUE, FALSE),
     {
