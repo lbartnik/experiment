@@ -1,20 +1,12 @@
 Package: experiment
 Type: Package
-Title: Track experimentator's work.
+Title: Utilities
 Version: 0.1
-Date: 2016-04-26
+Date: 2016-12-06
 Author: Lukasz A. Bartnik <l.bartnik@gmail.com>
 Maintainer: Lukasz A. Bartnik <l.bartnik@gmail.com>
-Description: Keep track of all the work done when working with R.
-    Extract full execution path to create any object in the history
-    of the current session.
+Description: Utilities to ease modelling.
 License: GPL3
-Imports:
-    digest,
-    ggplot2,
-    ggnetwork,
-    lazyeval,
-    stringi
 Suggests:
     testthat,
     knitr
