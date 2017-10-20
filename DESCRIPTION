@@ -5,10 +5,12 @@ Version: 0.1
 Date: 2016-12-06
 Author: Lukasz A. Bartnik <l.bartnik@gmail.com>
 Maintainer: Lukasz A. Bartnik <l.bartnik@gmail.com>
-Description: Utilities to ease modelling.
+Description: Utilities to ease interactive work.
 License: GPL3
+Imports:
+    storage
 Suggests:
     testthat,
     knitr
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.0
