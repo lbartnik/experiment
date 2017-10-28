@@ -42,7 +42,7 @@ commit_store <- function (commit, store)
 
 
   id <- storage::os_write(store, list(objects = objects, expr = commit$expr),
-                          tags = list(parent = commit$parent))
+                          tags = list(class = 'commit', parent = commit$parent))
   commit$id <- id
   commit
 }
