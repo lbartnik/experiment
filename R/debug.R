@@ -1,0 +1,1 @@
+stash <- function () internal_state$stash

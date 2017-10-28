@@ -1,3 +1,4 @@
+#' Compare models.
 #' @export
 compare_models <- function (x, ...) UseMethod("compare_models")
 

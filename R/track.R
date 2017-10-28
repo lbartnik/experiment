@@ -15,7 +15,8 @@ internal_state <- new.env()
 initiate_state <- function ()
 {
   internal_state$tracking         <- FALSE
-  internal_state$stash            <- storage(file.path(tempdir(), 'experiment-stash'), .create = TRUE)
+  internal_state$stash            <- storage::filesystem(file.path(tempdir(), 'experiment-stash'),
+                                                         create = TRUE)
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
 #  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)

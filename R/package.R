@@ -3,7 +3,7 @@
   initiate_state()
   internal_state$task_callback_id <- addTaskCallback(task_callback)
   
-  if (interactive()) {
+  if (interactive() && FALSE) {
     tracking_on()
   }
 }
