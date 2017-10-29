@@ -3,7 +3,7 @@
 S3method(compare_models,clist)
 S3method(compare_models,default)
 S3method(compare_models,list)
-export(commit.print)
+S3method(print,commit)
 export(compare_models)
 export(tracking_off)
 export(tracking_on)

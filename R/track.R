@@ -19,6 +19,7 @@ initiate_state <- function ()
                                                          create = TRUE)
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
+  internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
 #  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
 }
 
@@ -69,10 +70,11 @@ task_callback <- function (expr, result, successful, printed)
 #' @export
 update_current_commit <- function (env, expr)
 {
-  co <- commit(as.list(env), expression, internal_state$last_commit_id)
-  id <- commit_store(co, internal_state$stash)
-
-  internal_state$last_commit_id <- id
+  co <- commit(as.list(env), expression, internal_state$last_commit$id)
+  if (!commit_equal(co, internal_state$last_commit))
+  {
+    internal_state$last_commit <- commit_store(co, internal_state$stash)
+  }
 }
 
 

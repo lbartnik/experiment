@@ -2,12 +2,12 @@
 % Please edit documentation in R/commit.R
 \name{commit}
 \alias{commit}
-\alias{commit.print}
+\alias{print.commit}
 \title{Creates a new commit object.}
 \usage{
-commit(contents, expression, parent)
+commit(contents, expression, parent, id = NA_character_)
 
-commit.print(x)
+\method{print}{commit}(x, simple, ...)
 }
 \description{
 Creates a new commit object.

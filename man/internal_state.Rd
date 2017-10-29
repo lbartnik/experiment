@@ -4,7 +4,7 @@
 \name{internal_state}
 \alias{internal_state}
 \title{Global state of the tracker.}
-\format{An object of class \code{environment} of length 4.}
+\format{An object of class \code{environment} of length 5.}
 \usage{
 internal_state
 }
