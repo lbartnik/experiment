@@ -100,7 +100,12 @@ tracking_off <- function () {
 stashed <- function (...)
 {
   dots <- lazyeval::lazy_dots(...)
-  storage::os_find(internal_state$stash, dots)
+  ids <- storage::os_find(internal_state$stash, dots)
+  
+  objs <- lapply(ids, storage::os_read_object, store = internal_state$stash)
+  names(objs) <- ids
+  
+  objs
 }
 
 

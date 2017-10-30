@@ -62,6 +62,7 @@ commit_store <- function (commit, store)
 
   # name -> ID in object store
   objects <- lapply(commit$objects, function (o) {
+    o  <- cleanup_object(o)
     id <- storage::compute_id(o)
     if (storage::os_exists(store, id)) return(id)
 
@@ -95,6 +96,31 @@ commit_store <- function (commit, store)
 auto_tags <- function (obj)
 {
   list(class = class(obj), time = Sys.time())
+}
+
+
+#' Removes references to environments.
+#' 
+#' Some objects (e.g. formula, lm) store references to environments
+#' in which they were created. This function replaces each such reference
+#' with a reference to `emptyenv()`.
+#' 
+#' @param obj Object to be processed.
+#' @return `obj` with environment references replaced by `emptyenv()`
+#' 
+cleanup_object <- function (obj)
+{
+  if (is.environment(obj)) return(emptyenv())
+  
+  attrs <- lapply(attributes(obj), cleanup_object)
+  
+  if (is.list(obj))
+  {
+    obj <- lapply(obj, cleanup_object)
+  }
+  
+  attributes(obj) <- attrs
+  obj
 }
 
 
