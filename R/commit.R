@@ -2,12 +2,13 @@
 #' Creates a new commit object.
 #'
 #'
-commit <- function (contents, expression, parent, id = NA_character_)
+commit <- function (contents, expression, parent, id = NA_character_, object_ids = list())
 {
   objects <- as.list(contents)
   stopifnot(all_named(objects))
 
-  structure(list(id = id, objects = objects, expr = expression, parent = parent),
+  structure(list(id = id, objects = objects, object_ids = object_ids,
+                 expr = expression, parent = parent),
             class = 'commit')
 }
 
@@ -25,8 +26,20 @@ print.commit <- function (x, simple, ...)
   }
   else
   {
-    cat('Commit    : ', ifelse(is.na(x$id), 'NA', x$id), '\n')
-    cat('  objects : ', names(x$objects), '\n')
+    tag_print <- function (x) {
+      if (!length(x)) return('')
+      if (length(x) < 2) return(as.character(x))
+      paste0('[', paste(x, collapse = ', '), ']')
+    }
+    
+    cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+    cat('objects :\n')
+    mapply(function (name, id) {
+      tags <- storage::os_read_tags(internal_state$stash, id)
+      tags <- vapply(tags, tag_print, character(1))
+      cat('  ', name, ': ', paste(names(tags), '=', tags, collapse = ', '), '\n')
+    }, name = names(x$objects), id = as.character(x$object_ids))
+    cat('\n')
   }
 }
 
@@ -52,7 +65,8 @@ commit_store <- function (commit, store)
     id <- storage::compute_id(o)
     if (storage::os_exists(store, id)) return(id)
 
-    storage::os_write(store, o, id = id)
+    tg <- auto_tags(o)
+    storage::os_write(store, o, id = id, tags = tg)
   })
 
   if (is.na(commit$id))
@@ -77,6 +91,13 @@ commit_store <- function (commit, store)
 }
 
 
+# TODO could be turned into a S3 method
+auto_tags <- function (obj)
+{
+  list(class = class(obj), time = Sys.time())
+}
+
+
 
 commit_restore <- function (id, store)
 {
@@ -84,8 +105,7 @@ commit_restore <- function (id, store)
             storage::is_object_store(store))
   
   co <- storage::os_read(store, id)
-  objects <- lapply(co$object$objects, storage::os_read_object,
-                    store = store)
-  
-  commit(objects, co$object$expr, co$tags$parent, id)
+  objects <- lapply(co$object$objects, storage::os_read_object, store = store)
+
+  commit(objects, co$object$expr, co$tags$parent, id, co$object$objects)
 }

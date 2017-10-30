@@ -78,8 +78,6 @@ update_current_commit <- function (env, expr)
 }
 
 
-
-
 #' Toggle tracking mode.
 #'
 #' @export
@@ -96,3 +94,14 @@ tracking_off <- function () {
   internal_state$tracking <- FALSE
   options(prompt = internal_state$old_prompt)
 }
+
+
+#' @export
+stashed <- function (...)
+{
+  dots <- lazyeval::lazy_dots(...)
+  storage::os_find(internal_state$stash, dots)
+}
+
+
+

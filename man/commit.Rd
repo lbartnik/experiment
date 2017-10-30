@@ -5,7 +5,8 @@
 \alias{print.commit}
 \title{Creates a new commit object.}
 \usage{
-commit(contents, expression, parent, id = NA_character_)
+commit(contents, expression, parent, id = NA_character_,
+  object_ids = list())
 
 \method{print}{commit}(x, simple, ...)
 }
