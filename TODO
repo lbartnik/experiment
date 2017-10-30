@@ -1,6 +1,6 @@
-* move objects to permanent storage
-* extract code that creates a given object when moving objects to
-  permanent storage
+* compare all objects of a given class, returned by `stashed()`
+* find a commit parenting a given object
+* find a full sequence of calls leading to a given object
 * UI:
   - show history of commits
   - print commits
