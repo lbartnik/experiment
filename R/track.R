@@ -94,19 +94,3 @@ tracking_off <- function () {
   internal_state$tracking <- FALSE
   options(prompt = internal_state$old_prompt)
 }
-
-
-#' @export
-stashed <- function (...)
-{
-  dots <- lazyeval::lazy_dots(...)
-  ids <- storage::os_find(internal_state$stash, dots)
-  
-  objs <- lapply(ids, storage::os_read_object, store = internal_state$stash)
-  names(objs) <- ids
-  
-  objs
-}
-
-
-
