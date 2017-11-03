@@ -31,17 +31,16 @@ wrap_result <- function (res)
 by_class <- function (cls) wrap_result(stashed(class == cls))
 
 
-by_fun <- function (fun)
+commit_by_id <- function (id)
 {
-  ids <- storage::os_list(internal_state$stash)
+  ids <- storage::os_find(internal_state$stash, lazy_dots(class == 'commit'))
   
-  ids <- Filter(function (id) {
-    obj  <- NULL
-    tags <- storage::os_read_tags(internal_state$stash, id)
-    isTRUE(fun(obj, tags))
-  }, ids)
+  cmts <- lapply(ids, function (commit_id) {
+    co <- commit_restore(commit_id, internal_state$stash)
+    if (isTRUE(id %in% as.character(co$object_ids))) co else NULL
+  })
   
-  lapply(ids, storage::os_read_object, store = internal_state$stash)
+  cmts[!vapply(cmts, is.null, logical(1))]
 }
 
 
@@ -60,7 +59,7 @@ print.results <- function (x, ...)
 
 
 #' @export
-`.DollarNames.list_result` <- function (x, pattern = "")
+`.DollarNames.results` <- function (x, pattern = "")
 {
   ids <- vapply(x, `[[`, character(1), i = 'id')
   srt <- storage::shorten(ids)
@@ -73,34 +72,41 @@ print.results <- function (x, ...)
 #' @export
 `$.results` <- function (x, i)
 {
+  ids <- vapply(x, `[[`, character(1), i = 'id')
+  short_ids <- storage::shorten(ids)
+  
   if (identical(i, 'tidy')) {
     rows <- lapply(x, function (x) broom::tidy(x$object))
-    ids <- vapply(x, `[[`, character(1), i = 'id')
-    return(cbind(
-      id = storage::shorten(ids),
-      do.call(rbind, rows)
-    ))
+    return(cbind(id = short_ids, do.call(rbind, rows)))
   }
   
+  if (length(j <- match(i, short_ids))) return(x[[j]])
+  if (length(j <- match(i, ids))) return(x[[j]])
+
   stop('unknown option: ', i, call. = FALSE)
 }
 
 
 # --- single result object ---
 
-`.DollarNames.result` <- function (x, pattern)
+#' @export
+`.DollarNames.result` <- function (x, pattern = "")
 {
-  c('commit', 'object')
+  grep(pattern, c('commit', 'object', 'id'), value = TRUE)
 }
 
 
 `$.result` <- function (x, i)
 {
-  if (identical(i, 'commit')) {
-    by_fun(function(obj, tags) { stop('I do not have the id')})
+  if (identical(i, 'id') || identical(i, 'object')) {
+    return(x[[i]])
   }
 
-#  stop('unknown option: ', i, call. = FALSE)
+  if (identical(i, 'commit')) {
+    return(commit_by_id(x$id))
+  }
+
+  stop('unknown option: ', i, call. = FALSE)
 }
 
 

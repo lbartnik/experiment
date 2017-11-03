@@ -8,7 +8,7 @@
 commit(contents, expression, parent, id = NA_character_,
   object_ids = list())
 
-\method{print}{commit}(x, simple, ...)
+\method{print}{commit}(x, simple = FALSE, ...)
 }
 \description{
 Creates a new commit object.

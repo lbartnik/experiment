@@ -18,7 +18,7 @@ is_commit <- function (x) inherits(x, 'commit')
 
 #' @export
 #' @rdname commit
-print.commit <- function (x, simple, ...)
+print.commit <- function (x, simple = FALSE, ...)
 {
   if (isTRUE(simple))
   {
