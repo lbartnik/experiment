@@ -14,6 +14,23 @@ stashed <- function (...)
 }
 
 
+wrap_result <- function (res)
+{
+  stopifnot(is.list(res), all_named(res))
+
+  res <-
+    mapply(function (obj, id) structure(list(object = obj, id = id), class = 'result'),
+           obj = res, id = names(res), SIMPLIFY = FALSE, USE.NAMES = FALSE)
+
+  class(res) <- 'results'
+  res
+}
+
+
+#' @export
+by_class <- function (cls) wrap_result(stashed(class == cls))
+
+
 by_fun <- function (fun)
 {
   ids <- storage::os_list(internal_state$stash)
@@ -28,36 +45,24 @@ by_fun <- function (fun)
 }
 
 
-#' @export
-by_class <- function (cls)
-{
-  objs <- stashed(class == cls)
-  objs <- lapply(objs, function (obj) {
-    class(obj) <- c('result', class(obj))
-    obj
-  })
-  class(objs) <- 'list_result'
-  objs
-}
-
-
 # --- a collection of results ---
 
 #' @export
-print.list_result <- function (x, ...)
+print.results <- function (x, ...)
 {
   stopifnot(is.list(x))
-  mapply(function (obj, id) {
-    cat(crayon::green(storage::shorten(id)), ': ')
-    print(obj, indent = 10)
-  }, obj = x, id = names(x))
+
+  lapply(x, function (result) {
+    cat(crayon::green(storage::shorten(result[['id']])), ': ')
+    print(result, indent = 10)
+  })
 }
 
 
 #' @export
 `.DollarNames.list_result` <- function (x, pattern = "")
 {
-  ids <- names(x)
+  ids <- vapply(x, `[[`, character(1), i = 'id')
   srt <- storage::shorten(ids)
   ids <- if (anyDuplicated(srt)) ids else srt
 
@@ -66,13 +71,13 @@ print.list_result <- function (x, ...)
 
 
 #' @export
-`$.list_result` <- function (x, i)
+`$.results` <- function (x, i)
 {
   if (identical(i, 'tidy')) {
-    rows <- lapply(x, function (obj) { broom::tidy(`class<-`(obj, setdiff(class(obj), 'result')))})
-    names(rows) <- NULL
+    rows <- lapply(x, function (x) broom::tidy(x$object))
+    ids <- vapply(x, `[[`, character(1), i = 'id')
     return(cbind(
-      id = storage::shorten(names(x)),
+      id = storage::shorten(ids),
       do.call(rbind, rows)
     ))
   }
@@ -100,7 +105,7 @@ print.list_result <- function (x, ...)
 
 
 #' @export
-print.result <- function (x, ...) print_result(x, ...)
+print.result <- function (x, ...) print_result(x[['object']], ...)
 
 
 #' @export
@@ -109,15 +114,12 @@ print_result <- function (x, ...) UseMethod("print_result")
 #' @export
 print_result.default <- function (x, ...)
 {
-  class(x) <- setdiff(x, 'result')
   print(x)
 }
 
 #' @export
 print_result.lm <- function (x, digits = 2, indent = 0, ...)
 {
-  class(x) <- setdiff(class(x), 'result')
-
   glance <- broom::glance(x)
   values <- format(glance, digits = digits)
   glance <- paste(names(glance), values, sep = ':', collapse = ' ')
