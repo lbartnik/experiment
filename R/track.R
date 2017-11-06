@@ -78,6 +78,18 @@ update_current_commit <- function (env, expr)
 }
 
 
+restore_historical_commit <- function (co)
+{
+  stopifnot(is_commit(co))
+  
+  internal_state$last_commit <- co$id
+  rm(list = ls(envir = globalenv()), envir = globalenv())
+  mapply(function (name, value) assign(x = name, value = value, envir = globalenv()),
+         name = names(co$objects), value = co$objects)
+}
+
+
+
 #' Toggle tracking mode.
 #'
 #' @export

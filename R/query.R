@@ -18,19 +18,6 @@ stashed <- function (...)
 by_class <- function (cls) results(stashed(class == cls))
 
 
-commit_by_id <- function (id)
-{
-  ids <- storage::os_find(internal_state$stash, lazy_dots(class == 'commit'))
-  
-  cmts <- lapply(ids, function (commit_id) {
-    co <- commit_restore(commit_id, internal_state$stash)
-    if (isTRUE(id %in% as.character(co$object_ids))) co else NULL
-  })
-  
-  cmts[!vapply(cmts, is.null, logical(1))]
-}
-
-
 # --- wrappers ---
 
 

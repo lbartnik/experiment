@@ -18,36 +18,6 @@ commit <- function (contents, expression, parent, id, object_ids)
 
 is_commit <- function (x) inherits(x, 'commit')
 
-
-#' @export
-#' @rdname commit
-print.commit <- function (x, simple = FALSE, ...)
-{
-  if (isTRUE(simple))
-  {
-    cat(substr(x$id, 1, 8), ': ', names(x$objects), '\n')
-  }
-  else
-  {
-    tag_print <- function (x) {
-      if (!length(x)) return('')
-      if (length(x) < 2) return(as.character(x))
-      paste0('[', paste(x, collapse = ', '), ']')
-    }
-    
-    cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
-    cat('objects :\n')
-    mapply(function (name, id) {
-      tags <- storage::os_read_tags(internal_state$stash, id)
-      tags <- vapply(tags, tag_print, character(1))
-      cat('  ', name, ': ', paste(names(tags), '=', tags, collapse = ', '), '\n')
-    }, name = names(x$objects), id = as.character(x$object_ids))
-    cat('\n')
-  }
-}
-
-
-
 commit_equal <- function (a, b)
 {
   stopifnot(is_commit(a), is_commit(b))
@@ -95,6 +65,32 @@ commit_store <- function (commit, store)
 }
 
 
+
+commit_restore <- function (id, store, .data = TRUE)
+{
+  stopifnot(is_nonempty_character(id),
+            storage::is_object_store(store))
+  
+  co <- storage::os_read(store, id)
+  objects <- lapply(co$object$objects, function (id) NA_character_)
+
+  co <- commit(objects, co$object$expr, co$tags$parent, id, co$object$objects)
+  if (isTRUE(.data)) {
+    co <- commit_restore_data(co, store)
+  }
+  
+  co
+}
+
+
+commit_restore_data <- function (co, store)
+{
+  co$objects <- lapply(co$object_ids, function (id) storage::os_read_object(store, id))
+  co
+}
+
+
+
 # TODO could be turned into a S3 method
 auto_tags <- function (obj)
 {
@@ -128,20 +124,66 @@ cleanup_object <- function (obj)
 
 
 
-commit_restore <- function (id, store, .data = TRUE)
-{
-  stopifnot(is_nonempty_character(id),
-            storage::is_object_store(store))
-  
-  co <- storage::os_read(store, id)
 
-  if (isTRUE(.data)) {
-    object_restore <- function (id) storage::os_read_object(store, id)
+#' @export
+#' @rdname commit
+print.commit <- function (x, simple = FALSE, ...)
+{
+  if (isTRUE(simple))
+  {
+    cat(substr(x$id, 1, 8), ': ', names(x$objects), '\n')
   }
-  else {
-    object_restore <- function (id) NA_character_  
+  else
+  {
+    tag_print <- function (x) {
+      if (!length(x)) return('')
+      if (length(x) < 2) return(as.character(x))
+      paste0('[', paste(x, collapse = ', '), ']')
+    }
+    
+    cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+    cat('objects :\n')
+    mapply(function (name, id) {
+      tags <- storage::os_read_tags(internal_state$stash, id)
+      tags <- vapply(tags, tag_print, character(1))
+      cat('  ', name, ': ', paste(names(tags), '=', tags, collapse = ', '), '\n')
+    }, name = names(x$objects), id = as.character(x$object_ids))
+    cat('\n')
+  }
+}
+
+
+#' @export
+`.DollarNames.commit` <- function (x, pattern = "")
+{
+  grep(pattern, c("restore", names(x)), value = TRUE)
+}
+
+
+#' @export
+`$.commit` <- function (x, i = "")
+{
+  if (isTRUE(i %in% names(x))) {
+    return(x[[i]])
   }
   
-  objects <- lapply(co$object$objects, object_restore)
-  commit(objects, co$object$expr, co$tags$parent, id, co$object$objects)
+  # RStudio calls the operator so we cannot restore directly, but only
+  # after the user confirms the command and its return value is printed
+  if (identical(i, "restore")) {
+    return(structure(list(commit = x), class = 'restorer'))
+  }
+  
+  stop("unknown option: ", i, call. = FALSE)
 }
+
+
+#' @export
+print.restorer <- function (x)
+{
+  co <- commit_restore_data(x$commit, internal_state$stash)
+  restore_historical_commit(co)
+  message(crayon::green('Commit restored'))
+  print(co)
+}
+
+
