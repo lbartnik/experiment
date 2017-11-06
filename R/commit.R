@@ -2,10 +2,13 @@
 #' Creates a new commit object.
 #'
 #'
-commit <- function (contents, expression, parent, id = NA_character_, object_ids = list())
+commit <- function (contents, expression, parent, id, object_ids)
 {
   objects <- as.list(contents)
   stopifnot(all_named(objects))
+  
+  if (missing(id)) id <- NA_character_
+  if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
 
   structure(list(id = id, objects = objects, object_ids = object_ids,
                  expr = expression, parent = parent),
@@ -125,13 +128,20 @@ cleanup_object <- function (obj)
 
 
 
-commit_restore <- function (id, store)
+commit_restore <- function (id, store, .data = TRUE)
 {
   stopifnot(is_nonempty_character(id),
             storage::is_object_store(store))
   
   co <- storage::os_read(store, id)
-  objects <- lapply(co$object$objects, storage::os_read_object, store = store)
 
+  if (isTRUE(.data)) {
+    object_restore <- function (id) storage::os_read_object(store, id)
+  }
+  else {
+    object_restore <- function (id) NA_character_  
+  }
+  
+  objects <- lapply(co$object$objects, object_restore)
   commit(objects, co$object$expr, co$tags$parent, id, co$object$objects)
 }

@@ -14,21 +14,8 @@ stashed <- function (...)
 }
 
 
-wrap_result <- function (res)
-{
-  stopifnot(is.list(res), all_named(res))
-
-  res <-
-    mapply(function (obj, id) structure(list(object = obj, id = id), class = 'result'),
-           obj = res, id = names(res), SIMPLIFY = FALSE, USE.NAMES = FALSE)
-
-  class(res) <- 'results'
-  res
-}
-
-
 #' @export
-by_class <- function (cls) wrap_result(stashed(class == cls))
+by_class <- function (cls) results(stashed(class == cls))
 
 
 commit_by_id <- function (id)
@@ -44,17 +31,50 @@ commit_by_id <- function (id)
 }
 
 
-# --- a collection of results ---
+# --- wrappers ---
+
+
+#' A single result.
+result <- function (object, id)
+{
+  structure(list(object = object, id = id), class = 'result')
+}
+
+
+#' A set (list) of results.
+results <- function (res)
+{
+  stopifnot(is.list(res), all_named(res))
+  
+  structure(
+    mapply(result, object = res, id = names(res), SIMPLIFY = FALSE, USE.NAMES = FALSE),
+    class = 'results'
+  )
+}
+
+
 
 #' @export
-print.results <- function (x, ...)
+`.DollarNames.result` <- function (x, pattern = "")
 {
-  stopifnot(is.list(x))
+  grep(pattern, c('commit', 'object', 'id'), value = TRUE)
+}
 
-  lapply(x, function (result) {
-    cat(crayon::green(storage::shorten(result[['id']])), ': ')
-    print(result, indent = 10)
-  })
+
+`$.result` <- function (x, i)
+{
+  if (identical(i, 'id') || identical(i, 'object')) {
+    return(x[[i]])
+  }
+  
+  if (identical(i, 'commit')) {
+    g <- graph(internal_state$stash)
+    g <- Filter(function (co) (x$id %in% co$object_ids), g)
+    i <- which.min(vapply(g, function (co) co$level, numeric(1)))
+    return(g[[i]])
+  }
+  
+  stop('unknown option: ', i, call. = FALSE)
 }
 
 
@@ -64,7 +84,7 @@ print.results <- function (x, ...)
   ids <- vapply(x, `[[`, character(1), i = 'id')
   srt <- storage::shorten(ids)
   ids <- if (anyDuplicated(srt)) ids else srt
-
+  
   grep(pattern, c('tidy', ids), value = TRUE)
 }
 
@@ -82,31 +102,22 @@ print.results <- function (x, ...)
   
   if (length(j <- match(i, short_ids))) return(x[[j]])
   if (length(j <- match(i, ids))) return(x[[j]])
-
+  
   stop('unknown option: ', i, call. = FALSE)
 }
 
 
-# --- single result object ---
+# --- printing ---
 
 #' @export
-`.DollarNames.result` <- function (x, pattern = "")
+print.results <- function (x, ...)
 {
-  grep(pattern, c('commit', 'object', 'id'), value = TRUE)
-}
+  stopifnot(is.list(x))
 
-
-`$.result` <- function (x, i)
-{
-  if (identical(i, 'id') || identical(i, 'object')) {
-    return(x[[i]])
-  }
-
-  if (identical(i, 'commit')) {
-    return(commit_by_id(x$id))
-  }
-
-  stop('unknown option: ', i, call. = FALSE)
+  lapply(x, function (result) {
+    cat(crayon::green(storage::shorten(result[['id']])), ': ')
+    print(result, indent = 10)
+  })
 }
 
 
