@@ -5,9 +5,9 @@
 \alias{print.commit}
 \title{Creates a new commit object.}
 \usage{
-commit(contents, expression, parent, id = NA_character_)
+commit(contents, expression, parent, id, object_ids)
 
-\method{print}{commit}(x, simple, ...)
+\method{print}{commit}(x, simple = FALSE, ...)
 }
 \description{
 Creates a new commit object.

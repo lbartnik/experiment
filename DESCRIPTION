@@ -8,6 +8,8 @@ Maintainer: Lukasz A. Bartnik <l.bartnik@gmail.com>
 Description: Utilities to ease interactive work.
 License: GPL3
 Imports:
+    broom,
+    crayon,
     storage
 Suggests:
     testthat,
