@@ -1,7 +1,7 @@
 graph <- function (store)
 {
   # read all commits
-  ids <- storage::os_find(store, lazy_dots(class == 'commit'))
+  ids <- storage::os_find(store, lazyeval::lazy_dots(class == 'commit'))
   
   cmts <- lapply(ids, function (commit_id) 
     commit_restore(commit_id, internal_state$stash, .data = FALSE))
@@ -29,3 +29,17 @@ children <- function (commits, id, level)
 }
 
 
+#' @export
+#' @importFrom magrittr %>%
+#' 
+plot.graph <- function (x, ...)
+{
+  nodes <- list()
+  edges <- list()
+  
+  DiagrammeR::create_graph() %>%
+    DiagrammeR::add_nodes_from_table(
+      table = nodes
+    )
+  
+}
