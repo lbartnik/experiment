@@ -31,15 +31,27 @@ children <- function (commits, id, level)
 
 #' @export
 #' @importFrom magrittr %>%
+#' @import htmlwidgets
 #' 
 plot.graph <- function (x, ...)
 {
-  nodes <- list()
+  nodes <- data.frame(id = vapply(x, `[[`, i = 'id', character(1)) %>% unname %>% storage::shorten(),
+                      stringsAsFactors = FALSE)
   edges <- list()
   
-  DiagrammeR::create_graph() %>%
-    DiagrammeR::add_nodes_from_table(
-      table = nodes
-    )
+  x <- list(
+    data = list(
+      nodes = nodes,
+      edges = edges
+    ),
+    settings = list()
+  )
   
+  # create the widget
+  htmlwidgets::createWidget("experiment", x, width = NULL, height = NULL)
 }
+
+
+
+
+
