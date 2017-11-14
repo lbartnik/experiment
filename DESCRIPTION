@@ -10,7 +10,7 @@ License: GPL3
 Imports:
     broom,
     crayon,
-    DiagrammeR (>= 0.9.3),
+    htmlwidgets,
     magrittr,
     storage
 Suggests:

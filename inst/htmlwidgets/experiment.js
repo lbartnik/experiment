@@ -13,7 +13,7 @@ HTMLWidgets.widget({
     return {
       renderValue: function(x) {
         visvis.setOptions(x.settings);
-        visvis.setData(x.data.nodes, x.data.edges);
+        visvis.setData(x.data);
       },
       
       resize: function(width, height) {

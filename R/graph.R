@@ -30,27 +30,37 @@ children <- function (commits, id, level)
 
 
 #' @export
-#' @importFrom magrittr %>%
 #' @import htmlwidgets
 #' 
 plot.graph <- function (x, ...)
 {
-  nodes <- data.frame(id = vapply(x, `[[`, i = 'id', character(1)) %>% unname %>% storage::shorten(),
-                      stringsAsFactors = FALSE)
-  edges <- list()
+  x <- unname(x)
+
+  nodes <- lapply(x, function (n) list(
+    id = n$id,
+    label = storage::shorten(n$id)
+  ))
+
+  edges <- lapply(x, function (n) {
+    lapply(n$children, function (c) list(from = n$id, to = c))
+  })
+  edges <- unlist(edges, recursive = FALSE)
   
   x <- list(
     data = list(
       nodes = nodes,
       edges = edges
     ),
-    settings = list()
+    settings = list(autoResize = TRUE)
   )
   
   # create the widget
   htmlwidgets::createWidget("experiment", x, width = NULL, height = NULL)
 }
 
+
+#' @export
+fullhistory <- function() graph(internal_state$stash)
 
 
 
