@@ -1,7 +1,22 @@
 #' @export
 #' @import storage
-modelling <- function ()
+modelling <- function (overwrite = FALSE)
 {
+  if (length(storage::os_list(internal_state$stash))) {
+    if (!isTRUE(overwrite)) {
+      stop("stash is not empty and `overwrite` is FALSE, aborting",
+           call. = FALSE)
+    }
+    
+    warning("stash is not empty and `overwrite` is TRUE, removing data", call. = FALSE)
+    storage::os_remove(internal_state$stash)
+    internal_state$stash <- create_stash()
+  }
+  
   path <- file.path(system.file("examples", package = "experiment"), 'modelling')
-  storage::filesystem(path, create = FALSE)
+  file.copy(from = list.files(path, full.names = TRUE),
+            to = as.character(internal_state$stash),
+            recursive = TRUE)
+  
+  invisible()
 }

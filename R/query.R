@@ -34,8 +34,10 @@ query_by <- function (...)
 #' @export
 query_by_class <- function (value) results(stashed(class == value))
 
+
 #' @export
-query_by_name <- function (value) {
+query_by_name <- function (value)
+{
   cmts <- stashed(class == 'commit')
   ids <- lapply(cmts, function (co) {
     m <- match(value, names(co$objects))
@@ -44,4 +46,11 @@ query_by_name <- function (value) {
   })
   ids <- unique(unlist(ids))
   results(stashed(ids = ids))
+}
+
+
+#' @export
+explain <- function (id)
+{
+  
 }
