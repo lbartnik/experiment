@@ -44,30 +44,40 @@ find_first_parent <- function (g, id)
 #' @rdname graph
 #' @export
 #' @import htmlwidgets
+#' @import dplyr
+#' @importFrom magrittr %>%
 #' 
 #' @examples
 #' plot(graph(modelling()))
 #' 
 plot.graph <- function (x, ...)
 {
-  x <- unname(x)
-
-  nodes <- lapply(x, function (n) {
-    commit <- list(id = n$id, label = storage::shorten(n$id), color = '#0ff')
-    variables <- list(id = paste0(n$id, "objs"),
-                      label = paste(names(n$objects), collapse = ", "),
-                      color = "yellow")
-    c(list(commit), list(variables))
-  })
-  nodes <- unlist(nodes, recursive = FALSE)
+  node_color <- function (n)
+  {
+    if (identical(n$id, internal_state$last_commit)) return('red')
+    if (is.na(n$parent)) return('green')
+    '#0ff'
+  }
+  
+  nodes <- lapply(x, function (n) list(id = n$id,
+                                       label = storage::shorten(n$id),
+                                       color = node_color(n),
+                                       x     = n$level))
+  vars  <- lapply(x, function (n) list(id = paste0(n$id, "objs"),
+                                       label = paste(names(n$objects), collapse = ", "),
+                                       color = "yellow"))
+  nodes <-
+    dplyr::bind_rows(c(nodes, vars)) %>%
+    apply(1, as.list)
 
   edges <- lapply(x, function (n) {
     c(lapply(n$children, function (c) list(from = n$id, to = c)),
       list(list(from = n$id, to = paste0(n$id, "objs"))))
-  })
-  edges <- unlist(edges, recursive = FALSE)
+  }) %>%
+    unlist(recursive = FALSE) %>%
+    unname
   
-  x <- list(
+  input <- list(
     data = list(
       nodes = nodes,
       edges = edges
@@ -76,7 +86,7 @@ plot.graph <- function (x, ...)
   )
   
   # create the widget
-  htmlwidgets::createWidget("experiment", x, width = NULL, height = NULL)
+  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }
 
 
