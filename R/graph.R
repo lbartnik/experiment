@@ -1,10 +1,14 @@
+#' Graph of commits.
+#' 
+#' @export
+#' @import storage
 graph <- function (store)
 {
   # read all commits
-  ids <- storage::os_find(store, lazy_dots(class == 'commit'))
+  ids <- storage::os_find(store, lazyeval::lazy_dots(class == 'commit'))
   
   cmts <- lapply(ids, function (commit_id) 
-    commit_restore(commit_id, internal_state$stash, .data = FALSE))
+    commit_restore(commit_id, store, .data = FALSE))
   names(cmts) <- vapply(cmts, `[[`, character(1), i = 'id')
 
   # identify children and levels; start with root
@@ -27,5 +31,48 @@ children <- function (commits, id, level)
   
   commits
 }
+
+
+#' @rdname graph
+#' @export
+#' @import htmlwidgets
+#' 
+#' @examples
+#' plot(graph(modelling()))
+#' 
+plot.graph <- function (x, ...)
+{
+  x <- unname(x)
+
+  nodes <- lapply(x, function (n) {
+    commit <- list(id = n$id, label = storage::shorten(n$id), color = '#0ff')
+    variables <- list(id = paste0(n$id, "objs"),
+                      label = paste(names(n$objects), collapse = ", "),
+                      color = "yellow")
+    c(list(commit), list(variables))
+  })
+  nodes <- unlist(nodes, recursive = FALSE)
+
+  edges <- lapply(x, function (n) {
+    c(lapply(n$children, function (c) list(from = n$id, to = c)),
+      list(list(from = n$id, to = paste0(n$id, "objs"))))
+  })
+  edges <- unlist(edges, recursive = FALSE)
+  
+  x <- list(
+    data = list(
+      nodes = nodes,
+      edges = edges
+    ),
+    settings = list(autoResize = TRUE)
+  )
+  
+  # create the widget
+  htmlwidgets::createWidget("experiment", x, width = NULL, height = NULL)
+}
+
+
+#' @export
+fullhistory <- function() graph(internal_state$stash)
 
 
