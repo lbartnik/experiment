@@ -1,3 +1,5 @@
+#' Graph of commits.
+#' 
 #' @export
 #' @import storage
 graph <- function (store)
@@ -31,8 +33,12 @@ children <- function (commits, id, level)
 }
 
 
+#' @rdname graph
 #' @export
 #' @import htmlwidgets
+#' 
+#' @examples
+#' plot(graph(modelling()))
 #' 
 plot.graph <- function (x, ...)
 {
