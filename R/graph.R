@@ -1,10 +1,12 @@
+#' @export
+#' @import storage
 graph <- function (store)
 {
   # read all commits
   ids <- storage::os_find(store, lazyeval::lazy_dots(class == 'commit'))
   
   cmts <- lapply(ids, function (commit_id) 
-    commit_restore(commit_id, internal_state$stash, .data = FALSE))
+    commit_restore(commit_id, store, .data = FALSE))
   names(cmts) <- vapply(cmts, `[[`, character(1), i = 'id')
 
   # identify children and levels; start with root
@@ -66,7 +68,5 @@ plot.graph <- function (x, ...)
 
 #' @export
 fullhistory <- function() graph(internal_state$stash)
-
-
 
 
