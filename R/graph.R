@@ -36,13 +36,18 @@ plot.graph <- function (x, ...)
 {
   x <- unname(x)
 
-  nodes <- lapply(x, function (n) list(
-    id = n$id,
-    label = storage::shorten(n$id)
-  ))
+  nodes <- lapply(x, function (n) {
+    commit <- list(id = n$id, label = storage::shorten(n$id), color = '#0ff')
+    variables <- list(id = paste0(n$id, "objs"),
+                      label = paste(names(n$objects), collapse = ", "),
+                      color = "yellow")
+    c(list(commit), list(variables))
+  })
+  nodes <- unlist(nodes, recursive = FALSE)
 
   edges <- lapply(x, function (n) {
-    lapply(n$children, function (c) list(from = n$id, to = c))
+    c(lapply(n$children, function (c) list(from = n$id, to = c)),
+      list(list(from = n$id, to = paste0(n$id, "objs"))))
   })
   edges <- unlist(edges, recursive = FALSE)
   
