@@ -33,6 +33,14 @@ children <- function (commits, id, level)
 }
 
 
+find_first_parent <- function (g, id)
+{
+  g <- Filter(function (co) (id %in% co$object_ids), g)
+  i <- which.min(vapply(g, function (co) co$level, numeric(1)))
+  g[[i]]
+}
+
+
 #' @rdname graph
 #' @export
 #' @import htmlwidgets

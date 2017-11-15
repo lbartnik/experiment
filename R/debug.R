@@ -40,7 +40,6 @@ simulate_modelling <- function ()
   simulate_user_command(iris2 <- iris, user_space)
   simulate_user_command(iris2$Sepal.Length <- iris2$Sepal.Length ** 2, user_space)
   simulate_user_command(y <- lm(Sepal.Width ~ Sepal.Length, iris2), user_space)
-  
 }
 
 

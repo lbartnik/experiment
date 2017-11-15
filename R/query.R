@@ -52,5 +52,10 @@ query_by_name <- function (value)
 #' @export
 explain <- function (id)
 {
+  # TODO handle short id and long id
   
+  g <- graph(internal_state$stash)
+  c <- find_first_parent(g, id)
+  
+  cat(format(c$expr))
 }

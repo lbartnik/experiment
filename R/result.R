@@ -29,6 +29,7 @@ is_results <- function (x) inherits(x, "results")
 }
 
 
+#' @export
 `$.result` <- function (x, i)
 {
   if (identical(i, 'id') || identical(i, 'object')) {
@@ -37,9 +38,7 @@ is_results <- function (x) inherits(x, "results")
   
   if (identical(i, 'commit')) {
     g <- graph(internal_state$stash)
-    g <- Filter(function (co) (x$id %in% co$object_ids), g)
-    i <- which.min(vapply(g, function (co) co$level, numeric(1)))
-    return(g[[i]])
+    return(find_first_parent(g, x$id))
   }
   
   stop('unknown option: ', i, call. = FALSE)

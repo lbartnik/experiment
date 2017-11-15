@@ -75,7 +75,7 @@ task_callback <- function (expr, result, successful, printed)
 #' @export
 update_current_commit <- function (env, expr)
 {
-  co <- commit(as.list(env), expression, internal_state$last_commit$id)
+  co <- commit(as.list(env), expr, internal_state$last_commit$id)
   if (!commit_equal(co, internal_state$last_commit))
   {
     internal_state$last_commit <- commit_store(co, internal_state$stash)
