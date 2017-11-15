@@ -50,6 +50,8 @@ query_by_name <- function (value)
 
 
 #' @export
+#' @import storage
+#' @import crayon
 explain <- function (id)
 {
   # TODO handle short id and long id
@@ -57,5 +59,7 @@ explain <- function (id)
   g <- graph(internal_state$stash)
   c <- find_first_parent(g, id)
   
-  cat(format(c$expr))
+  t <- storage::os_read_tags(internal_state$stash, id)
+  
+  cat("in commit", crayon::yellow(storage::shorten(c$id)), ": ", crayon::green(format(c$expr)))
 }
