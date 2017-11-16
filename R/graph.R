@@ -1,22 +1,25 @@
 #' Graph of commits.
-#' 
+#'
 #' @export
 #' @import storage
 graph <- function (store)
 {
   # read all commits
   ids <- storage::os_find(store, lazyeval::lazy_dots(class == 'commit'))
-  
-  cmts <- lapply(ids, function (commit_id) 
+
+  cmts <- lapply(ids, function (commit_id)
     commit_restore(commit_id, store, .data = FALSE))
   names(cmts) <- vapply(cmts, `[[`, character(1), i = 'id')
 
   # identify children and levels; start with root
   root <- names(Filter(function (co) is.na(co$parent), cmts))
   cmts <- children(cmts, root, 1)
-  
+
   structure(cmts, class = 'graph')
 }
+
+
+is_graph <- function (x) inherits(x, 'graph')
 
 
 children <- function (commits, id, level)
@@ -28,7 +31,7 @@ children <- function (commits, id, level)
   for (id in found) {
     commits <- children(commits, id, level + 1)
   }
-  
+
   commits
 }
 
@@ -46,10 +49,10 @@ find_first_parent <- function (g, id)
 #' @import htmlwidgets
 #' @import dplyr
 #' @importFrom magrittr %>%
-#' 
+#'
 #' @examples
 #' plot(graph(modelling()))
-#' 
+#'
 plot.graph <- function (x, ...)
 {
   node_color <- function (n)
@@ -58,7 +61,7 @@ plot.graph <- function (x, ...)
     if (is.na(n$parent)) return('green')
     '#0ff'
   }
-  
+
   nodes <- lapply(x, function (n) list(id = n$id,
                                        label = storage::shorten(n$id),
                                        color = node_color(n),
@@ -76,7 +79,7 @@ plot.graph <- function (x, ...)
   }) %>%
     unlist(recursive = FALSE) %>%
     unname
-  
+
   input <- list(
     data = list(
       nodes = nodes,
@@ -84,7 +87,7 @@ plot.graph <- function (x, ...)
     ),
     settings = list(autoResize = TRUE)
   )
-  
+
   # create the widget
   htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }

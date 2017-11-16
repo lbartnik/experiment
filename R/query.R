@@ -8,10 +8,10 @@ stashed <- function (..., ids)
     dots <- lazyeval::lazy_dots(...)
     ids <- storage::os_find(internal_state$stash, dots)
   }
-  
+
   objs <- lapply(ids, storage::os_read_object, store = internal_state$stash)
   names(objs) <- ids
-  
+
   objs
 }
 
@@ -21,7 +21,7 @@ stashed <- function (..., ids)
 query_by <- function (...)
 {
   dots <- lazyeval::lazy_dots(...)
-  
+
   check <- list(class = function(...) "class",
                 name = function(...) "name")
 
@@ -54,12 +54,38 @@ query_by_name <- function (value)
 #' @import crayon
 explain <- function (id)
 {
-  # TODO handle short id and long id
-  
+  stopifnot(is_nonempty_character(id))
+  id <- to_long(id, internal_state$stash)
+
   g <- graph(internal_state$stash)
   c <- find_first_parent(g, id)
-  
+
+  explain_parents(g, id)
+
   t <- storage::os_read_tags(internal_state$stash, id)
-  
   cat("in commit", crayon::yellow(storage::shorten(c$id)), ": ", crayon::green(format(c$expr)))
+}
+
+
+#' @import defer
+explain_parents <- function (graph, id)
+{
+  stopifnot(is_graph(graph))
+  c <- find_first_parent(graph, id)
+  if (is.na(c$parent)) return()
+
+  p <- commit_restore(c$parent, internal_state$stash, .data = FALSE)
+
+  f <- function(){}; body(f) <- c$expr
+
+  d <- defer_(f, .caller_env = as.environment(p$object_ids), .extract = T)
+  v <- extract_variables(d)
+
+  if (length(v)) {
+    lapply(as.character(v), function (id) explain_parents(graph, id))
+  }
+
+  cat(format(c$expr), '\n')
+
+  invisible()
 }

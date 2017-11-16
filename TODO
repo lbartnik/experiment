@@ -1,7 +1,8 @@
-* compare all objects of a given class, returned by `stashed()`
-* find a commit parenting a given object
-* find a full sequence of calls leading to a given object
+* explain: find a full sequence of calls leading to a given object
+  - option to plot explanation as a graph with vis.js
 * UI:
   - show history of commits
   - print commits
   - do not print commits in stashed()
+* move plot.result to compare - plot.result should show something
+  similar to plot.graph - a graph of inter-related objects
