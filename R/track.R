@@ -15,14 +15,19 @@ internal_state <- new.env()
 initiate_state <- function ()
 {
   internal_state$tracking         <- FALSE
-  internal_state$stash            <- storage::filesystem(file.path(tempdir(), 'experiment-stash'),
-                                                         create = TRUE)
+  internal_state$stash            <- create_stash()
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
   internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
 #  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
 }
 
+
+create_stash <- function ()
+{
+  storage::filesystem(file.path(tempdir(), 'experiment-stash'),
+                      create = TRUE)
+}
 
 
 #' A callback run after each top-level expression is evaluated.
@@ -70,7 +75,7 @@ task_callback <- function (expr, result, successful, printed)
 #' @export
 update_current_commit <- function (env, expr)
 {
-  co <- commit(as.list(env), expression, internal_state$last_commit$id)
+  co <- commit(as.list(env), expr, internal_state$last_commit$id)
   if (!commit_equal(co, internal_state$last_commit))
   {
     internal_state$last_commit <- commit_store(co, internal_state$stash)

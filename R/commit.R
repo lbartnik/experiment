@@ -6,7 +6,7 @@ commit <- function (contents, expression, parent, id, object_ids)
 {
   objects <- as.list(contents)
   stopifnot(all_named(objects))
-  
+
   if (missing(id)) id <- NA_character_
   if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
 
@@ -47,7 +47,7 @@ commit_store <- function (commit, store)
   {
     commit$id <- storage::compute_id(commit)
   }
-  
+
   # this should never happen because hash is computed from
   # both objects and parent id; if it does happen, something
   # is seriously broken
@@ -56,7 +56,7 @@ commit_store <- function (commit, store)
     stop("commit already exists, aborting", call. = FALSE)
   }
 
-  # store list of object pointers + basic 'history' tags  
+  # store list of object pointers + basic 'history' tags
   id <- storage::os_write(store, list(objects = objects, expr = commit$expr),
                           tags = list(class = 'commit', parent = commit$parent),
                           id = commit$id)
@@ -70,7 +70,7 @@ commit_restore <- function (id, store, .data = TRUE)
 {
   stopifnot(is_nonempty_character(id),
             storage::is_object_store(store))
-  
+
   co <- storage::os_read(store, id)
   objects <- lapply(co$object$objects, function (id) NA_character_)
 
@@ -78,7 +78,7 @@ commit_restore <- function (id, store, .data = TRUE)
   if (isTRUE(.data)) {
     co <- commit_restore_data(co, store)
   }
-  
+
   co
 }
 
@@ -99,25 +99,25 @@ auto_tags <- function (obj)
 
 
 #' Removes references to environments.
-#' 
+#'
 #' Some objects (e.g. formula, lm) store references to environments
 #' in which they were created. This function replaces each such reference
 #' with a reference to `emptyenv()`.
-#' 
+#'
 #' @param obj Object to be processed.
 #' @return `obj` with environment references replaced by `emptyenv()`
-#' 
+#'
 cleanup_object <- function (obj)
 {
   if (is.environment(obj)) return(emptyenv())
-  
+
   attrs <- lapply(attributes(obj), cleanup_object)
-  
+
   if (is.list(obj))
   {
     obj <- lapply(obj, cleanup_object)
   }
-  
+
   attributes(obj) <- attrs
   obj
 }
@@ -140,7 +140,7 @@ print.commit <- function (x, simple = FALSE, ...)
       if (length(x) < 2) return(as.character(x))
       paste0('[', paste(x, collapse = ', '), ']')
     }
-    
+
     cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
     cat('objects :\n')
     mapply(function (name, id) {
@@ -166,13 +166,13 @@ print.commit <- function (x, simple = FALSE, ...)
   if (isTRUE(i %in% names(x))) {
     return(x[[i]])
   }
-  
+
   # RStudio calls the operator so we cannot restore directly, but only
   # after the user confirms the command and its return value is printed
   if (identical(i, "restore")) {
     return(structure(list(commit = x), class = 'restorer'))
   }
-  
+
   stop("unknown option: ", i, call. = FALSE)
 }
 
@@ -187,3 +187,9 @@ print.restorer <- function (x)
 }
 
 
+#' @import storage
+to_long <- function (x, store = internal_state$stash)
+{
+  stopifnot(is.character(x), length(x) > 0)
+  storage::enlongate(x, store)
+}

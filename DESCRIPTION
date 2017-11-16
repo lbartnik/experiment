@@ -10,6 +10,8 @@ License: GPL3
 Imports:
     broom,
     crayon,
+    defer,
+    dplyr,
     htmlwidgets,
     magrittr,
     storage

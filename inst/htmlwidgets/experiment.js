@@ -12,6 +12,7 @@ HTMLWidgets.widget({
     // return widget instance
     return {
       renderValue: function(x) {
+        x.settings.layout = { 'randomSeed': 1 };
         visvis.setOptions(x.settings);
         visvis.setData(x.data);
       },

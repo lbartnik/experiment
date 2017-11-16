@@ -1,22 +1,25 @@
 #' Graph of commits.
-#' 
+#'
 #' @export
 #' @import storage
 graph <- function (store)
 {
   # read all commits
   ids <- storage::os_find(store, lazyeval::lazy_dots(class == 'commit'))
-  
-  cmts <- lapply(ids, function (commit_id) 
+
+  cmts <- lapply(ids, function (commit_id)
     commit_restore(commit_id, store, .data = FALSE))
   names(cmts) <- vapply(cmts, `[[`, character(1), i = 'id')
 
   # identify children and levels; start with root
   root <- names(Filter(function (co) is.na(co$parent), cmts))
   cmts <- children(cmts, root, 1)
-  
+
   structure(cmts, class = 'graph')
 }
+
+
+is_graph <- function (x) inherits(x, 'graph')
 
 
 children <- function (commits, id, level)
@@ -28,47 +31,65 @@ children <- function (commits, id, level)
   for (id in found) {
     commits <- children(commits, id, level + 1)
   }
-  
+
   commits
+}
+
+
+find_first_parent <- function (g, id)
+{
+  g <- Filter(function (co) (id %in% co$object_ids), g)
+  i <- which.min(vapply(g, function (co) co$level, numeric(1)))
+  g[[i]]
 }
 
 
 #' @rdname graph
 #' @export
 #' @import htmlwidgets
-#' 
+#' @import dplyr
+#' @importFrom magrittr %>%
+#'
 #' @examples
 #' plot(graph(modelling()))
-#' 
+#'
 plot.graph <- function (x, ...)
 {
-  x <- unname(x)
+  node_color <- function (n)
+  {
+    if (identical(n$id, internal_state$last_commit)) return('red')
+    if (is.na(n$parent)) return('green')
+    '#0ff'
+  }
 
-  nodes <- lapply(x, function (n) {
-    commit <- list(id = n$id, label = storage::shorten(n$id), color = '#0ff')
-    variables <- list(id = paste0(n$id, "objs"),
-                      label = paste(names(n$objects), collapse = ", "),
-                      color = "yellow")
-    c(list(commit), list(variables))
-  })
-  nodes <- unlist(nodes, recursive = FALSE)
+  nodes <- lapply(x, function (n) list(id = n$id,
+                                       label = storage::shorten(n$id),
+                                       color = node_color(n),
+                                       x     = n$level))
+  vars  <- lapply(x, function (n) list(id = paste0(n$id, "objs"),
+                                       label = paste(names(n$objects), collapse = ", "),
+                                       color = "yellow"))
+  nodes <-
+    dplyr::bind_rows(c(nodes, vars)) %>%
+    apply(1, as.list)
 
   edges <- lapply(x, function (n) {
     c(lapply(n$children, function (c) list(from = n$id, to = c)),
       list(list(from = n$id, to = paste0(n$id, "objs"))))
-  })
-  edges <- unlist(edges, recursive = FALSE)
-  
-  x <- list(
+  }) %>%
+    unlist(recursive = FALSE) %>%
+    unname
+
+  input <- list(
     data = list(
       nodes = nodes,
       edges = edges
     ),
     settings = list(autoResize = TRUE)
   )
-  
+
   # create the widget
-  htmlwidgets::createWidget("experiment", x, width = NULL, height = NULL)
+  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }
 
 
