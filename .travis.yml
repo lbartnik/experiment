@@ -13,6 +13,9 @@ matrix:
       r: devel
 r_packages:
   - covr
+r_github_packages:
+  - lbartnik/defer
+  - lbartnik/storage
 
 # Only report coverage for the release version
 after_success:
