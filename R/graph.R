@@ -67,6 +67,10 @@ plot.graph <- function (x, ...)
                                        label = paste(names(n$objects), collapse = ", "),
                                        color = node_color(n),
                                        x     = n$level))
+  nodes <- lapply(nodes, function (n) {
+    n$title <- paste(n$short_id, ':', n$label)
+    n
+  })
 
   edges <- lapply(x, function (n) {
     lapply(n$children, function (c) list(from = n$id, to = c))
@@ -78,7 +82,13 @@ plot.graph <- function (x, ...)
       nodes = unname(nodes),
       edges = unname(edges)
     ),
-    settings = list(autoResize = TRUE)
+    settings = list(
+      autoResize = TRUE,
+      interaction = list (
+        dragNodes = FALSE,
+        hover = TRUE
+      )
+    )
   )
 
   # create the widget
