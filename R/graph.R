@@ -63,27 +63,20 @@ plot.graph <- function (x, ...)
   }
 
   nodes <- lapply(x, function (n) list(id = n$id,
-                                       label = storage::shorten(n$id),
+                                       short_id = storage::shorten(n$id),
+                                       label = paste(names(n$objects), collapse = ", "),
                                        color = node_color(n),
                                        x     = n$level))
-  vars  <- lapply(x, function (n) list(id = paste0(n$id, "objs"),
-                                       label = paste(names(n$objects), collapse = ", "),
-                                       color = "yellow"))
-  nodes <-
-    dplyr::bind_rows(c(nodes, vars)) %>%
-    apply(1, as.list)
 
   edges <- lapply(x, function (n) {
-    c(lapply(n$children, function (c) list(from = n$id, to = c)),
-      list(list(from = n$id, to = paste0(n$id, "objs"))))
-  }) %>%
-    unlist(recursive = FALSE) %>%
-    unname
+    lapply(n$children, function (c) list(from = n$id, to = c))
+  })
+  edges <- unlist(edges, recursive = FALSE)
 
   input <- list(
     data = list(
-      nodes = nodes,
-      edges = edges
+      nodes = unname(nodes),
+      edges = unname(edges)
     ),
     settings = list(autoResize = TRUE)
   )
