@@ -2,13 +2,13 @@
 #'
 #' @export
 #' @import storage
-graph <- function (store)
+graph <- function (store, .data = FALSE)
 {
   # read all commits
   ids <- storage::os_find(store, lazyeval::lazy_dots(class == 'commit'))
 
   cmts <- lapply(ids, function (commit_id)
-    commit_restore(commit_id, store, .data = FALSE))
+    commit_restore(commit_id, store, .data = .data))
   names(cmts) <- vapply(cmts, `[[`, character(1), i = 'id')
 
   # identify children and levels; start with root
@@ -97,6 +97,38 @@ plot.graph <- function (x, ...)
 
 
 #' @export
-fullhistory <- function() graph(internal_state$stash)
+fullhistory <- function() graph(internal_state$stash, TRUE)
+
+
+#' @import storage
+graph_js <- function (x)
+{
+  # nodes
+  nodes <- lapply(x, function (n) {
+    node <- list(id       = n$id,
+                 short_id = storage::shorten(n$id),
+                 rclass   = "commit")
+    objects <- mapply(function (obj, id, name) {
+      list(id     = id,
+           rclass = class(obj)[[1]],
+           name   = name)
+    }, obj = n$objects, id = n$object_ids, name = names(n$objects), SIMPLIFY = FALSE)
+
+    c(list(node), objects)
+  })
+  nodes <- unname(unlist(nodes, recursive = FALSE))
+
+  # links
+  links <- lapply(x, function (n) {
+    children <- lapply(n$children, function (c) list(source = n$id, target = c))
+    objects  <- lapply(n$object_ids, function (id) list(source = n$id, target = id))
+    c(children, objects)
+  })
+  links <- unname(unlist(links, recursive = FALSE))
+
+  jsonlite::toJSON(list(nodes = nodes, links = links), pretty = FALSE, auto_unbox = TRUE)
+}
+
+
 
 

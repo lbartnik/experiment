@@ -18,3 +18,8 @@ dependencies:
       - jquery-ui.css
       - jquery-ui.structure.css
       - jquery-ui.theme.css
+  - name: d3
+    version: 4.11.0
+    src: htmlwidgets/lib/d3-4.11.0
+    script:
+      - d3.min.js
