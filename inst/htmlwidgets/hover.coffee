@@ -7,6 +7,10 @@ VariablesNetwork = (radius, vis) ->
   # links group goes before nodes to paint them below
   linksG = vis.append("g").attr("id", "varlinks")
   varsG  = vis.append("g").attr("id", "variables")
+  namesG = vis.append("g").attr("id", "varlabels")
+
+  rx = 20
+  ry = 10
 
   variablesNetwork = () ->
   
@@ -20,21 +24,28 @@ VariablesNetwork = (radius, vis) ->
       v.x = center.x
       v.y = center.y
 
-    vG = varsG.selectAll("circle.node")
+    vG = varsG.selectAll("ellipse.node")
       .data(vars, (d) -> d.id)
-    vG.enter().append("circle")
+    vG.enter().append("ellipse")
       .attr("class", "node variable")
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
-      .attr("r", 5)
+      .attr("rx", rx)
+      .attr("ry", ry)
     vG.exit().remove()
+
+    # update labels
+    nG = namesG.selectAll("text")
+      .data(vars, (d) -> d.id)
+    nG.enter().append("text")
+      .text((d) -> d.name)
+    nG.exit().remove()
 
     lG = linksG.selectAll("line.link")
       .data(links, (d) -> "#{d.source.id}_#{d.target.id}")
     lG.enter().append("line")
       .attr("class", "link")
       .attr("stroke", "#ddd")
-      .attr("stroke-opacity", 0.8)
       .attr("x1", (d) -> d.source.x)
       .attr("y1", (d) -> d.source.y)
       .attr("x2", (d) -> d.target.x)
@@ -43,14 +54,17 @@ VariablesNetwork = (radius, vis) ->
 
   # transition outside
   variablesNetwork.show = () ->
-    varsG.selectAll("circle.node")
-      .raise()
+    varsG.selectAll("ellipse.node")
       .transition()
       .duration(150)
       .attr('cx', (v, i) -> computePosition(i * 360 / vars.length).x)
       .attr('cy', (v, i) -> computePosition(i * 360 / vars.length).y)
+    namesG.selectAll("text")
+      .transition()
+      .duration(150)
+      .attr('x', (v, i) -> computePosition(i * 360 / vars.length).x - rx * .8)
+      .attr('y', (v, i) -> computePosition(i * 360 / vars.length).y + ry / 3)
     linksG.selectAll("line.link")
-      .lower()
       .transition()
       .duration(150)
       .attr("x2", (v, i) -> computePosition(i * 360 / vars.length).x)
@@ -58,7 +72,7 @@ VariablesNetwork = (radius, vis) ->
 
   # transition inside
   variablesNetwork.hide = () ->
-    varsG.selectAll("circle.node")
+    varsG.selectAll("ellipse.node")
       .transition()
       .duration(750)
       .attr('cx', (v, i) -> center.x)
@@ -80,9 +94,14 @@ VariablesNetwork = (radius, vis) ->
 
 # compute positioning of commits
 CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariables) ->
-  linksG = vis.append("g").attr("id", "links")
-  nodesG = vis.append("g").attr("id", "nodes")
+  linksG = vis.append("g").attr("id", "comlinks")
+  nodesG = vis.append("g").attr("id", "commits")
+  namesG = vis.append("g").attr("id", "comlabels")
   force = null
+
+  rx = 40
+  ry = 15
+  dist = 150
 
   network = () ->
 
@@ -92,15 +111,18 @@ CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariabl
     updateLinks()
     force = d3.forceSimulation(commits)
       .force("charge", d3.forceManyBody())
-      .force("link", d3.forceLink(links).distance(50))
+      .force("link", d3.forceLink(links).distance(dist))
       .force("center", d3.forceCenter(width/2, height/2))
       .alphaMin(.1)
       .on("tick", forceTick)
 
   forceTick = (e) ->
-    nodesG.selectAll("circle.node")
+    nodesG.selectAll("ellipse.node")
       .attr("cx", (d) -> d.x )
       .attr("cy", (d) -> d.y )
+    namesG.selectAll("text")
+      .attr("x", (d) -> d.x - rx * .8)
+      .attr("y", (d) -> d.y + ry / 3)
     linksG.selectAll("line.link")
       .attr("x1", (d) -> d.source.x )
       .attr("y1", (d) -> d.source.y )
@@ -108,18 +130,27 @@ CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariabl
       .attr("y2", (d) -> d.target.y )
 
   updateNodes = () ->
-    node = nodesG.selectAll("circle.node")
+    # updates graphs
+    node = nodesG.selectAll("ellipse.node")
       .data(commits, (d) -> d.id)
-      .raise()
-    node.enter().append("circle")
+    node.enter().append("ellipse")
       .attr("class", "node commit")
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
-      .attr("r", 10)
-      .raise()
+      .attr("rx", rx)
+      .attr("ry", ry)
       .on("mouseover", showVariables)
       .on("mouseout", hideVariables)
     node.exit().remove()
+    # update labels
+    name = namesG.selectAll("text")
+      .data(commits, (d) -> d.id)
+    name.enter().append("text")
+      .text((d) -> d.short_id)
+      .attr("cx", (d) -> d.x)
+      .attr("cy", (d) -> d.y)
+    name.exit().remove()
+
   
   updateLinks = () ->
     link = linksG.selectAll("line.link")
@@ -146,6 +177,7 @@ Network = (selection, data) ->
   width = 500
   height = 500
   vn = null
+  varRadius = 75
 
   # constructor
   network = () ->
@@ -160,9 +192,9 @@ Network = (selection, data) ->
     # transform the input data
     data = setupData(data)
     # variables go before commits to paint them below
-    vn = VariablesNetwork(50, vis)
+    vn = VariablesNetwork(varRadius, vis)
     links = filterLinks(data.links, data.commits)
-    cn = CommitsNetwork(data.commits, links, 500, 500, vis, showVariables, hideVariables)
+    cn = CommitsNetwork(data.commits, links, width, height, vis, showVariables, hideVariables)
 
   # transform the data set
   setupData = (data) ->
