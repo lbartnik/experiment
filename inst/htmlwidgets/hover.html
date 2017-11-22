@@ -59,10 +59,14 @@
 }
 </script>
 
+<div id="canvas"></div>
 
 <script type="text/coffeescript" src="hover.coffee"></script>
 
-<div id="canvas"></div>
+<script type="text/coffeescript">
+    data = JSON.parse($("#graph").html())
+    myHover = Network('#canvas', data)
+</script>
 
 </body>
 </html>

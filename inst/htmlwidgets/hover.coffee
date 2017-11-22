@@ -217,8 +217,5 @@ Network = (selection, data) ->
   network.init()
   return network
 
-
-# --------------------------
-
-data = JSON.parse($("#graph").html())
-myHover = Network('#canvas', data)
+# make it global
+window.Network = Network
