@@ -4,8 +4,9 @@ VariablesNetwork = (radius, vis) ->
   center = {}
   vars  = []
   links = []
-  varsG  = vis.append("g").attr("id", "variables")
+  # links group goes before nodes to paint them below
   linksG = vis.append("g").attr("id", "varlinks")
+  varsG  = vis.append("g").attr("id", "variables")
 
   variablesNetwork = () ->
   
@@ -22,7 +23,7 @@ VariablesNetwork = (radius, vis) ->
     vG = varsG.selectAll("circle.node")
       .data(vars, (d) -> d.id)
     vG.enter().append("circle")
-      .attr("class", "node")
+      .attr("class", "node variable")
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
       .attr("r", 5)
@@ -43,11 +44,13 @@ VariablesNetwork = (radius, vis) ->
   # transition outside
   variablesNetwork.show = () ->
     varsG.selectAll("circle.node")
+      .raise()
       .transition()
       .duration(150)
       .attr('cx', (v, i) -> computePosition(i * 360 / vars.length).x)
       .attr('cy', (v, i) -> computePosition(i * 360 / vars.length).y)
     linksG.selectAll("line.link")
+      .lower()
       .transition()
       .duration(150)
       .attr("x2", (v, i) -> computePosition(i * 360 / vars.length).x)
@@ -77,8 +80,8 @@ VariablesNetwork = (radius, vis) ->
 
 # compute positioning of commits
 CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariables) ->
-  nodesG = vis.append("g").attr("id", "nodes")
   linksG = vis.append("g").attr("id", "links")
+  nodesG = vis.append("g").attr("id", "nodes")
   force = null
 
   network = () ->
@@ -89,7 +92,8 @@ CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariabl
     updateLinks()
     force = d3.forceSimulation(commits)
       .force("charge", d3.forceManyBody())
-      .force("link", d3.forceLink(links))
+      .force("link", d3.forceLink(links).distance(50))
+      .force("center", d3.forceCenter(width/2, height/2))
       .alphaMin(.1)
       .on("tick", forceTick)
 
@@ -106,11 +110,13 @@ CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariabl
   updateNodes = () ->
     node = nodesG.selectAll("circle.node")
       .data(commits, (d) -> d.id)
+      .raise()
     node.enter().append("circle")
-      .attr("class", "node")
+      .attr("class", "node commit")
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
       .attr("r", 10)
+      .raise()
       .on("mouseover", showVariables)
       .on("mouseout", hideVariables)
     node.exit().remove()
@@ -126,6 +132,7 @@ CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariabl
       .attr("y1", (d) -> d.source.y)
       .attr("x2", (d) -> d.target.x)
       .attr("y2", (d) -> d.target.y)
+      .lower()
     link.exit().remove()
 
   # initialize & return the new network object
@@ -152,10 +159,10 @@ Network = (selection, data) ->
 
     # transform the input data
     data = setupData(data)
-
+    # variables go before commits to paint them below
+    vn = VariablesNetwork(50, vis)
     links = filterLinks(data.links, data.commits)
     cn = CommitsNetwork(data.commits, links, 500, 500, vis, showVariables, hideVariables)
-    vn = VariablesNetwork(50, vis)
 
   # transform the data set
   setupData = (data) ->
@@ -215,50 +222,3 @@ Network = (selection, data) ->
 
 data = JSON.parse($("#graph").html())
 myHover = Network('#canvas', data)
-
-
-# var linksG = vis.append("g").attr("id", "links");
-# var nodesMap  = mapNodes(data.nodes);
-
-# data.links.forEach(function (l) {
-#     l.source = nodesMap.get(l.source);
-#     l.target = nodesMap.get(l.target);
-# });
-
-
-# var node = nodesG.selectAll("circle.node")
-#       .data(data.nodes, function (d) { return d.id; });
-
-# node.enter().append("circle")
-#       .attr("class", "node")
-#       .attr("cx", function (d) { return d.x; })
-#       .attr("cy", function (d) { return d.y; })
-#       .attr("r", 5);
-
-# node.exit().remove();
-
-# var link = linksG.selectAll("line.link")
-#       .data(data.links, function (d) { d.source.id + "_" + d.target.id; });
-
-# link.enter().append("line")
-#       .attr("class", "link")
-#       .attr("stroke", "#ddd")
-#       .attr("stroke-opacity", 0.8)
-#       .attr("x1", function (d) { d.source.x; })
-#       .attr("y1", function (d) { d.source.y; })
-#       .attr("x2", function (d) { d.target.x; })
-#       .attr("y2", function (d) { d.target.y; });
-
-# link.exit().remove();
-
-
-
-# //        .linkDistance(50);
-
-# nodesG.selectAll("circle.node")
-#     .style("fill", function (d) {
-#         if (d.rclass == "commit") return "red";
-#     })
-#     .on("mouseover", function (d) {
-#         console.log(d);
-#     });

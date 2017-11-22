@@ -1,0 +1,13 @@
+.node {
+
+}
+
+.commit {
+    fill: rgb(14, 121, 209);
+    stroke: black;
+}
+
+.variable {
+    fill: rgb(158, 9, 196);
+    stroke: black;
+}
