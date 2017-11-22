@@ -1,14 +1,43 @@
+# compute positioning of variables
+RadialLocation = (c, r, s) ->
+
+  center = c
+  radius = r
+  size   = s
+
+  computePosition = (angle) ->
+    x = (center.x + radius * Math.cos(angle * Math.PI / 180))
+    y = (center.y + radius * Math.sin(angle * Math.PI / 180))
+    {"x":x,"y":y}
+  
+  radialLocation = () ->
+  
+  radialLocation.position = (i) ->
+    computePosition(i * 360 / s)
+
+  return radialLocation
+
+
+# main class
 Hover = () ->
   width = 500
   height = 500;
 
   allData = []
   nodesG = null
-  variablesG = null
+  linksG = null
+  varsG  = null
 
+  simulation = {}
 
+  # constructor
   hover = (selection, data) ->
     allData = setupData(data)
+    console.log(allData)
+    simulation = d3.forceSimulation(allData.commits)
+      .force("charge", d3.forceManyBody())
+      .force("link", d3.forceLink(allData.links))
+      .on("tick", forceTick)
 
     vis = d3.select(selection)
       .append("svg")
@@ -16,32 +45,94 @@ Hover = () ->
       .attr("height", height)
 
     nodesG = vis.append("g").attr("id", "nodes")
-    variablesG = vis.append("g").attr("id", "variables")
+    linksG = vis.append("g").attr("id", "links")
+    varsG  = vis.append("g").attr("id", "variables")
     
     updateNodes()
 
+  # transform data set
   setupData = (data) ->
+    # initialize positioning of commits
     data.commits.forEach (n) ->
-      n.x = width/2
-      n.y = height/2
+      n.x = Math.floor(Math.random()*width)
+      n.y = Math.floor(Math.random()*height)
 
+    # find parent comments for all variables
     data.variables.forEach (v) ->
       link = data.links.filter (l) ->
         l.target == v.id
       if !link.length
-        throw "cannot find link"
+        throw "cannot find link for variable #{v}"
       v.parent = link[0].source
+    
+    # replace target/source references in links with actual objects
+    nodesMap  = mapNodes(data.commits)
+    data.links.forEach (l) ->
+      l.source = nodesMap.get(l.source)
+      l.target = nodesMap.get(l.target)
 
     return data
 
-  showDetails = (d, i) ->
+  # Helper function to map node id's to node objects.
+  # Returns d3.map of ids -> nodes
+  mapNodes = (nodes) ->
+    nodesMap = d3.map()
+    nodes.forEach (n) ->
+      nodesMap.set(n.id, n)
+    nodesMap
+
+  # update nodes according to data
+  updateNodes = () ->
+    node = nodesG.selectAll("circle.node")
+      .data(allData.commits, (d) -> d.id)
+
+    node.enter().append("circle")
+      .attr("class", "node")
+      .attr("cx", (d) -> d.x)
+      .attr("cy", (d) -> d.y)
+      .attr("r", 10)
+      .on("mouseover", showVariables)
+      .on("mouseout", hideVariables)
+
+    node.exit().remove()
+  
+  updateLinks = () ->
+    link = linksG.selectAll("line.link")
+      .data(curLinksData, (d) -> "#{d.source.id}_#{d.target.id}")
+    link.enter().append("line")
+      .attr("class", "link")
+      .attr("stroke", "#ddd")
+      .attr("stroke-opacity", 0.8)
+      .attr("x1", (d) -> d.source.x)
+      .attr("y1", (d) -> d.source.y)
+      .attr("x2", (d) -> d.target.x)
+      .attr("y2", (d) -> d.target.y)
+
+    link.exit().remove()
+
+  forceTick = (e) ->
+    nodesG.selectAll("circle.node")
+      .attr("cx", (d) -> d.x )
+      .attr("cy", (d) -> d.y )
+
+    linksG.selectAll("line.link")
+      .attr("x1", (d) -> d.source.x )
+      .attr("y1", (d) -> d.source.y )
+      .attr("x2", (d) -> d.target.x )
+      .attr("y2", (d) -> d.target.y )
+
+  # show details of a commit
+  showVariables = (d, i) ->
     thisVars = allData.variables.filter (v) ->
       v.parent == d.id
+
+    radial = RadialLocation(d, 50, thisVars.length)
+
     thisVars.forEach (v) ->
       v.x = d.x
       v.y = d.y
-    console.log(thisVars)
-    thisVars = variablesG.selectAll("circle.node")
+
+    thisVars = varsG.selectAll("circle.node")
       .data(thisVars, (d) -> d.id)
 
     thisVars.enter().append("circle")
@@ -52,35 +143,22 @@ Hover = () ->
 
     thisVars.exit().remove()
 
-    variablesG.selectAll("circle.node")
+    varsG.selectAll("circle.node")
       .transition()
-      .duration(750)
-      .attr('cx', (v, i) -> d.y - 10)
-      .attr('cy', (v, i) -> d.y - 10)
+      .duration(150)
+      .attr('cx', (v, i) -> radial.position(i).x)
+      .attr('cy', (v, i) -> radial.position(i).y)
     
-
-  hideDetails = (d, i) ->
-    variablesG.selectAll("circle.node")
+  # hide the detailed view of a commit
+  hideVariables = (d, i) ->
+    varsG.selectAll("circle.node")
       .transition()
       .duration(750)
       .attr('cx', (v, i) -> d.y)
       .attr('cy', (v, i) -> d.y)
+      .remove()
 
 
-
-  updateNodes = () ->
-    node = nodesG.selectAll("circle.node")
-      .data(allData.commits, (d) -> d.id)
-
-    node.enter().append("circle")
-      .attr("class", "node")
-      .attr("cx", (d) -> d.x)
-      .attr("cy", (d) -> d.y)
-      .attr("r", 10)
-      .on("mouseover", showDetails)
-      .on("mouseout", hideDetails)
-
-    node.exit().remove()
 
   return hover
 
@@ -93,8 +171,6 @@ myHover('#canvas', data)
 
 
 # var linksG = vis.append("g").attr("id", "links");
-
-
 # var nodesMap  = mapNodes(data.nodes);
 
 # data.links.forEach(function (l) {
@@ -129,22 +205,6 @@ myHover('#canvas', data)
 # link.exit().remove();
 
 
-# function forceTick (e) {
-#     d3.selectAll("circle.node")
-#       .attr("cx", function (d) { return d.x; })
-#       .attr("cy", function (d) { return d.y; });
-
-#     d3.selectAll("line.link")
-#       .attr("x1", function (d) { return d.source.x; })
-#       .attr("y1", function (d) { return d.source.y; })
-#       .attr("x2", function (d) { return d.target.x; })
-#       .attr("y2", function (d) { return d.target.y; });
-# }
-
-# var simulation = d3.forceSimulation(data.nodes)
-#     .on("tick", forceTick)
-#     .force("charge", d3.forceManyBody())
-#     .force("link", d3.forceLink(data.links));
 
 # //        .linkDistance(50);
 
