@@ -8,3 +8,7 @@
     fill: rgb(158, 9, 196);
     stroke: black;
 }
+
+.node .text {
+    text-align: center;
+}

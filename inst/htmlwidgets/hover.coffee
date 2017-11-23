@@ -1,16 +1,58 @@
+UpdateNodes = (type, vis, rx, ry) ->
+
+  # links group goes before nodes to paint them below
+  linksG = vis.append("g").attr("id", "links_#{type}")
+  nodesG = vis.append("g").attr("id", "nodes_#{type}")
+
+  updateNodes = () ->
+
+  updateNodes.update = (nodes, links) -> 
+    # nodes
+    node = nodesG.selectAll("g.#{type}")
+      .data(nodes, (d) -> d.id)
+    enter = node.enter().append("g")
+      .attr("class", "#{type}")
+    enter.append("ellipse")
+      .attr("rx", rx)
+      .attr("ry", ry)
+    enter.append("text")
+      .attr("dx", -rx * 0.8)
+      .attr("dy", 5)
+      .text((d) -> d.label)
+    node.exit().remove()
+
+    # links
+    link = linksG.selectAll("line.link")
+      .data(links, (d) -> "#{d.source.id}_#{d.target.id}")
+    link.enter().append("line")
+      .attr("class", "link")
+      .attr("stroke", "#ddd")
+    link.exit().remove()
+
+    this.updatePosition()
+  
+  updateNodes.updatePosition = () ->
+    node = nodesG.selectAll("g.#{type}")
+      .attr("transform", (d) -> "translate(#{d.x},#{d.y})")
+    link = linksG.selectAll("line.link")
+      .attr("x1", (d) -> d.source.x)
+      .attr("y1", (d) -> d.source.y)
+      .attr("x2", (d) -> d.target.x)
+      .attr("y2", (d) -> d.target.y)
+  
+  updateNodes.nodes = () -> nodesG.selectAll("g.#{type}")
+  
+  return updateNodes
+
+
 # compute positioning of variables
 VariablesNetwork = (radius, vis) ->
 
   center = {}
   vars  = []
   links = []
-  # links group goes before nodes to paint them below
-  linksG = vis.append("g").attr("id", "varlinks")
-  varsG  = vis.append("g").attr("id", "variables")
-  namesG = vis.append("g").attr("id", "varlabels")
-
-  rx = 20
-  ry = 10
+  updater = UpdateNodes('variable', vis, 20, 10)
+  force = null
 
   variablesNetwork = () ->
   
@@ -23,78 +65,31 @@ VariablesNetwork = (radius, vis) ->
     vars.forEach (v) ->
       v.x = center.x
       v.y = center.y
+    
+    updater.update(vars, links)
 
-    vG = varsG.selectAll("ellipse.node")
-      .data(vars, (d) -> d.id)
-    vG.enter().append("ellipse")
-      .attr("class", "node variable")
-      .attr("cx", (d) -> d.x)
-      .attr("cy", (d) -> d.y)
-      .attr("rx", rx)
-      .attr("ry", ry)
-    vG.exit().remove()
-
-    # update labels
-    nG = namesG.selectAll("text")
-      .data(vars, (d) -> d.id)
-    nG.enter().append("text")
-      .text((d) -> d.name)
-      .attr('x', (v, i) -> center.x)
-      .attr('y', (v, i) -> center.y)
-    nG.exit().remove()
-
-    lG = linksG.selectAll("line.link")
-      .data(links, (d) -> "#{d.source.id}_#{d.target.id}")
-    lG.enter().append("line")
-      .attr("class", "link")
-      .attr("stroke", "#ddd")
-      .attr("x1", (d) -> d.source.x)
-      .attr("y1", (d) -> d.source.y)
-      .attr("x2", (d) -> d.target.x)
-      .attr("y2", (d) -> d.target.y)
-    lG.exit().remove()
-
+  moveOut = () ->
+    if force.alpha() < 0.25
+      force.stop()
+    move = (d, i) ->
+      p = computePosition(i * 360 / vars.length, 1 - force.alpha())
+      d.x = p.x
+      d.y = p.y
+      console.log("#{force.alpha()} #{center.x} #{p.x} #{d.x}")
+    vars.forEach(move)
+    updater.updatePosition()
+    
   # transition outside
   variablesNetwork.show = () ->
-    varsG.selectAll("ellipse.node")
-      .transition()
-      .duration(150)
-      .attr('cx', (v, i) -> computePosition(i * 360 / vars.length).x)
-      .attr('cy', (v, i) -> computePosition(i * 360 / vars.length).y)
-    namesG.selectAll("text")
-      .transition()
-      .duration(150)
-      .attr('x', (v, i) -> computePosition(i * 360 / vars.length).x - rx * .8)
-      .attr('y', (v, i) -> computePosition(i * 360 / vars.length).y + ry / 3)
-    linksG.selectAll("line.link")
-      .transition()
-      .duration(150)
-      .attr("x2", (v, i) -> computePosition(i * 360 / vars.length).x)
-      .attr("y2", (v, i) -> computePosition(i * 360 / vars.length).y)
+    force  = d3.forceSimulation(vars)
+      .on("tick", moveOut)
 
   # transition inside
   variablesNetwork.hide = () ->
-    varsG.selectAll("ellipse.node")
-      .transition()
-      .duration(750)
-      .attr('cx', (v, i) -> center.x)
-      .attr('cy', (v, i) -> center.y)
-      .remove()
-    namesG.selectAll("text")
-      .transition()
-      .duration(750)
-      .attr('x', (v, i) -> center.x)
-      .attr('y', (v, i) -> center.y)
-      .remove()
-    linksG.selectAll("line.link")
-      .transition()
-      .duration(750)
-      .attr("x2", (v, i) -> center.x)
-      .attr("y2", (v, i) -> center.y)
 
-  computePosition = (angle) ->
-    x = (center.x + radius * Math.cos(angle * Math.PI / 180))
-    y = (center.y + radius * Math.sin(angle * Math.PI / 180))
+  computePosition = (angle, alpha) ->
+    x = (center.x + alpha * radius * Math.cos(angle * Math.PI / 180))
+    y = (center.y + alpha * radius * Math.sin(angle * Math.PI / 180))
     {"x":x,"y":y}
   
   return variablesNetwork
@@ -102,77 +97,24 @@ VariablesNetwork = (radius, vis) ->
 
 # compute positioning of commits
 CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariables) ->
-  linksG = vis.append("g").attr("id", "comlinks")
-  nodesG = vis.append("g").attr("id", "commits")
-  namesG = vis.append("g").attr("id", "comlabels")
+  updater = UpdateNodes('commit', vis, 40, 15)
   force = null
-
-  rx = 40
-  ry = 15
   dist = 150
 
   network = () ->
 
   # constructor
   network.init = () ->
-    updateNodes()
-    updateLinks()
+    updater.update(commits, links)
+    updater.nodes()
+      .on("mouseover", showVariables)
+      .on("mouseout", hideVariables)
     force = d3.forceSimulation(commits)
       .force("charge", d3.forceManyBody())
       .force("link", d3.forceLink(links).distance(dist))
       .force("center", d3.forceCenter(width/2, height/2))
       .alphaMin(.1)
-      .on("tick", forceTick)
-
-  forceTick = (e) ->
-    nodesG.selectAll("ellipse.node")
-      .attr("cx", (d) -> d.x )
-      .attr("cy", (d) -> d.y )
-    namesG.selectAll("text")
-      .attr("x", (d) -> d.x - rx * .8)
-      .attr("y", (d) -> d.y + ry / 3)
-    linksG.selectAll("line.link")
-      .attr("x1", (d) -> d.source.x )
-      .attr("y1", (d) -> d.source.y )
-      .attr("x2", (d) -> d.target.x )
-      .attr("y2", (d) -> d.target.y )
-
-  updateNodes = () ->
-    # updates graphs
-    node = nodesG.selectAll("ellipse.node")
-      .data(commits, (d) -> d.id)
-    node.enter().append("ellipse")
-      .attr("class", "node commit")
-      .attr("cx", (d) -> d.x)
-      .attr("cy", (d) -> d.y)
-      .attr("rx", rx)
-      .attr("ry", ry)
-      .on("mouseover", showVariables)
-      .on("mouseout", hideVariables)
-    node.exit().remove()
-    # update labels
-    name = namesG.selectAll("text")
-      .data(commits, (d) -> d.id)
-    name.enter().append("text")
-      .text((d) -> d.short_id)
-      .attr("cx", (d) -> d.x)
-      .attr("cy", (d) -> d.y)
-    name.exit().remove()
-
-  
-  updateLinks = () ->
-    link = linksG.selectAll("line.link")
-      .data(links, (d) -> "#{d.source.id}_#{d.target.id}")
-    link.enter().append("line")
-      .attr("class", "link")
-      .attr("stroke", "#ddd")
-      .attr("stroke-opacity", 0.8)
-      .attr("x1", (d) -> d.source.x)
-      .attr("y1", (d) -> d.source.y)
-      .attr("x2", (d) -> d.target.x)
-      .attr("y2", (d) -> d.target.y)
-      .lower()
-    link.exit().remove()
+      .on("tick", (e) -> updater.updatePosition())    
 
   # initialize & return the new network object
   network.init()
