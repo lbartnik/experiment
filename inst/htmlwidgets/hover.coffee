@@ -7,7 +7,7 @@ UpdateNodes = (type, vis, rx, ry) ->
   updateNodes = () ->
 
   updateNodes.update = (nodes, links) -> 
-    # nodes
+    # nodes: group element, background node, text, mouse-face
     node = nodesG.selectAll("g.#{type}")
       .data(nodes, (d) -> d.id)
     enter = node.enter().append("g")
@@ -16,8 +16,9 @@ UpdateNodes = (type, vis, rx, ry) ->
       .attr("rx", rx)
       .attr("ry", ry)
     enter.append("text")
-      .attr("dx", -rx * 0.8)
-      .attr("dy", 5)
+      .attr("dy", ry / 3)
+      .attr("text-anchor", "middle")
+      .attr("class", "label")
       .text((d) -> d.label)
     enter.append("ellipse")
       .attr("class", "face")
@@ -89,7 +90,7 @@ VariablesNetwork = (radius, vis) ->
     updater.updatePosition()
     
   # transition outside
-  variablesNetwork.show = (timeout = 750) ->
+  variablesNetwork.show = (timeout = 150) ->
     animation?.stop()
     animation = self = d3.timer (elapsed) ->
       if elapsed > timeout

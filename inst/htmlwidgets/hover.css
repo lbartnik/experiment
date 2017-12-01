@@ -1,13 +1,15 @@
 .commit {
-    fill: rgb(14, 121, 209);
+    fill: white;
     stroke: black;
 }
 
 .variable {
-    fill: rgb(158, 9, 196);
+    fill: rgb(166, 165, 175);
     stroke: black;
 }
 
-.node .text {
-    text-align: center;
+.label {
+    font-family: 'Times New Roman', Times, serif;
+    fill: black;
+    stroke: none;
 }
