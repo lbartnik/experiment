@@ -19,6 +19,11 @@ UpdateNodes = (type, vis, rx, ry) ->
       .attr("dx", -rx * 0.8)
       .attr("dy", 5)
       .text((d) -> d.label)
+    enter.append("ellipse")
+      .attr("class", "face")
+      .attr("rx", rx)
+      .attr("ry", ry)
+      .style('fill', 'transparent')
     node.exit().remove()
 
     # links
@@ -45,7 +50,7 @@ UpdateNodes = (type, vis, rx, ry) ->
       .remove()
   
   updateNodes.on = (what, callback) ->
-    nodesG.selectAll("g.#{type}")
+    nodesG.selectAll(".face")
       .on(what, callback)
   
   return updateNodes
