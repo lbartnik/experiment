@@ -76,28 +76,28 @@ VariablesNetwork = (radius, vis) ->
     updater.updatePosition()
 
   # returns a callback used with d3.timer
-  move = (timeout, outward) ->
-    (elapsed) ->
-      if elapsed > timeout
-        updater.remove() unless outward
-        return true
-      alpha = Math.min(elapsed/timeout, 1)
-      alpha = 1 - alpha unless outward
-      vars.forEach (d, i) ->
-        p = computePosition(i * 360 / vars.length, alpha)
-        d.x = p.x
-        d.y = p.y
-      updater.updatePosition()
+  move = (alpha) ->
+    vars.forEach (d, i) ->
+      p = computePosition(i * 360 / vars.length, alpha)
+      d.x = p.x
+      d.y = p.y
+    updater.updatePosition()
     
   # transition outside
-  variablesNetwork.show = () ->
+  variablesNetwork.show = (timeout = 750) ->
     animation?.stop()
-    animation = d3.timer(move(750, true))
+    animation = self = d3.timer (elapsed) ->
+      if elapsed > timeout
+        self.stop()
+      move(Math.min(elapsed/timeout, 1))      
 
   # transition inside
-  variablesNetwork.hide = () ->
+  variablesNetwork.hide = (timeout = 150) ->
     animation?.stop()
-    animation = d3.timer(move(150, false))
+    animation = self = d3.timer (elapsed) ->
+      if elapsed > timeout
+        self.stop()
+      move(1 - Math.min(elapsed/timeout, 1))      
 
   computePosition = (angle, alpha) ->
     x = (center.x + alpha * radius * Math.cos(angle * Math.PI / 180))
