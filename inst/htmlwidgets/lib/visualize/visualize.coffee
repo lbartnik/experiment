@@ -57,7 +57,7 @@ UpdateNodes = (type, vis, rx, ry) ->
   return updateNodes
 
 
-# compute positioning of variables
+# compute positioning of objects
 VariablesNetwork = (radius, vis) ->
 
   center = {}
@@ -114,37 +114,37 @@ VariablesNetwork = (radius, vis) ->
 
 
 # compute positioning of commits
-CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariables) ->
+CommitsNetwork = (vis, showVariables, hideVariables) ->
   updater = UpdateNodes('commit', vis, 40, 15)
   force = null
   dist = 150
 
   network = () ->
 
-  # constructor
-  network.init = () ->
+  network.setData = (commits, links) ->
     updater.update(commits, links)
     updater.on("mouseover", showVariables)
     updater.on("mouseout", hideVariables)
     force = d3.forceSimulation(commits)
       .force("charge", d3.forceManyBody())
       .force("link", d3.forceLink(links).distance(dist))
-      .force("center", d3.forceCenter(width/2, height/2))
       .alphaMin(.1)
       .on("tick", (e) -> updater.updatePosition())    
 
-  # initialize & return the new network object
-  network.init()
   return network
 
 
 
 # main class
-Network = (selection, data) ->
-  width = 500
-  height = 500
+Network = (selection, data = {}) ->
+  options = {
+    width: 500,
+    height: 500,
+    varRadius: 75
+  }
   vn = null
-  varRadius = 75
+  cn = null
+  vis = null
 
   # constructor
   network = () ->
@@ -153,25 +153,40 @@ Network = (selection, data) ->
     # create the canvas
     vis = d3.select(selection)
       .append("svg")
-      .attr("width", width)
-      .attr("height", height)
 
-    # transform the input data
-    data = setupData(data)
-    # variables go before commits to paint them below
-    vn = VariablesNetwork(varRadius, vis)
+    # objects go before commits to paint them below
+    vn = VariablesNetwork(options.varRadius, vis)
+    cn = CommitsNetwork(vis, showVariables, hideVariables)
+
+    this.setData(data)
+    this.setSize(options.width, options.height)
+
+  # update the data set
+  network.setData = (newData) ->
+    if not ('commits' of newData and 'objects' of newData and 'links' of newData)
+      return data
+
+    data = setupData(newData)
     links = filterLinks(data.links, data.commits)
-    cn = CommitsNetwork(data.commits, links, width, height, vis, showVariables, hideVariables)
+    cn.setData(data.commits, links)
+  
+  # update widget size
+  network.setSize = (width, height) ->
+    options.width = width
+    options.height = height
+    vis.attr("width", width)
+       .attr("height", height)
+
 
   # transform the data set
   setupData = (data) ->
     # initialize positioning of commits
     data.commits.forEach (n) ->
-      n.x = Math.floor(Math.random()*width)
-      n.y = Math.floor(Math.random()*height)
+      n.x = Math.floor(Math.random()*options.width)
+      n.y = Math.floor(Math.random()*options.height)
 
-    # find parent comments for all variables
-    data.variables.forEach (v) ->
+    # find parent comments for all objects
+    data.objects.forEach (v) ->
       link = data.links.filter (l) ->
         l.target == v.id
       if !link.length
@@ -179,7 +194,7 @@ Network = (selection, data) ->
       v.parent = link[0].source
     
     # replace target/source references in links with actual objects
-    allNodes = data.commits.concat(data.variables)
+    allNodes = data.commits.concat(data.objects)
     nodesMap = mapNodes(allNodes)
     data.links.forEach (l) ->
       l.source = nodesMap.get(l.source)
@@ -203,7 +218,7 @@ Network = (selection, data) ->
 
   # show details of a commit
   showVariables = (d, i) ->
-    vars = data.variables.filter (v) ->
+    vars = data.objects.filter (v) ->
       v.parent == d.id
     links = filterLinks(data.links, vars.concat(d))
     vn.update(d, vars, links)

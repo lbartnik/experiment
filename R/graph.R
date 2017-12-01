@@ -55,42 +55,7 @@ find_first_parent <- function (g, id)
 #'
 plot.graph <- function (x, ...)
 {
-  node_color <- function (n)
-  {
-    if (identical(n$id, internal_state$last_commit)) return('red')
-    if (is.na(n$parent)) return('green')
-    '#0ff'
-  }
-
-  nodes <- lapply(x, function (n) list(id = n$id,
-                                       short_id = storage::shorten(n$id),
-                                       label = paste(names(n$objects), collapse = ", "),
-                                       color = node_color(n),
-                                       x     = n$level))
-  nodes <- lapply(nodes, function (n) {
-    n$title <- paste(n$short_id, ':', n$label)
-    n
-  })
-
-  edges <- lapply(x, function (n) {
-    lapply(n$children, function (c) list(from = n$id, to = c))
-  })
-  edges <- unlist(edges, recursive = FALSE)
-
-  input <- list(
-    data = list(
-      nodes = unname(nodes),
-      edges = unname(edges)
-    ),
-    settings = list(
-      autoResize = TRUE,
-      interaction = list (
-        dragNodes = FALSE,
-        hover = TRUE
-      )
-    )
-  )
-
+  input <- list(data = graph_js(x))
   # create the widget
   htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }
@@ -103,30 +68,35 @@ fullhistory <- function() graph(internal_state$stash, TRUE)
 #' @import storage
 graph_js <- function (x)
 {
-  # nodes
-  nodes <- lapply(x, function (n) {
-    node <- list(id       = n$id,
-                 short_id = storage::shorten(n$id),
-                 rclass   = "commit")
-    objects <- mapply(function (obj, id, name) {
-      list(id     = id,
-           rclass = class(obj)[[1]],
-           name   = name)
-    }, obj = n$objects, id = n$object_ids, name = names(n$objects), SIMPLIFY = FALSE)
-
-    c(list(node), objects)
+  # nodes: commits
+  commits <- lapply(x, function (n) {
+    list(id     = n$id,
+         label  = storage::shorten(n$id),
+         rclass = "commit")
   })
-  nodes <- unname(unlist(nodes, recursive = FALSE))
+  commits <- unname(commits)
+
+  # nodes: objects
+  objects <- lapply(x, function (n) {
+    mapply(function (obj, id, name) {
+      list(id     = paste0(id, ':', name),
+           rclass = class(obj)[[1]],
+           label  = name)
+    }, obj = n$objects, id = n$object_ids, name = names(n$objects), SIMPLIFY = FALSE)
+  })
+  objects <- unname(unlist(objects, recursive = FALSE))
 
   # links
   links <- lapply(x, function (n) {
     children <- lapply(n$children, function (c) list(source = n$id, target = c))
-    objects  <- lapply(n$object_ids, function (id) list(source = n$id, target = id))
+    objects  <- lapply(paste0(n$object_ids, ':', names(n$objects)),
+                       function (target) list(source = n$id, target = target))
     c(children, objects)
   })
   links <- unname(unlist(links, recursive = FALSE))
 
-  jsonlite::toJSON(list(nodes = nodes, links = links), pretty = FALSE, auto_unbox = TRUE)
+  jsonlite::toJSON(list(commits = commits, objects = objects, links = links),
+                   pretty = FALSE, auto_unbox = TRUE)
 }
 
 
