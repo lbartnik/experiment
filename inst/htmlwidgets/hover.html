@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <script src="lib/jquery-3.2.1/jquery.js"></script>
 <script src="lib/d3-4.11.0/d3.min.js"></script>
-<script src="http://coffeescript.org/browser-compiler/coffeescript.js"></script>
+<script src="lib/coffeescript/coffeescript.js"></script>
 <link rel = "stylesheet" type = "text/css" href = "hover.css">
 
 </head>
@@ -64,8 +64,8 @@
 <script type="text/coffeescript" src="hover.coffee"></script>
 
 <script type="text/coffeescript">
-    data = JSON.parse($("#graph").html())
-    myHover = Network('#canvas', data)
+data = JSON.parse($("#graph").html())
+myHover = Network('#canvas', data)
 </script>
 
 </body>

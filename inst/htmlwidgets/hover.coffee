@@ -40,7 +40,9 @@ UpdateNodes = (type, vis, rx, ry) ->
       .attr("x2", (d) -> d.target.x)
       .attr("y2", (d) -> d.target.y)
   
-  updateNodes.nodes = () -> nodesG.selectAll("g.#{type}")
+  updateNodes.on = (what, callback) ->
+    nodesG.selectAll("g.#{type}")
+      .on(what, callback)
   
   return updateNodes
 
@@ -67,25 +69,35 @@ VariablesNetwork = (radius, vis) ->
       v.y = center.y
     
     updater.update(vars, links)
-
-  moveOut = () ->
-    if force.alpha() < 0.25
-      force.stop()
-    move = (d, i) ->
-      p = computePosition(i * 360 / vars.length, 1 - force.alpha())
-      d.x = p.x
-      d.y = p.y
-      console.log("#{force.alpha()} #{center.x} #{p.x} #{d.x}")
-    vars.forEach(move)
     updater.updatePosition()
+
+  move = (direction) ->
+    threshold = .5
+    computer = () ->
+      alpha = force.alpha()
+      if alpha < threshold
+        force.stop()
+        return
+      if direction == "out"
+        alpha2 = 1 - (alpha - threshold)
+      else
+        alpha2 = alpha - threshold
+      updateNode = (d, i) ->
+        p = computePosition(i * 360 / vars.length, alpha2)
+        d.x = p.x
+        d.y = p.y
+      vars.forEach(updateNode)
+      updater.updatePosition()
     
   # transition outside
   variablesNetwork.show = () ->
-    force  = d3.forceSimulation(vars)
-      .on("tick", moveOut)
+    force = d3.forceSimulation(vars)
+      .on("tick", move("out"))
 
   # transition inside
   variablesNetwork.hide = () ->
+    force  = d3.forceSimulation(vars)
+      .on("tick", move("in"))
 
   computePosition = (angle, alpha) ->
     x = (center.x + alpha * radius * Math.cos(angle * Math.PI / 180))
@@ -106,9 +118,8 @@ CommitsNetwork = (commits, links, width, height, vis, showVariables, hideVariabl
   # constructor
   network.init = () ->
     updater.update(commits, links)
-    updater.nodes()
-      .on("mouseover", showVariables)
-      .on("mouseout", hideVariables)
+    updater.on("mouseover", showVariables)
+    updater.on("mouseout", hideVariables)
     force = d3.forceSimulation(commits)
       .force("charge", d3.forceManyBody())
       .force("link", d3.forceLink(links).distance(dist))
@@ -191,10 +202,12 @@ Network = (selection, data) ->
     links = filterLinks(data.links, vars.concat(d))
     vn.update(d, vars, links)
     vn.show()
+    console.log("x")
     
   # hide the detailed view of a commit
   hideVariables = (d, i) ->
     vn.hide()
+    console.log("y")
 
   network.init()
   return network
