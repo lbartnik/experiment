@@ -256,7 +256,8 @@
     return network;
   };
 
-  // make it global
+  // make it global; this doesn't work in RStudio because RStudio viewer's
+  // JavaScript engine is too old
   // export { Network }
   window.Network = Network;
 }).call(undefined);
