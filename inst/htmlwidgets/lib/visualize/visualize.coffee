@@ -232,4 +232,6 @@ Network = (selection, data = {}) ->
   return network
 
 # make it global
-export { Network }
+# export { Network }
+
+window.Network = Network
