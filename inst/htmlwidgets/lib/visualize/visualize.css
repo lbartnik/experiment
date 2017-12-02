@@ -1,0 +1,16 @@
+.commit {
+    fill: white;
+    stroke: black;
+}
+
+.variable {
+    fill: rgb(166, 165, 175);
+    stroke: black;
+}
+
+.label {
+    font-family: 'Times New Roman', Times, serif;
+    fill: black;
+    stroke: none;
+    font-size: 10pt;
+}

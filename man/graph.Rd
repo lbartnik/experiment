@@ -5,7 +5,7 @@
 \alias{plot.graph}
 \title{Graph of commits.}
 \usage{
-graph(store)
+graph(store, .data = FALSE)
 
 \method{plot}{graph}(x, ...)
 }
