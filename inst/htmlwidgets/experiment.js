@@ -32,7 +32,7 @@ HTMLWidgets.widget({
   factory: function(el, width, height) {
 
     // dependencies: tooltip
-    var tooltip = experiment().create(el);
+    //var tooltip = experiment().create(el);
 
     // create our vis object and bind it to the element
     var visvis = new Network(el);
