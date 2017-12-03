@@ -1,3 +1,7 @@
+* store plots the same way as objects; show plots in the history
+* history by new objects introduced to the session, not by commits
+
+
 * explain: find a full sequence of calls leading to a given object
   - option to plot explanation as a graph with vis.js
 * UI:
