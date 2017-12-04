@@ -1,0 +1,15 @@
+#' Electric energy usage for 3 smart meters.
+#'
+#' A dataset containing the usage (in kWh) of 3 homes located in
+#' the London area. It is a subset of a much bigger data set published
+#' on Kaggle.
+#'
+#' @format A data frame with 26820 rows and 3 variables:
+#' \describe{
+#'   \item{meter}{meter identifier}
+#'   \item{timestamp}{the hour of reading}
+#'   \item{usage}{the reading, in kWh}
+#' }
+#' @source \url{https://www.kaggle.com/jeanmidev/smart-meters-in-london}
+#' @source \url{https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households}
+"energy"
