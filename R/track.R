@@ -1,13 +1,13 @@
 # Track user's interactions with R session.
 
 #' Global state of the tracker.
-#' 
+#'
 #' \describe{
 #'   \item{tracking}{whether we are in the tracking state}
 #'   \item{old_prompt}{prompt as set when loading the package}
 #'   \item{stash}{local, file-system-based, object cache}
 #' }
-#' 
+#'
 internal_state <- new.env()
 
 
@@ -19,6 +19,7 @@ initiate_state <- function ()
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
   internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
+  internal_state$plots            <- list()
 #  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
 }
 
@@ -31,7 +32,7 @@ create_stash <- function ()
 
 
 #' A callback run after each top-level expression is evaluated.
-#'  
+#'
 #' From [addTaskCallback()]: if the data argument was specified in
 #' the call to addTaskCallback, that value is given as the fifth
 #' argument.
@@ -45,22 +46,24 @@ create_stash <- function ()
 #'
 #' @return A logical value indicating whether to keep this function in
 #'         the list of active callbacks.
-#'         
+#'
+#' @import grDevices
+#'
 task_callback <- function (expr, result, successful, printed)
 {
   if (!isTRUE(internal_state$tracking) || !isTRUE(successful))
     return(TRUE)
-  
+
   tryCatch(
     error = function(e) warning('could not create a commit: ',
                                 e$message, call. = FALSE),
     {
       # it's length of ls() because we don't care for hidden objects
       if (length(ls(globalenv())))
-        update_current_commit(globalenv(), expr)
+        update_current_commit(internal_state, globalenv(), recordPlot(), expr)
     }
   )
-  
+
   TRUE
 }
 
@@ -68,17 +71,39 @@ task_callback <- function (expr, result, successful, printed)
 #' @description `update_current_commit` is a part of `task_callback`
 #' made separate due to testing purposes.
 #'
+#' @param state Global state, an [environment()]; passed as a parameter
+#'        for testing purposes.
 #' @param env Environment this commits represents.
+#' @param plot The last plot (see [recordPlot()]).
 #' @param expr Expression that created this environment.
 #'
 #' @name task_callback
 #' @export
-update_current_commit <- function (env, expr)
+#'
+update_current_commit <- function (state, env, plot, expr)
 {
-  co <- commit(as.list(env), expr, internal_state$last_commit$id)
-  if (!commit_equal(co, internal_state$last_commit))
+  co <- commit(as.list(env), expr)
+
+  # if there is new data...
+  if (!commit_equal(co, state$last_commit))
   {
-    internal_state$last_commit <- commit_store(co, internal_state$stash)
+    # ... first flush plots, if any are held in the list
+    if (length(state$plots))
+    {
+      pl <- plot_commit(state$plots, expr, state$last_commit$id)
+      state$last_commit <- commit_store(pl, state$stash)
+
+      state$plots <- list()
+    }
+
+    # ... and then write down actual data
+    parent(co) <- state$last_commit$id
+    state$last_commit <- commit_store(co, state$stash)
+  }
+  else if (!any(vapply(state$plots, identical, logical(1), plot)))
+  {
+    # cache any new plots
+    state$plots <- append(state$plots, pl)
   }
 }
 
@@ -86,7 +111,7 @@ update_current_commit <- function (env, expr)
 restore_historical_commit <- function (co)
 {
   stopifnot(is_commit(co))
-  
+
   internal_state$last_commit <- co$id
   rm(list = ls(envir = globalenv()), envir = globalenv())
   mapply(function (name, value) assign(x = name, value = value, envir = globalenv()),
@@ -98,7 +123,7 @@ restore_historical_commit <- function (co)
 #' Toggle tracking mode.
 #'
 #' @export
-#' 
+#'
 tracking_on <- function () {
   internal_state$tracking <- TRUE
   options(prompt = "[tracked] > ")

@@ -100,5 +100,46 @@ graph_js <- function (x)
 }
 
 
+steps <- function ()
+{
+  data <- list(
+    list(
+      id = "",
+      type = "object",
+      name = "input",
+      expr = paste(deparse(expression(input <-
+          readr::read_csv("halfhourly/block_62.csv", na = 'Null') %>%
+          rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+          filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
+                 year(timestamp) == 2013)
+      )), sep = "\n")
+    ),
+    list(
+      id = "",
+      type = "object",
+      name = "input",
+      expr = paste(deparse(expression(input %<>%
+        mutate(timestamp = floor_date(timestamp, 'hours')) %>%
+        group_by(meter, timestamp) %>%
+        summarise(usage = sum(usage))
+      )), sep = "\n")
+    ),
+    list(
+      id = "",
+      type = "plot",
+      contents = "",
+      expr = paste(deparse(expression(
+        with(filter(input, meter == "MAC004929"),
+             plot(timestamp, usage, type = 'p', pch = '.'))
+      )), "\n")
+    )
+  )
+
+  links = list()
+
+  jsonlite::toJSON(list(data = data, links = links),
+                   pretty = FALSE, auto_unbox = TRUE)
+
+}
 
 

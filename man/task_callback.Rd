@@ -4,15 +4,11 @@
 \alias{task_callback}
 \alias{task_callback}
 \alias{update_current_commit}
-\title{A callback run after each top-level expression is evaluated.
- 
-From [addTaskCallback()]: if the data argument was specified in
-the call to addTaskCallback, that value is given as the fifth
-argument.}
+\title{A callback run after each top-level expression is evaluated.}
 \usage{
 task_callback(expr, result, successful, printed)
 
-update_current_commit(env, expr)
+update_current_commit(state, env, plot, expr)
 }
 \arguments{
 \item{expr}{Expression for the top-level task.}
@@ -25,7 +21,12 @@ successfully completed or not (always `TRUE` at present).}
 \item{printed}{A logical value indicating whether the result was
 printed or not.}
 
+\item{state}{Global state, an [environment()]; passed as a parameter
+for testing purposes.}
+
 \item{env}{Environment this commits represents.}
+
+\item{plot}{The last plot (see [recordPlot()]).}
 
 \item{expr}{Expression that created this environment.}
 }
@@ -34,8 +35,6 @@ A logical value indicating whether to keep this function in
         the list of active callbacks.
 }
 \description{
-A callback run after each top-level expression is evaluated.
- 
 From [addTaskCallback()]: if the data argument was specified in
 the call to addTaskCallback, that value is given as the fifth
 argument.

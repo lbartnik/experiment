@@ -7,6 +7,7 @@ commit <- function (contents, expression, parent, id, object_ids)
   objects <- as.list(contents)
   stopifnot(all_named(objects))
 
+  if (missing(parent)) parent <- NA_character_
   if (missing(id)) id <- NA_character_
   if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
 
@@ -17,6 +18,24 @@ commit <- function (contents, expression, parent, id, object_ids)
 
 
 is_commit <- function (x) inherits(x, 'commit')
+
+
+plot_commit <- function (plots, expression, parent)
+{
+  plots <- as.list(plots)
+
+  co <- commit(plots, expression, parent)
+  class(co) <- c("plot", class(co))
+
+  co
+}
+
+
+`parent<-` <- function (co, value)
+{
+  co$parent <- value
+  co
+}
 
 commit_equal <- function (a, b)
 {
