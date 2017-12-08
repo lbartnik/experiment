@@ -24,11 +24,20 @@ plot_commit <- function (plots, expression, parent)
 {
   plots <- as.list(plots)
 
+  # name plots
+  width <- ceiling(log10(length(plots) + 1))
+  names(plots) <- paste0('plot', formatC(seq_along(plots), width = width, flag = "0"))
+
+  if (missing(parent)) parent <- NA_character_
+
   co <- commit(plots, expression, parent)
-  class(co) <- c("plot", class(co))
+  class(co) <- c('plot', class(co))
 
   co
 }
+
+
+is_plot_commit <- function (x) is_commit(x) && inherits(x, 'plot')
 
 
 `parent<-` <- function (co, value)
@@ -53,7 +62,7 @@ commit_store <- function (commit, store)
   stopifnot(storage::is_object_store(store))
 
   # name -> ID in object store
-  objects <- lapply(commit$objects, function (o) {
+  commit$object_ids <- lapply(commit$objects, function (o) {
     o  <- cleanup_object(o)
     id <- storage::compute_id(o)
     if (storage::os_exists(store, id)) return(id)
@@ -76,8 +85,8 @@ commit_store <- function (commit, store)
   }
 
   # store list of object pointers + basic 'history' tags
-  id <- storage::os_write(store, list(objects = objects, expr = commit$expr),
-                          tags = list(class = 'commit', parent = commit$parent),
+  id <- storage::os_write(store, list(objects = commit$object_ids, expr = commit$expr),
+                          tags = list(class = class(commit), parent = commit$parent),
                           id = commit$id)
 
   commit

@@ -90,7 +90,11 @@ update_current_commit <- function (state, env, plot, expr)
     # ... first flush plots, if any are held in the list
     if (length(state$plots))
     {
-      pl <- plot_commit(state$plots, expr, state$last_commit$id)
+      # TODO what are the conditions for replayPlot? how well does a recordedplot
+      # object preserve the input data, parameters, device setup, etc.?
+      plots <- lapply(state$plots, plot_as_svg)
+
+      pl <- plot_commit(plots, expr, state$last_commit$id)
       state$last_commit <- commit_store(pl, state$stash)
 
       state$plots <- list()
@@ -100,12 +104,36 @@ update_current_commit <- function (state, env, plot, expr)
     parent(co) <- state$last_commit$id
     state$last_commit <- commit_store(co, state$stash)
   }
-  else if (!any(vapply(state$plots, identical, logical(1), plot)))
+
+  # TODO can both, env and plot, change as a result of a single command?
+  if (!is.null(plot) && !any(vapply(state$plots, identical, logical(1), plot)))
   {
     # cache any new plots
-    state$plots <- append(state$plots, pl)
+    state$plots <- append(state$plots, list(plot))
   }
+
+  invisible(state$last_commit$id)
 }
+
+
+#' Returns a base64-encoded, SVG plot.
+#'
+#' @param pl Plot recorded by [recordPlot()].
+#' @return `character` string, base64-encoded SVG plot.
+#' @import jsonlite
+#'
+plot_as_svg <- function (pl)
+{
+  path <- tempfile(fileext = ".svg")
+
+  svg(path)
+  replayPlot(pl)
+  dev.off()
+
+  contents <- readBin(path, "raw", n = file.size(path))
+  jsonlite::base64_enc(contents)
+}
+
 
 
 restore_historical_commit <- function (co)

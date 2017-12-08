@@ -7,10 +7,11 @@ temp_stash <- function ()
   storage::filesystem(path, create = TRUE)
 }
 
-temp_state <- function ()
+empty_state <- function ()
 {
   as.environment(list(
-    stash = temp_stash(),
-    last_commit = commit(list(), bquote())
+    stash       = temp_stash(),
+    last_commit = commit(list(), bquote()),
+    plots       = list()
   ))
 }

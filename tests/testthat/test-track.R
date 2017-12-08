@@ -2,9 +2,10 @@ context("track")
 
 
 test_that("commit is updated", {
-  state <- temp_state()
+  state <- empty_state()
   env <- as.environment(list(x = 1))
   exp <- substitute(x <- 1)
+
   update_current_commit(state, env, NULL, exp)
 
   id <- storage::os_list(state$stash)
@@ -14,6 +15,19 @@ test_that("commit is updated", {
 
 
 test_that("plot is cached", {
+  state <- empty_state()
 
+  update_current_commit(state, list(x = 1), NULL, bquote(x <- 1))
+  update_current_commit(state, list(x = 1), new_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 2), NULL, bquote(x <- 2))
+
+  last <- state$last_commit
+  expect_identical(last$objects, list(x = 2))
+
+  prev <- commit_restore(last$parent, state$stash)
+  expect_named(prev$objects, 'plot1')
+
+  root <- commit_restore(prev$parent, state$stash)
+  expect_identical(root$objects, list(x = 1))
 })
 
