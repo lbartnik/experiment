@@ -102,9 +102,11 @@ graph_js <- function (x)
 
 steps <- function ()
 {
+  svgPlot <- system.file("examples/plot.svg", package = "experiment")
+
   data <- list(
     list(
-      id = "",
+      id = "1",
       type = "object",
       name = "input",
       expr = paste(deparse(expression(input <-
@@ -115,7 +117,7 @@ steps <- function ()
       )), sep = "\n")
     ),
     list(
-      id = "",
+      id = "2",
       type = "object",
       name = "input",
       expr = paste(deparse(expression(input %<>%
@@ -125,9 +127,9 @@ steps <- function ()
       )), sep = "\n")
     ),
     list(
-      id = "",
+      id = "3",
       type = "plot",
-      contents = "",
+      contents = jsonlite::base64_enc(readBin(svgPlot, "raw", n = file.size(svgPlot))),
       expr = paste(deparse(expression(
         with(filter(input, meter == "MAC004929"),
              plot(timestamp, usage, type = 'p', pch = '.'))
@@ -135,11 +137,13 @@ steps <- function ()
     )
   )
 
-  links = list()
+  links <- list(
+    list(target = 2, source = 1),
+    list(target = 3, source = 2)
+  )
 
   jsonlite::toJSON(list(data = data, links = links),
-                   pretty = FALSE, auto_unbox = TRUE)
-
+                   pretty = TRUE, auto_unbox = TRUE)
 }
 
 
