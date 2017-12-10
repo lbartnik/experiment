@@ -1,3 +1,13 @@
+RoundPosition = (center, radius, n) ->
+  increment = if n < 12 then 30 else 360 / n
+
+  return (i) ->
+    angle = i * increment
+    x = (center.x + radius * Math.cos(angle * Math.PI / 180))
+    y = (center.y + radius * Math.sin(angle * Math.PI / 180))
+    {"x":x,"y":y}
+
+
 Widget = (selection) ->
 
   width  = 500
@@ -11,6 +21,7 @@ Widget = (selection) ->
   nodesG = vis.append("g").attr("id", "nodes")
   
   widget = () ->
+
   widget.setData = (Data) ->
     data = setupData(Data)
     filtered = filterData(data)
@@ -24,9 +35,12 @@ Widget = (selection) ->
 
   setupData = (data) ->
     # initialize positioning of commits
+    rp = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
+    i  = 0
     data.steps.forEach (n) ->
-      n.x = Math.floor(Math.random()*width)
-      n.y = Math.floor(Math.random()*height)
+      p = rp(i++)
+      n.x = p.x
+      n.y = p.y
     
     # replace target/source references in links with actual objects
     stepsMap = mapNodes(data.steps)
@@ -94,7 +108,31 @@ Widget = (selection) ->
       .attr("viewBox", "#{bb.x} #{bb.y} #{bb.width} #{bb.height}")
       .attr("width", 25)
       .attr("height", 25)
-  
+      .on("mouseover", (e) -> show(step))
+      .on("mouseout", (e) -> hide(step))
+
+  # transition outside
+  show = (step, timeout = 150) ->
+    animation?.stop()
+    animation = self = d3.timer (elapsed) ->
+      zoomFrame(self, step, Math.min(elapsed/timeout, 1))
+
+  # transition inside
+  hide = (step, timeout = 150) ->
+    animation?.stop()
+    animation = self = d3.timer (elapsed) ->
+      zoomFrame(self, step, Math.max(1 - elapsed/timeout, 0))
+
+  zoomFrame = (timer, step, alpha) ->
+    plot = d3.select("#plot#{step.id}")
+    if alpha == 1 or alpha == 0
+      timer.stop()
+    zoom = Math.max(150 * alpha, 25)
+    plot
+      .attr("width", zoom)
+      .attr("height", zoom)
+
+
   widget.setSize = (Width, Height) ->
     width = Width
     height = Height
