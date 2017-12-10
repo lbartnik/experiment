@@ -86,8 +86,8 @@ Widget = (selection) ->
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
     vis.selectAll("svg.plot")
-      .attr("x", (d) -> d.x)
-      .attr("y", (d) -> d.y)
+      .attr("x", (d) -> d.x - 12.5)
+      .attr("y", (d) -> d.y - 12.5)
     link = linksG.selectAll("line.link")
       .attr("x1", (d) -> d.source.x)
       .attr("y1", (d) -> d.source.y)
@@ -127,10 +127,12 @@ Widget = (selection) ->
     plot = d3.select("#plot#{step.id}")
     if alpha == 1 or alpha == 0
       timer.stop()
-    zoom = Math.max(150 * alpha, 25)
+    zoom = Math.max(250 * alpha, 25)
     plot
       .attr("width", zoom)
       .attr("height", zoom)
+      .attr("x", step.x - zoom /2)
+      .attr("y", step.y - zoom /2)
 
 
   widget.setSize = (Width, Height) ->
