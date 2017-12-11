@@ -25,13 +25,8 @@ Widget = (selection) ->
   widget.setData = (Data) ->
     data = setupData(Data)
     filtered = filterData(data)
-    setupVisuals(filtered)
-
-    force = d3.forceSimulation(data.steps)
-      .force("charge", d3.forceManyBody())
-      .force("link", d3.forceLink(data.links).distance(50))
-      .alphaMin(.1)
-      .on("tick", (e) -> updatePosition())    
+    createVisuals(filtered)
+    placeVisuals(filtered, enableEvents)
 
   setupData = (data) ->
     # initialize positioning of commits
@@ -60,7 +55,7 @@ Widget = (selection) ->
 
   filterData = (data) -> data
 
-  setupVisuals = (data) ->
+  createVisuals = (data) ->
     # add regular steps
     steps = (step for step in data.steps when step.type is 'object')
     node = nodesG.selectAll("circle.variable")
@@ -80,8 +75,15 @@ Widget = (selection) ->
       .attr("stroke", "#ddd")
     link.exit().remove()
 
+  placeVisuals = (data, whenDone) ->
+    force = d3.forceSimulation(data.steps)
+      .force("charge", d3.forceManyBody())
+      .force("link", d3.forceLink(data.links).distance(50))
+      .alphaMin(.1)
+      .on("tick", (e) -> updatePositions())
+      .on("end", whenDone)
 
-  updatePosition = () ->
+  updatePositions = () ->
     nodesG.selectAll("circle")
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
@@ -93,6 +95,11 @@ Widget = (selection) ->
       .attr("y1", (d) -> d.source.y)
       .attr("x2", (d) -> d.target.x)
       .attr("y2", (d) -> d.target.y)
+
+  enableEvents = () ->
+    d3.selectAll("svg.plot")
+      .on("mouseover", show)
+      .on("mouseout", hide)
 
   addPlot = (step) ->
     fromBase64 = atob(step.contents)
@@ -108,17 +115,17 @@ Widget = (selection) ->
       .attr("viewBox", "#{bb.x} #{bb.y} #{bb.width} #{bb.height}")
       .attr("width", 25)
       .attr("height", 25)
-      .on("mouseover", (e) -> show(step))
-      .on("mouseout", (e) -> hide(step))
 
   # transition outside
-  show = (step, timeout = 150) ->
+  show = (step) ->
+    timeout = 150
     animation?.stop()
     animation = self = d3.timer (elapsed) ->
       zoomFrame(self, step, Math.min(elapsed/timeout, 1))
 
   # transition inside
-  hide = (step, timeout = 150) ->
+  hide = (step) ->
+    timeout = 150
     animation?.stop()
     animation = self = d3.timer (elapsed) ->
       zoomFrame(self, step, Math.max(1 - elapsed/timeout, 0))
