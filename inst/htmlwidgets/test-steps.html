@@ -5,6 +5,9 @@
 <script src="lib/jquery-3.2.1/jquery.js"></script>
 <script src="lib/d3-4.11.0/d3.min.js"></script>
 <script src="lib/coffeescript-2.0/coffeescript.js"></script>
+<script src="lib/mustache-2.3.0/mustache.js"></script>
+<script src="lib/highlight-9.12.0/highlight.js"></script>
+<link rel = "stylesheet" type = "text/css" href = "lib/highlight-9.12.0/styles/zenburn.css">
 <script type="text/coffeescript" src="lib/visualize/steps.coffee"></script>
 <link rel = "stylesheet" type = "text/css" href = "lib/visualize/steps.css">
 
@@ -44,6 +47,16 @@
     ]
 }
 </script>
+
+<script id="tooltip-template" type="x-tmpl-mustache">
+    <div class="tooltip">
+        <div class="inner">
+            <span class="name">{{name}}</span>
+            <pre><code class="R">{{code}}</code></pre>
+        </div>
+    </div>
+</script>
+
 
 <div id="canvas"></div>
 

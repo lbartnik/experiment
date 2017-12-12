@@ -100,7 +100,7 @@ Widget = (selection) ->
       .on("end", whenDone)
 
   updatePositions = () ->
-    nodesG.selectAll("circle")
+    nodesG.selectAll("circle.variable")
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
     vis.selectAll("svg.plot")
@@ -113,12 +113,15 @@ Widget = (selection) ->
       .attr("y2", (d) -> d.target.y)
 
   enableEvents = () ->
-    d3.selectAll("svg.plot")
-      .on("mouseover", show)
-      .on("mouseout", hide)
+    vis.selectAll("svg.plot")
+      .on("mouseover", showPlot)
+      .on("mouseout", hidePlot)
+    vis.selectAll("circle.variable")
+      .on("mouseover", showVariable)
+      .on("mouseout", hideVariable)
 
   # transition outside
-  show = (step) ->
+  showPlot = (step) ->
     this.animation?.stop()
     this.animation = self = d3.timer (elapsed) ->
       if elapsed >= timeout
@@ -126,7 +129,7 @@ Widget = (selection) ->
       zoomFrame(step, Math.min(elapsed/timeout, 1))
 
   # transition inside
-  hide = (step) ->
+  hidePlot = (step) ->
     this.animation?.stop()
     this.animation = self = d3.timer (elapsed) ->
       if elapsed >= timeout
@@ -135,11 +138,43 @@ Widget = (selection) ->
 
   zoomFrame = (step, alpha) ->
     zoom = Math.max(250 * alpha, thumbnail)
-    d3.select("#plot#{step.id}")
+    vis.select("#plot#{step.id}")
       .attr("width", zoom)
       .attr("height", zoom)
       .attr("x", step.x - zoom /2)
       .attr("y", step.y - zoom /2)
+
+  showVariable = (step) ->
+    template = $('#tooltip-template').html()
+    Mustache.parse(template)
+
+    code = if step.expr.constructor is Array then step.expr.join('\n') else step.expr
+    rendered = Mustache.render(template, {
+      name: step.name,
+      code: code
+    })
+    tooltip = $(rendered)
+
+    tooltip
+      .attr("id", "tooltip_#{step.id}")
+      .css({
+        left: step.x + width * .05,
+        top: step.y + height * .05,
+      })
+      .find("pre code").each (i, block) -> hljs.highlightBlock(block)
+    tooltip.find(".inner").css({zoom: .1})
+   
+    this.tooltip?.remove()
+    this.tooltip = tooltip.appendTo(selection)
+
+    tooltip.css({visibility: 'visible'})
+      .find(".inner")
+      .animate({zoom: 1}, 'fast')
+
+
+  hideVariable = (step) ->
+    thisNode = this
+    this.tooltip?.find('.inner').animate({zoom: 0}, 'fast', 'swing', () -> thisNode.tooltip?.remove())
 
   widget.setSize = (Width, Height) ->
     width = Width

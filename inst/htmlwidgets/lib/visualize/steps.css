@@ -14,3 +14,20 @@
     stroke: none;
     font-size: 10pt;
 }
+
+.tooltip {
+    position: absolute;
+    display: block;
+    visibility: hidden;
+}
+
+.tooltip .inner {
+    position: relative;
+    left: '50%';
+    top: '50%';
+    border: 1px solid black;
+}
+
+.tooltip .name {
+    font-weight: bold;
+}
