@@ -100,6 +100,18 @@ graph_js <- function (x)
 }
 
 
+#' @import formatR
+format <- function (code)
+{
+  return(paste(deparse(code), sep = '\n'))
+
+  form <- tryCatch(formatR::tidy_source(text = code, blank = FALSE, comment = FALSE,
+                                        width.cutoff = 72,
+                                        output = FALSE),
+                   error = function(e) 'error')
+  if (!identical(form, 'error')) return(form$text.tidy)
+}
+
 steps <- function ()
 {
   svgPlot <- system.file("examples/plot.svg", package = "experiment")
@@ -109,31 +121,31 @@ steps <- function ()
       id = "1",
       type = "object",
       name = "input",
-      expr = paste(deparse(expression(input <-
+      expr = format(bquote(input <-
           readr::read_csv("halfhourly/block_62.csv", na = 'Null') %>%
           rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
           filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
                  year(timestamp) == 2013)
-      )), sep = "\n")
+      ))
     ),
     list(
       id = "2",
       type = "object",
       name = "input",
-      expr = paste(deparse(expression(input %<>%
+      expr = format(bquote(input %<>%
         mutate(timestamp = floor_date(timestamp, 'hours')) %>%
         group_by(meter, timestamp) %>%
         summarise(usage = sum(usage))
-      )), sep = "\n")
+      ))
     ),
     list(
       id = "3",
       type = "plot",
       contents = jsonlite::base64_enc(readBin(svgPlot, "raw", n = file.size(svgPlot))),
-      expr = paste(deparse(expression(
+      expr = format(bquote(
         with(filter(input, meter == "MAC004929"),
              plot(timestamp, usage, type = 'p', pch = '.'))
-      )), "\n")
+      ))
     )
   )
 
