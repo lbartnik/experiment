@@ -10,6 +10,8 @@ RoundPosition = (center, radius, n) ->
 
 Widget = (selection) ->
 
+  timeout = 150
+  thumbnail = 25
   width  = 500
   height = 500
   data  = null
@@ -75,6 +77,20 @@ Widget = (selection) ->
       .attr("stroke", "#ddd")
     link.exit().remove()
 
+  addPlot = (step) ->
+    fromBase64 = atob(step.contents)
+    parser = new DOMParser()
+    doc = parser.parseFromString(fromBase64, "application/xml")
+    plot = vis.node()
+      .appendChild(doc.documentElement)
+    bb = plot.getBBox()
+    d3.select(plot)
+      .data([step])
+      .attr("id", "plot#{step.id}")
+      .attr("class", "plot")
+      .attr("viewBox", "#{bb.x} #{bb.y} #{bb.width} #{bb.height}")
+    zoomFrame(step, 0)
+
   placeVisuals = (data, whenDone) ->
     force = d3.forceSimulation(data.steps)
       .force("charge", d3.forceManyBody())
@@ -88,8 +104,8 @@ Widget = (selection) ->
       .attr("cx", (d) -> d.x)
       .attr("cy", (d) -> d.y)
     vis.selectAll("svg.plot")
-      .attr("x", (d) -> d.x - 12.5)
-      .attr("y", (d) -> d.y - 12.5)
+      .attr("x", (d) -> d.x - thumbnail/2)
+      .attr("y", (d) -> d.y - thumbnail/2)
     link = linksG.selectAll("line.link")
       .attr("x1", (d) -> d.source.x)
       .attr("y1", (d) -> d.source.y)
@@ -101,46 +117,29 @@ Widget = (selection) ->
       .on("mouseover", show)
       .on("mouseout", hide)
 
-  addPlot = (step) ->
-    fromBase64 = atob(step.contents)
-    parser = new DOMParser()
-    doc = parser.parseFromString(fromBase64, "application/xml")
-    plot = vis.node()
-      .appendChild(doc.documentElement)
-    bb = plot.getBBox()
-    d3.select(plot)
-      .data([step])
-      .attr("id", "plot#{step.id}")
-      .attr("class", "plot")
-      .attr("viewBox", "#{bb.x} #{bb.y} #{bb.width} #{bb.height}")
-      .attr("width", 25)
-      .attr("height", 25)
-
   # transition outside
   show = (step) ->
-    timeout = 150
-    animation?.stop()
-    animation = self = d3.timer (elapsed) ->
-      zoomFrame(self, step, Math.min(elapsed/timeout, 1))
+    this.animation?.stop()
+    this.animation = self = d3.timer (elapsed) ->
+      if elapsed >= timeout
+        self.stop()
+      zoomFrame(step, Math.min(elapsed/timeout, 1))
 
   # transition inside
   hide = (step) ->
-    timeout = 150
-    animation?.stop()
-    animation = self = d3.timer (elapsed) ->
-      zoomFrame(self, step, Math.max(1 - elapsed/timeout, 0))
+    this.animation?.stop()
+    this.animation = self = d3.timer (elapsed) ->
+      if elapsed >= timeout
+        self.stop()
+      zoomFrame(step, Math.max(1 - elapsed/timeout, 0))
 
-  zoomFrame = (timer, step, alpha) ->
-    plot = d3.select("#plot#{step.id}")
-    if alpha == 1 or alpha == 0
-      timer.stop()
-    zoom = Math.max(250 * alpha, 25)
-    plot
+  zoomFrame = (step, alpha) ->
+    zoom = Math.max(250 * alpha, thumbnail)
+    d3.select("#plot#{step.id}")
       .attr("width", zoom)
       .attr("height", zoom)
       .attr("x", step.x - zoom /2)
       .attr("y", step.y - zoom /2)
-
 
   widget.setSize = (Width, Height) ->
     width = Width
