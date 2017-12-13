@@ -8,6 +8,11 @@ RoundPosition = (center, radius, n) ->
     {"x":x,"y":y}
 
 
+DiagonalPosition = (width, height, n) ->
+  return (i) ->
+    { x: width * (i/n + .1), y: height * (i/n + .1) }
+
+
 Widget = (selection) ->
 
   timeout = 150
@@ -41,14 +46,6 @@ Widget = (selection) ->
     placeVisuals(filtered, enableEvents)
 
   setupData = (data) ->
-    # initialize positioning of commits
-    rp = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
-    i  = 0
-    data.steps.forEach (n) ->
-      p = rp(i++)
-      n.x = p.x
-      n.y = p.y
-    
     # replace target/source references in links with actual objects
     stepsMap = mapNodes(data.steps)
     data.links.forEach (l) ->
@@ -102,12 +99,23 @@ Widget = (selection) ->
     zoomFrame(step, 0)
 
   placeVisuals = (data, whenDone) ->
-    force = d3.forceSimulation(data.steps)
-      .force("charge", d3.forceManyBody())
-      .force("link", d3.forceLink(data.links).distance(50))
-      .alphaMin(.1)
-      .on("tick", (e) -> updatePositions())
-      .on("end", whenDone)
+    # initialize positioning of commits
+    # pos = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
+    pos = DiagonalPosition(width, height, data.steps.length)
+    i = 0
+    data.steps.forEach (n) ->
+      p = pos(i++)
+      n.x = p.x
+      n.y = p.y
+
+    updatePositions()
+    whenDone()
+#    force = d3.forceSimulation(data.steps)
+#      .force("charge", d3.forceManyBody())
+#      .force("link", d3.forceLink(data.links).distance(50))
+#      .alphaMin(.3)
+#      .on("tick", (e) -> updatePositions())
+#      .on("end", whenDone)
 
   updatePositions = () ->
     nodesG.selectAll("circle.variable")
