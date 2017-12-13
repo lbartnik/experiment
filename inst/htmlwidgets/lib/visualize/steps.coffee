@@ -9,6 +9,7 @@ RoundPosition = (center, radius, n) ->
 
 
 DiagonalPosition = (width, height, n) ->
+  n = Math.max(n, width/50)
   return (i) ->
     { x: width * (i/n + .1), y: height * (i/n + .1) }
 
@@ -17,12 +18,9 @@ Widget = (selection) ->
 
   timeout = 150
   thumbnail = 25
-  width  = 500
-  height = 500
   data  = null
   vis  = d3.select(selection)
     .append("svg")
-    .attr("viewBox", "0 0 #{width} #{height}")
 
   linksG = vis.append("g").attr("id", "links")
   nodesG = vis.append("g").attr("id", "nodes")
@@ -39,11 +37,21 @@ Widget = (selection) ->
   
   widget = () ->
 
+  widget.setSize = (width, height) ->
+    vis.attr("width", width)
+       .attr("height", height)
+       .attr("viewBox", "0 0 #{width} #{height}")
+    if data
+      refreshVisuals()
+
   widget.setData = (Data) ->
     data = setupData(Data)
+    refreshVisuals()
+  
+  refreshVisuals = () ->
     filtered = filterData(data)
     createVisuals(filtered)
-    placeVisuals(filtered, enableEvents)
+    placeVisuals(filtered)
 
   setupData = (data) ->
     # replace target/source references in links with actual objects
@@ -96,12 +104,13 @@ Widget = (selection) ->
       .attr("id", "plot#{step.id}")
       .attr("class", "plot")
       .attr("viewBox", "#{bb.x} #{bb.y} #{bb.width} #{bb.height}")
-    zoomFrame(step, 0)
+      .attr("width", thumbnail)
+      .attr("height", thumbnail)
 
-  placeVisuals = (data, whenDone) ->
+  placeVisuals = (data, whenDone = enableEvents) ->
     # initialize positioning of commits
     # pos = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
-    pos = DiagonalPosition(width, height, data.steps.length)
+    pos = DiagonalPosition(vis.attr('width'), vis.attr('height'), data.steps.length)
     i = 0
     data.steps.forEach (n) ->
       p = pos(i++)
@@ -159,8 +168,8 @@ Widget = (selection) ->
     vis.select("#plot#{step.id}")
       .attr("width", zoom)
       .attr("height", zoom)
-      .attr("x", step.x - zoom /2)
-      .attr("y", step.y - zoom /2)
+#      .attr("x", step.x - zoom /2)
+#      .attr("y", step.y - zoom /2)
 
   showVariable = (step) ->
     Mustache.parse(template)
@@ -195,12 +204,7 @@ Widget = (selection) ->
     thisNode = this
     this.tooltip?.find('.inner').animate({zoom: 0}, 'fast', 'swing', () -> thisNode.tooltip?.remove())
 
-  widget.setSize = (Width, Height) ->
-    width = Width
-    height = Height
-    vis.attr("width", width)
-       .attr("height", height)
-
+  widget.setSize($(selection).width(), $(selection).height())
   widget
 
 window.Widget = Widget

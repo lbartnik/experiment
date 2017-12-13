@@ -20,6 +20,7 @@
   };
 
   DiagonalPosition = function DiagonalPosition(width, height, n) {
+    n = Math.max(n, width / 50);
     return function (i) {
       return {
         x: width * (i / n + .1),
@@ -29,23 +30,30 @@
   };
 
   Widget = function Widget(selection) {
-    var addPlot, createVisuals, data, enableEvents, filterData, height, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, updatePositions, vis, widget, width, zoomFrame;
+    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, updatePositions, vis, widget, zoomFrame;
     timeout = 150;
     thumbnail = 25;
-    width = 500;
-    height = 500;
     data = null;
-    vis = d3.select(selection).append("svg").attr("viewBox", "0 0 " + width + " " + height);
+    vis = d3.select(selection).append("svg");
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     widget = function widget() {};
+    widget.setSize = function (width, height) {
+      vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
+      if (data) {
+        return refreshVisuals();
+      }
+    };
     widget.setData = function (Data) {
-      var filtered;
       data = setupData(Data);
+      return refreshVisuals();
+    };
+    refreshVisuals = function refreshVisuals() {
+      var filtered;
       filtered = filterData(data);
       createVisuals(filtered);
-      return placeVisuals(filtered, enableEvents);
+      return placeVisuals(filtered);
     };
     setupData = function setupData(data) {
       var stepsMap;
@@ -112,14 +120,15 @@
       doc = parser.parseFromString(fromBase64, "application/xml");
       plot = vis.node().appendChild(doc.documentElement);
       bb = plot.getBBox();
-      d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height);
-      return zoomFrame(step, 0);
+      return d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height).attr("width", thumbnail).attr("height", thumbnail);
     };
-    placeVisuals = function placeVisuals(data, whenDone) {
+    placeVisuals = function placeVisuals(data) {
+      var whenDone = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : enableEvents;
+
       var i, pos;
       // initialize positioning of commits
       // pos = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
-      pos = DiagonalPosition(width, height, data.steps.length);
+      pos = DiagonalPosition(vis.attr('width'), vis.attr('height'), data.steps.length);
       i = 0;
       data.steps.forEach(function (n) {
         var p;
@@ -191,8 +200,10 @@
     zoomFrame = function zoomFrame(step, alpha) {
       var zoom;
       zoom = Math.max(250 * alpha, thumbnail);
-      return vis.select("#plot" + step.id).attr("width", zoom).attr("height", zoom).attr("x", step.x - zoom / 2).attr("y", step.y - zoom / 2);
+      return vis.select("#plot" + step.id).attr("width", zoom).attr("height", zoom);
     };
+    //      .attr("x", step.x - zoom /2)
+    //      .attr("y", step.y - zoom /2)
     showVariable = function showVariable(step) {
       var bcr, code, ref, rendered, tooltip;
       Mustache.parse(template);
@@ -232,11 +243,7 @@
         return (ref1 = thisNode.tooltip) != null ? ref1.remove() : void 0;
       }) : void 0;
     };
-    widget.setSize = function (Width, Height) {
-      width = Width;
-      height = Height;
-      return vis.attr("width", width).attr("height", height);
-    };
+    widget.setSize($(selection).width(), $(selection).height());
     return widget;
   };
 
