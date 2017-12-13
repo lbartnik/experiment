@@ -22,10 +22,9 @@
 }
 
 .tooltip .inner {
-    position: relative;
-    left: '50%';
-    top: '50%';
+    display: inline-block;
     border: 1px solid black;
+    margin: 0px auto;
 }
 
 .tooltip .name {

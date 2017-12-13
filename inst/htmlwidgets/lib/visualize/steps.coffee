@@ -159,11 +159,11 @@ Widget = (selection) ->
       .attr("id", "tooltip_#{step.id}")
       .css({
         left: step.x + width * .05,
-        top: step.y + height * .05,
+        top: step.y + height * .05
       })
       .find("pre code").each (i, block) -> hljs.highlightBlock(block)
     tooltip.find(".inner").css({zoom: .1})
-   
+    
     this.tooltip?.remove()
     this.tooltip = tooltip.appendTo(selection)
 
