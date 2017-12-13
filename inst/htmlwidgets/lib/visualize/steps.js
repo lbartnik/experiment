@@ -20,7 +20,7 @@
   };
 
   Widget = function Widget(selection) {
-    var addPlot, createVisuals, data, enableEvents, filterData, height, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, setupData, showPlot, showVariable, thumbnail, timeout, updatePositions, vis, widget, width, zoomFrame;
+    var addPlot, createVisuals, data, enableEvents, filterData, height, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, updatePositions, vis, widget, width, zoomFrame;
     timeout = 150;
     thumbnail = 25;
     width = 500;
@@ -29,6 +29,7 @@
     vis = d3.select(selection).append("svg").attr("viewBox", "0 0 " + width + " " + height);
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
+    template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     widget = function widget() {};
     widget.setData = function (Data) {
       var filtered;
@@ -110,7 +111,7 @@
     };
     addPlot = function addPlot(step) {
       var bb, doc, fromBase64, parser, plot;
-      fromBase64 = atob(step.contents);
+      fromBase64 = atob(step.contents.replace(/\s/g, ""));
       parser = new DOMParser();
       doc = parser.parseFromString(fromBase64, "application/xml");
       plot = vis.node().appendChild(doc.documentElement);
@@ -182,8 +183,7 @@
       return vis.select("#plot" + step.id).attr("width", zoom).attr("height", zoom).attr("x", step.x - zoom / 2).attr("y", step.y - zoom / 2);
     };
     showVariable = function showVariable(step) {
-      var code, ref, rendered, template, tooltip;
-      template = $('#tooltip-template').html();
+      var bcr, code, ref, rendered, tooltip;
       Mustache.parse(template);
       code = step.expr.constructor === Array ? step.expr.join('\n') : step.expr;
       rendered = Mustache.render(template, {
@@ -191,9 +191,10 @@
         code: code
       });
       tooltip = $(rendered);
+      bcr = this.getBoundingClientRect();
       tooltip.attr("id", "tooltip_" + step.id).css({
-        left: step.x + width * .05,
-        top: step.y + height * .05
+        left: bcr.right,
+        top: bcr.bottom
       }).find("pre code").each(function (i, block) {
         return hljs.highlightBlock(block);
       });

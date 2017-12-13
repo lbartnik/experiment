@@ -55,7 +55,7 @@ find_first_parent <- function (g, id)
 #'
 plot.graph <- function (x, ...)
 {
-  input <- list(data = graph_js(x))
+  input <- list(data = steps())
   # create the widget
   htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }
@@ -116,7 +116,7 @@ steps <- function ()
 {
   svgPlot <- system.file("examples/plot.svg", package = "experiment")
 
-  data <- list(
+  steps <- list(
     list(
       id = "1",
       type = "object",
@@ -154,7 +154,7 @@ steps <- function ()
     list(target = 3, source = 2)
   )
 
-  jsonlite::toJSON(list(data = data, links = links),
+  jsonlite::toJSON(list(steps = steps, links = links),
                    pretty = TRUE, auto_unbox = TRUE)
 }
 

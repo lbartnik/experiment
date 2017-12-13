@@ -21,6 +21,16 @@ Widget = (selection) ->
 
   linksG = vis.append("g").attr("id", "links")
   nodesG = vis.append("g").attr("id", "nodes")
+
+  template =
+    """
+    <div class="tooltip">
+        <div class="inner">
+            <span class="name">{{name}}</span>
+            <pre><code class="R">{{code}}</code></pre>
+        </div>
+    </div>
+    """
   
   widget = () ->
 
@@ -78,7 +88,7 @@ Widget = (selection) ->
     link.exit().remove()
 
   addPlot = (step) ->
-    fromBase64 = atob(step.contents)
+    fromBase64 = atob(step.contents.replace(/\s/g, ""))
     parser = new DOMParser()
     doc = parser.parseFromString(fromBase64, "application/xml")
     plot = vis.node()
@@ -145,7 +155,6 @@ Widget = (selection) ->
       .attr("y", step.y - zoom /2)
 
   showVariable = (step) ->
-    template = $('#tooltip-template').html()
     Mustache.parse(template)
 
     code = if step.expr.constructor is Array then step.expr.join('\n') else step.expr
@@ -155,11 +164,13 @@ Widget = (selection) ->
     })
     tooltip = $(rendered)
 
+    bcr = this.getBoundingClientRect()
+
     tooltip
       .attr("id", "tooltip_#{step.id}")
       .css({
-        left: step.x + width * .05,
-        top: step.y + height * .05
+        left: bcr.right,
+        top: bcr.bottom
       })
       .find("pre code").each (i, block) -> hljs.highlightBlock(block)
     tooltip.find(".inner").css({zoom: .1})
