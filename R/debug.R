@@ -16,7 +16,11 @@ show_commits <- function (simple = TRUE)
 simulate_user_command <- function (expr, env) {
   expr <- substitute(expr)
   eval(expr, env)
-  update_current_commit(internal_state, env, recordPlot(), expr)
+
+  plot <- tryCatch(recordPlot(), error = function(e)'error')
+  if (identical(plot, 'error')) plot <- NULL
+
+  update_current_commit(internal_state, env, plot, expr)
 }
 
 
@@ -49,6 +53,7 @@ simulate_london_meters <- function ()
   library(lubridate)
 
   user_space <- new.env()
+  try(dev.off())
 
   simulate_user_command(
     input <-
@@ -60,6 +65,9 @@ simulate_london_meters <- function ()
     user_space
   )
 
+  # dplyr adds attributes to objects when filter is called
+  # it's probably some kind of smart pre-computed cache but
+  # it messes up object tracking
   simulate_user_command(
     input %<>%
       mutate(timestamp = floor_date(timestamp, 'hours')) %>%
@@ -68,13 +76,10 @@ simulate_london_meters <- function ()
     user_space
   )
 
+  # use subset() instead of filter() to maintain object id
   simulate_user_command(
-    with(filter(input, meter == "MAC004929"),
+    with(subset(input, meter == "MAC004929"),
          plot(timestamp, usage, type = 'p', pch = '.')),
     user_space
-  )
-
-  simulate_user_command(
-    x <- 1, user_space
   )
 }

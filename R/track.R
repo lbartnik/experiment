@@ -57,9 +57,12 @@ task_callback <- function (expr, result, successful, printed)
     error = function(e) warning('could not create a commit: ',
                                 e$message, call. = FALSE),
     {
+      last_plot <- tryCatch(recordPlot(), error = function(e)'error')
+      if (identical(last_plot, 'error')) last_plot <- NULL
+
       # it's length of ls() because we don't care for hidden objects
       if (length(ls(globalenv())))
-        update_current_commit(internal_state, globalenv(), recordPlot(), expr)
+        update_current_commit(internal_state, globalenv(), last_plot, expr)
     }
   )
 
