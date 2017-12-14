@@ -126,6 +126,9 @@ plot_as_svg <- function (pl)
 {
   path <- tempfile(fileext = ".svg")
 
+  # TODO if `pl` has been recorded without dev.control("enable"), the
+  #      plot might be empty; it might be necessary to check for that
+
   svg(path)
   replayPlot(pl)
   dev.off()
