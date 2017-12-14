@@ -2,15 +2,29 @@
 % Please edit documentation in R/graph.R
 \name{graph}
 \alias{graph}
+\alias{is_graph}
 \alias{plot.graph}
-\title{Graph of commits.}
+\title{Graph of all commits in `store`.}
 \usage{
 graph(store, .data = FALSE)
 
+is_graph(x)
+
 \method{plot}{graph}(x, ...)
 }
+\arguments{
+\item{store}{A data store, e.g. `storage::filesystem`.}
+
+\item{.data}{Wether to read full object data.}
+}
+\value{
+An object of S3 class `graph`.
+}
 \description{
-Graph of commits.
+Reads all commits from `store` and assigns the `children` and
+`level` attributes. `children` is a `character` vector containing
+identifiers of children commit, `level` is the distance from the
+root of the tree.
 }
 \examples{
 plot(graph(modelling()))

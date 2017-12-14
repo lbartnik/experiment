@@ -1,7 +1,18 @@
-#' Graph of commits.
+#' Graph of all commits in `store`.
+#'
+#' Reads all commits from `store` and assigns the `children` and
+#' `level` attributes. `children` is a `character` vector containing
+#' identifiers of children commit, `level` is the distance from the
+#' root of the tree.
+#'
+#' @param store A data store, e.g. `storage::filesystem`.
+#' @param .data Wether to read full object data.
+#' @return An object of S3 class `graph`.
 #'
 #' @export
 #' @import storage
+#' @rdname graph
+#'
 graph <- function (store, .data = FALSE)
 {
   # read all commits
@@ -25,23 +36,70 @@ graph <- function (store, .data = FALSE)
     commits
   }
 
-  root <- names(Filter(function (co) is.na(co$parent), commits))
-  structure(assign_children(commits, root, 1), class = 'graph')
+  structure(assign_children(commits, find_root_id(commits), 1),
+            class = 'graph')
 }
 
-
+#' @rdname graph
 is_graph <- function (x) inherits(x, 'graph')
 
 
-graph2steps <- function (graph)
+find_root_id <- function (g)
+{
+  stopifnot(is_graph(g))
+  root <- names(Filter(function (co) is.na(co$parent), g))
+
+  stopifnot(length(root) == 1)
+  root
+}
+
+#' Transform a graph of commits into a graph of steps.
+#'
+#' A step is an introduction of a new object or a new plot to the
+#' session. Graph of steps is easier to read for humans than a graph of
+#' commits becase only the relevant (new) information is shown in each
+#' node of the graph. Thus, translating from commits to steps is the
+#' first step to visualize the history stored in commits.
+#'
+#' @param graph Object returned by [graph()].
+#' @return Object of S3 class `steps`.
+#'
+graph_to_steps <- function (graph)
 {
   stopifnot(is_graph(graph))
 
-  root <- names(Filter(function (co) is.na(co$parent), graph))
-  processCommit(graph, root)
+  # convert each single commit
+  all <- lapply(graph, function (commit) {
+    new_objects <- introduced_in(graph, commit$id)
+    commit_to_steps(commit, new_objects)
+  })
+
+  steps <- unlist(lapply(all, `[[`, i = 'steps'), recursive = FALSE)
+  links <- unlist(lapply(all, `[[`, i = 'links'), recursive = FALSE)
+
+  # connect the last object of each "parent" commit with the first
+  # object of each of its "children"
+  bridges <- lapply(graph, function (commit) {
+    lapply(commit$children, function (child) {
+      list(
+        source = last(all[[commit$id]]$steps)$id,
+        target = first(all[[child]]$steps)$id
+      )
+    })
+  })
+  bridges <- unlist(bridges, recursive = FALSE)
+  links <- c(links, bridges)
+
+  # return the final "steps" structure
+  structure(list(steps = unname(steps), links = unname(links)),
+            class = 'steps')
 }
 
-commit2steps <- function (commit, filter)
+last <- function (x) x[[length(x)]]
+first <- function(x) x[[1]]
+
+
+commit_to_steps <- function (commit, filter)
 {
   filter <- names(commit$objects) %in% filter
 
@@ -81,7 +139,8 @@ commit2steps <- function (commit, filter)
   list(steps = steps, links = links)
 }
 
-new_objects <- function (graph, id)
+
+introduced_in <- function (graph, id)
 {
   c <- graph[[id]]
   if (is.na(c$parent)) return(names(c$objects))
@@ -92,23 +151,6 @@ new_objects <- function (graph, id)
   }, names(c$objects))
 }
 
-processCommit <- function (graph, id)
-{
-  parent <- commit2steps(graph[[id]], new_objects(graph, id))
-  children <- lapply(graph[[id]]$children, function (child) processCommit(graph, child))
-
-  bridge <- lapply(children, function (child) list(
-    source = tail(parent$steps, 1)[[1]]$id,
-    target = head(child$steps, 1)[[1]]$id
-  ))
-
-  links <- c(parent$links, bridge,
-             unlist(lapply(children, `[[`, i = 'links'), recursive = FALSE))
-  steps <- c(parent$steps,
-             unlist(lapply(children, `[[`, i = 'steps'), recursive = FALSE))
-
-  list(steps = steps, links = links)
-}
 
 
 
@@ -185,7 +227,7 @@ find_first_parent <- function (g, id)
 #'
 plot.graph <- function (x, ...)
 {
-  input <- list(data = graph2steps(x))
+  input <- list(data = graph_to_steps(x))
   # create the widget
   htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }

@@ -1,6 +1,8 @@
-* store plots the same way as objects; show plots in the history
 * history by new objects introduced to the session, not by commits
 
+* search
+  query_by(inherits("lm"))
+  query_by(name("input"))
 
 * explain: find a full sequence of calls leading to a given object
   - option to plot explanation as a graph with vis.js
