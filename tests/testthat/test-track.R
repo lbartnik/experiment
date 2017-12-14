@@ -18,7 +18,7 @@ test_that("plot is cached", {
   state <- empty_state()
 
   update_current_commit(state, list(x = 1), NULL, bquote(x <- 1))
-  update_current_commit(state, list(x = 1), new_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 1), dummy_plot(), bquote(plot(1)))
   update_current_commit(state, list(x = 2), NULL, bquote(x <- 2))
 
   last <- state$last_commit
@@ -31,3 +31,22 @@ test_that("plot is cached", {
   expect_identical(root$objects, list(x = 1))
 })
 
+
+test_that("multiple plots", {
+  state <- empty_state()
+
+  update_current_commit(state, list(x = 1), NULL, bquote(x <- 1))
+  update_current_commit(state, list(x = 1), random_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 1), random_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 1), random_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 2), NULL, bquote(x <- 2))
+
+  last <- state$last_commit
+  expect_identical(last$objects, list(x = 2))
+
+  prev <- commit_restore(last$parent, state$stash)
+  expect_named(prev$objects, paste0('plot', 1:3))
+
+  root <- commit_restore(prev$parent, state$stash)
+  expect_identical(root$objects, list(x = 1))
+})
