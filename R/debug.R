@@ -8,7 +8,7 @@ show_commits <- function (simple = TRUE)
     co <- commit_restore(id, internal_state$stash)
     print(co, simple = simple)
   })
-  
+
   invisible()
 }
 
@@ -16,7 +16,7 @@ show_commits <- function (simple = TRUE)
 simulate_user_command <- function (expr, env) {
   expr <- substitute(expr)
   eval(expr, env)
-  update_current_commit(env, expr)
+  update_current_commit(internal_state, env, recordPlot(), expr)
 }
 
 
@@ -35,7 +35,7 @@ simulate_simple_interactions <- function ()
 simulate_modelling <- function ()
 {
   user_space <- new.env()
-  
+
   simulate_user_command(x <- lm(Sepal.Width ~ Sepal.Length, iris), user_space)
   simulate_user_command(iris2 <- iris, user_space)
   simulate_user_command(iris2$Sepal.Length <- iris2$Sepal.Length ** 2, user_space)
@@ -43,3 +43,38 @@ simulate_modelling <- function ()
 }
 
 
+simulate_london_meters <- function ()
+{
+  library(dplyr)
+  library(lubridate)
+
+  user_space <- new.env()
+
+  simulate_user_command(
+    input <-
+      system.file("extdata/block_62.csv", package = "experiment") %>%
+      readr::read_csv(na = 'Null') %>%
+      rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+      filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
+             year(timestamp) == 2013),
+    user_space
+  )
+
+  simulate_user_command(
+    input %<>%
+      mutate(timestamp = floor_date(timestamp, 'hours')) %>%
+      group_by(meter, timestamp) %>%
+      summarise(usage = sum(usage)),
+    user_space
+  )
+
+  simulate_user_command(
+    with(filter(input, meter == "MAC004929"),
+         plot(timestamp, usage, type = 'p', pch = '.')),
+    user_space
+  )
+
+  simulate_user_command(
+    x <- 1, user_space
+  )
+}
