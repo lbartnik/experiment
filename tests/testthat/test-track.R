@@ -25,7 +25,7 @@ test_that("plot is cached", {
   expect_identical(last$objects, list(x = 2))
 
   prev <- commit_restore(last$parent, state$stash)
-  expect_named(prev$objects, 'plot1')
+  expect_named(prev$objects, c('x', '.plot'), ignore.order = TRUE)
 
   root <- commit_restore(prev$parent, state$stash)
   expect_identical(root$objects, list(x = 1))
@@ -36,17 +36,22 @@ test_that("multiple plots", {
   state <- empty_state()
 
   update_current_commit(state, list(x = 1), NULL, bquote(x <- 1))
-  update_current_commit(state, list(x = 1), random_plot(), bquote(plot(1)))
-  update_current_commit(state, list(x = 1), random_plot(), bquote(plot(1)))
-  update_current_commit(state, list(x = 1), random_plot(), bquote(plot(1)))
-  update_current_commit(state, list(x = 2), NULL, bquote(x <- 2))
+  update_current_commit(state, list(x = 2), random_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 3), random_plot(), bquote(plot(1)))
+  update_current_commit(state, list(x = 4), NULL, bquote(x <- 2))
 
   last <- state$last_commit
-  expect_identical(last$objects, list(x = 2))
+  expect_identical(last$objects, list(x = 4))
 
   prev <- commit_restore(last$parent, state$stash)
-  expect_named(prev$objects, paste0('plot', 1:3))
+  expect_named(prev$objects, c('x', '.plot'), ignore.order = TRUE)
+  expect_equal(prev$objects$x, 3)
 
-  root <- commit_restore(prev$parent, state$stash)
+  prv2 <- commit_restore(prev$parent, state$stash)
+  expect_named(prev$objects, c('x', '.plot'), ignore.order = TRUE)
+  expect_false(identical(prev$objects$.plot, prv2$objects$.plot))
+  expect_equal(prv2$objects$x, 2)
+
+  root <- commit_restore(prv2$parent, state$stash)
   expect_identical(root$objects, list(x = 1))
 })

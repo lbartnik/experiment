@@ -19,7 +19,6 @@ initiate_state <- function ()
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
   internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
-  internal_state$plots            <- list()
 #  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
 }
 
@@ -82,34 +81,21 @@ task_callback <- function (expr, result, successful, printed)
 #'
 update_current_commit <- function (state, env, plot, expr)
 {
-  co <- commit(as.list(env), expr)
+  # prepare the list of objects
+  env <- as.list(env)
+  env$.plot <- plot_as_svg(plot)
+
+  # TODO can both, env and plot, change as a result of a single command?
+
+  # now create and process the commit
+  co <- commit(env, expr)
 
   # if there is new data...
   if (!commit_equal(co, state$last_commit))
   {
-    # ... first flush plots, if any are held in the list
-    if (length(state$plots))
-    {
-      # TODO what are the conditions for replayPlot? how well does a recordedplot
-      # object preserve the input data, parameters, device setup, etc.?
-      plots <- lapply(state$plots, plot_as_svg)
-
-      pl <- plot_commit(plots, expr, state$last_commit$id)
-      state$last_commit <- commit_store(pl, state$stash)
-
-      state$plots <- list()
-    }
-
     # ... and then write down actual data
     parent(co) <- state$last_commit$id
     state$last_commit <- commit_store(co, state$stash)
-  }
-
-  # TODO can both, env and plot, change as a result of a single command?
-  if (!is.null(plot) && !any(vapply(state$plots, identical, logical(1), plot)))
-  {
-    # cache any new plots
-    state$plots <- append(state$plots, list(plot))
   }
 
   invisible(state$last_commit$id)
@@ -124,6 +110,8 @@ update_current_commit <- function (state, env, plot, expr)
 #'
 plot_as_svg <- function (pl)
 {
+  if (is.null(pl)) return(NULL)
+
   path <- tempfile(fileext = ".svg")
 
   # TODO if `pl` has been recorded without dev.control("enable"), the
