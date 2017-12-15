@@ -1,8 +1,12 @@
 * history by new objects introduced to the session, not by commits
 
-* search
+* search:
   query_by(inherits("lm"))
   query_by(name("input"))
+
+* Widget:
+  maximize tooltip/plot towards the center of the canvas
+  add onmouseout to tooltip/plot in case it covers the node/miniature
 
 * explain: find a full sequence of calls leading to a given object
   - option to plot explanation as a graph with vis.js

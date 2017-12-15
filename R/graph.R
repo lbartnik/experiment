@@ -22,36 +22,45 @@ graph <- function (store, .data = FALSE)
     commit_restore(commit_id, store, .data = .data))
   names(commits) <- ids
 
-  # identify children and levels; start with root
-  assign_children <- function (commits, id, level)
-  {
-    found <- names(Filter(function (co) co$parent == id, commits))
-    commits[[id]]$children <- found
-    commits[[id]]$level <- level
+  commits <- structure(commits, class = 'graph')
+  assign_children(commits, find_root_id(commits), 1)
+}
 
-    for (id in found) {
-      commits <- assign_children(commits, id, level + 1)
-    }
+# identify children and levels; start with root
+# used only inside graph()
+assign_children <- function (commits, id, level)
+{
+  found <- names(Filter(function (co) co$parent == id, commits))
+  commits[[id]]$children <- found
+  commits[[id]]$level <- level
 
-    commits
+  for (id in found) {
+    commits <- assign_children(commits, id, level + 1)
   }
 
-  structure(assign_children(commits, find_root_id(commits), 1),
-            class = 'graph')
+  commits
 }
+
 
 #' @rdname graph
 is_graph <- function (x) inherits(x, 'graph')
 
 
-find_root_id <- function (g)
+#' @rdname graph
+#' @export
+#' @import htmlwidgets
+#'
+#' @examples
+#' plot(graph(modelling()))
+#'
+plot.graph <- function (x, ...)
 {
-  stopifnot(is_graph(g))
-  root <- names(Filter(function (co) is.na(co$parent), g))
-
-  stopifnot(length(root) == 1)
-  root
+  input <- list(data = graph_to_steps(x))
+  # create the widget
+  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
 }
+
+
 
 #' Transform a graph of commits into a graph of steps.
 #'
@@ -61,8 +70,13 @@ find_root_id <- function (g)
 #' node of the graph. Thus, translating from commits to steps is the
 #' first step to visualize the history stored in commits.
 #'
+#' `graph_to_steps` is the main function that orchestrates the
+#' transformation.
+#'
 #' @param graph Object returned by [graph()].
 #' @return Object of S3 class `steps`.
+#'
+#' @rdname steps
 #'
 graph_to_steps <- function (graph)
 {
@@ -95,19 +109,23 @@ graph_to_steps <- function (graph)
             class = 'steps')
 }
 
-last <- function (x) x[[length(x)]]
-first <- function(x) x[[1]]
 
 
-commit_to_steps <- function (commit, filter)
+#' @description `commit_to_steps` generates a `list` with two elements:
+#' * `steps` with a separate entry for each variable/plot that matches
+#'   the `objects` filter
+#' * `links` which defines links (graph edges) between `steps`
+#'
+#' @param commit A [commit()] object.
+#' @param objects Filter for objects present in the commit.
+#' @return `commit_to_steps` returns a `list` of `steps` and `links`.
+#'
+#' @rdname steps
+#'
+commit_to_steps <- function (commit, objects)
 {
-  filter <- names(commit$objects) %in% filter
-
-  names <- names(commit$objects)[filter]
-  ids <- as.character(commit$object_ids)[filter]
-  objects <- commit$objects[filter]
-
-  steps <- mapply(function(name, id, object) {
+  # turns an object/plot into a step structure
+  generate_step <- function(name, id, object) {
     if (identical(name, '.plot')) {
       list(
         type = 'plot',
@@ -124,14 +142,20 @@ commit_to_steps <- function (commit, filter)
         expr = format(commit$expr)
       )
     }
-  },
-  name = names,
-  id   = ids,
-  object = objects,
-  SIMPLIFY = FALSE,
-  USE.NAMES = FALSE
-  ) # steps <- mapply
+  }
 
+  # define the TRUE/FALSE filter
+  filter <- names(commit$objects) %in% objects
+
+  names <- names(commit$objects)[filter]
+  ids <- as.character(commit$object_ids)[filter]
+  objects <- commit$objects[filter]
+
+  # get all steps
+  steps <- mapply(generate_step, name = names, id = ids, object = objects,
+                  SIMPLIFY = FALSE, USE.NAMES = FALSE)
+
+  # get links between these teps
   links <- mapply(function (source, target) list(source = source, target = target),
                   source = head(ids, -1), target = tail(ids, -1),
                   SIMPLIFY = FALSE, USE.NAMES = FALSE)
@@ -140,6 +164,15 @@ commit_to_steps <- function (commit, filter)
 }
 
 
+#' @description `introduced_in` generates the filter for
+#' `commit_to_steps`'s `objects` parameter. It does it by comparing the
+#' contents of the commit `id` against the contents of its parent.
+#'
+#' @param id Identifier of a commit in `graph`.
+#' @return `introduced_in` returns a `character` vector.
+#'
+#' @rdname steps
+#'
 introduced_in <- function (graph, id)
 {
   c <- graph[[id]]
@@ -152,125 +185,14 @@ introduced_in <- function (graph, id)
 }
 
 
-
-
-
-
-
-steps <- function ()
+find_root_id <- function (g)
 {
-  svgPlot <- system.file("examples/plot.svg", package = "experiment")
+  stopifnot(is_graph(g))
+  root <- names(Filter(function (co) is.na(co$parent), g))
 
-  steps <- list(
-    list(
-      id = "1",
-      type = "object",
-      name = "input",
-      expr = format(bquote(input <-
-                             system.file("extdata/block_62.csv", package = "experiment") %>%
-                             readr::read_csv(na = 'Null') %>%
-                             rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
-                             filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
-                                    year(timestamp) == 2013)
-      ))
-    ),
-    list(
-      id = "2",
-      type = "object",
-      name = "input",
-      expr = format(bquote(input %<>%
-                             mutate(timestamp = floor_date(timestamp, 'hours')) %>%
-                             group_by(meter, timestamp) %>%
-                             summarise(usage = sum(usage))
-      ))
-    ),
-    list(
-      id = "3",
-      type = "plot",
-      contents = jsonlite::base64_enc(readBin(svgPlot, "raw", n = file.size(svgPlot))),
-      expr = format(bquote(
-        with(filter(input, meter == "MAC004929"),
-             plot(timestamp, usage, type = 'p', pch = '.'))
-      ))
-    )
-  )
-
-  links <- list(
-    list(target = 2, source = 1),
-    list(target = 3, source = 2)
-  )
-
-  jsonlite::toJSON(list(steps = steps, links = links),
-                   pretty = TRUE, auto_unbox = TRUE)
+  stopifnot(length(root) == 1)
+  root
 }
-
-
-
-
-
-find_first_parent <- function (g, id)
-{
-  g <- Filter(function (co) (id %in% co$object_ids), g)
-  i <- which.min(vapply(g, function (co) co$level, numeric(1)))
-  g[[i]]
-}
-
-
-#' @rdname graph
-#' @export
-#' @import htmlwidgets
-#' @import dplyr
-#' @importFrom magrittr %>%
-#'
-#' @examples
-#' plot(graph(modelling()))
-#'
-plot.graph <- function (x, ...)
-{
-  input <- list(data = graph_to_steps(x))
-  # create the widget
-  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
-}
-
-
-#' @export
-fullhistory <- function() graph(internal_state$stash, TRUE)
-
-
-#' @import storage
-graph_js <- function (x)
-{
-  # nodes: commits
-  commits <- lapply(x, function (n) {
-    list(id     = n$id,
-         label  = storage::shorten(n$id),
-         rclass = "commit")
-  })
-  commits <- unname(commits)
-
-  # nodes: objects
-  objects <- lapply(x, function (n) {
-    mapply(function (obj, id, name) {
-      list(id     = paste0(id, ':', name),
-           rclass = class(obj)[[1]],
-           label  = name)
-    }, obj = n$objects, id = n$object_ids, name = names(n$objects), SIMPLIFY = FALSE)
-  })
-  objects <- unname(unlist(objects, recursive = FALSE))
-
-  # links
-  links <- lapply(x, function (n) {
-    children <- lapply(n$children, function (c) list(source = n$id, target = c))
-    objects  <- lapply(paste0(n$object_ids, ':', names(n$objects)),
-                       function (target) list(source = n$id, target = target))
-    c(children, objects)
-  })
-  links <- unname(unlist(links, recursive = FALSE))
-
-  jsonlite::toJSON(list(commits = commits, objects = objects, links = links),
-                   pretty = FALSE, auto_unbox = TRUE)
-}
-
 
 #' @import formatR
 format <- function (code)
@@ -283,3 +205,25 @@ format <- function (code)
                    error = function(e) 'error')
   if (!identical(form, 'error')) return(form$text.tidy)
 }
+
+
+
+
+
+#' @import jsonlite
+graph_to_json <- function (g)
+{
+  stopifnot(is_graph(g))
+  steps <- graph_to_steps(g)
+  jsonlite::toJSON(steps, pretty = TRUE, auto_unbox = TRUE)
+}
+
+find_first_parent <- function (g, id)
+{
+  g <- Filter(function (co) (id %in% co$object_ids), g)
+  i <- which.min(vapply(g, function (co) co$level, numeric(1)))
+  g[[i]]
+}
+
+#' @export
+fullhistory <- function() graph(internal_state$stash, TRUE)
