@@ -79,7 +79,11 @@
       return data;
     };
     createVisuals = function createVisuals(data) {
-      var j, len, link, node, ref, step, steps;
+      var enter, j, len, link, node, nodeSize, ref, step, steps;
+      // this sizes each node
+      nodeSize = function nodeSize(selection) {
+        return selection.attr("width", 2 * thumbnail).attr("height", thumbnail).attr("rx", thumbnail / 3).attr("ry", thumbnail / 3);
+      };
       // add regular steps
       steps = function () {
         var j, len, ref, results;
@@ -93,10 +97,15 @@
         }
         return results;
       }();
-      node = nodesG.selectAll("circle.variable").data(steps, function (d) {
+      node = nodesG.selectAll("g.variable").data(steps, function (d) {
         return d.id;
       });
-      node.enter().append("circle").attr("class", "variable").attr("r", 10);
+      enter = node.enter().append("svg").attr("class", "variable").attr("viewBox", "-1 -2 52 29").attr("width", "50").attr("height", "25");
+      nodeSize(enter.append("rect"));
+      enter.append("text").attr("class", "label").attr("text-anchor", "middle").attr("alignment-baseline", "middle").attr("y", '50%').attr("x", '50%').text(function (d) {
+        return d.name;
+      });
+      nodeSize(enter.append("rect")).attr("class", "face").style('fill', 'transparent');
       node.exit().remove();
       ref = data.steps;
       for (j = 0, len = ref.length; j < len; j++) {
@@ -137,7 +146,7 @@
       });
       root = stratify(data.steps);
       root.sort();
-      tree = d3.tree().size([vis.attr("width") - thumbnail, vis.attr("height") - thumbnail - 150]);
+      tree = d3.tree().size([vis.attr("width") - thumbnail * 1.5, vis.attr("height") - thumbnail * 1.5 - 150]);
       root = tree(root);
       min_x = root.descendants().map(function (n) {
         return n.x;
@@ -153,8 +162,8 @@
       root.each(function (n) {
         var s;
         s = nodesMap.get(n.id);
-        s.x = n.x + thumbnail / 2 - min_x;
-        return s.y = n.y + thumbnail / 2 - min_y;
+        s.x = n.x + thumbnail - min_x;
+        return s.y = n.y + thumbnail / 1.75 - min_y;
       });
       updatePositions();
       return whenDone();
@@ -169,10 +178,10 @@
     //      .nodes(data.steps)
     updatePositions = function updatePositions() {
       var link;
-      nodesG.selectAll("circle.variable").attr("cx", function (d) {
-        return d.x;
-      }).attr("cy", function (d) {
-        return d.y;
+      nodesG.selectAll("svg.variable").attr("x", function (d) {
+        return d.x - thumbnail;
+      }).attr("y", function (d) {
+        return d.y - thumbnail / 2;
       });
       vis.selectAll("svg.plot").attr("x", function (d) {
         return d.x - thumbnail / 2;
@@ -191,7 +200,7 @@
     };
     enableEvents = function enableEvents() {
       vis.selectAll("svg.plot").on("mouseover", showPlot).on("mouseout", hidePlot);
-      return vis.selectAll("circle.variable").on("mouseover", showVariable).on("mouseout", hideVariable);
+      return vis.selectAll("rect.face").on("mouseover", showVariable).on("mouseout", hideVariable);
     };
     // transition outside
     showPlot = function showPlot(step) {

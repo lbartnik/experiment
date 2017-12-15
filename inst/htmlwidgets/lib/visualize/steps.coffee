@@ -74,13 +74,34 @@ Widget = (selection) ->
   filterData = (data) -> data
 
   createVisuals = (data) ->
+    # this sizes each node
+    nodeSize = (selection) ->
+      selection
+        .attr("width", 2*thumbnail)
+        .attr("height", thumbnail)
+        .attr("rx", thumbnail/3)
+        .attr("ry", thumbnail/3)
+
     # add regular steps
     steps = (step for step in data.steps when step.type is 'object')
-    node = nodesG.selectAll("circle.variable")
+    node = nodesG.selectAll("g.variable")
       .data(steps, (d) -> d.id)
-    node.enter().append("circle")
+    enter = node.enter().append("svg")
       .attr("class", "variable")
-      .attr("r", 10)
+      .attr("viewBox", "-1 -2 52 29")
+      .attr("width", "50")
+      .attr("height", "25")
+    nodeSize enter.append("rect")
+    enter.append("text")
+      .attr("class", "label")
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("y", '50%')
+      .attr("x", '50%')
+      .text((d) -> d.name)
+    nodeSize enter.append("rect")
+      .attr("class", "face")
+      .style('fill', 'transparent')
     node.exit().remove()
     
     # add plots
@@ -120,8 +141,8 @@ Widget = (selection) ->
 
     root.sort()
     tree = d3.tree()
-      .size([vis.attr("width") - thumbnail,
-             vis.attr("height") - thumbnail - 150])
+      .size([vis.attr("width") - thumbnail * 1.5,
+             vis.attr("height") - thumbnail * 1.5 - 150])
     root = tree(root)
 
     min_x = root.descendants().map((n) -> n.x).reduce((a,b) -> Math.min(a,b))
@@ -130,8 +151,8 @@ Widget = (selection) ->
     nodesMap = mapNodes(data.steps)
     root.each (n) ->
       s = nodesMap.get(n.id)
-      s.x = n.x + thumbnail/2 - min_x
-      s.y = n.y + thumbnail/2 - min_y
+      s.x = n.x + thumbnail - min_x
+      s.y = n.y + thumbnail/1.75 - min_y
     
     updatePositions()
     whenDone()
@@ -145,9 +166,9 @@ Widget = (selection) ->
 #      .nodes(data.steps)
 
   updatePositions = () ->
-    nodesG.selectAll("circle.variable")
-      .attr("cx", (d) -> d.x)
-      .attr("cy", (d) -> d.y)
+    nodesG.selectAll("svg.variable")
+      .attr("x", (d) -> d.x - thumbnail)
+      .attr("y", (d) -> d.y - thumbnail/2)
     vis.selectAll("svg.plot")
       .attr("x", (d) -> d.x - thumbnail/2)
       .attr("y", (d) -> d.y - thumbnail/2)
@@ -161,7 +182,7 @@ Widget = (selection) ->
     vis.selectAll("svg.plot")
       .on("mouseover", showPlot)
       .on("mouseout", hidePlot)
-    vis.selectAll("circle.variable")
+    vis.selectAll("rect.face")
       .on("mouseover", showVariable)
       .on("mouseout", hideVariable)
 

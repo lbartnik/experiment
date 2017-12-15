@@ -4,15 +4,15 @@
 }
 
 .variable {
-    fill: rgb(166, 165, 175);
-    stroke: black;
+    fill: rgb(247, 247, 247);
+    stroke: rgb(150, 150, 150);
 }
 
 .label {
-    font-family: 'Times New Roman', Times, serif;
+    font-family: monospace;
     fill: black;
     stroke: none;
-    font-size: 10pt;
+    font-size: 8pt;
 }
 
 .tooltip {
