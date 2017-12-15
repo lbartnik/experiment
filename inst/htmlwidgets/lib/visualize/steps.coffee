@@ -14,6 +14,7 @@ DiagonalPosition = (width, height, n) ->
     { x: width * (i/n + .1), y: height * (i/n + .1) }
 
 
+
 Widget = (selection) ->
 
   timeout = 150
@@ -108,15 +109,28 @@ Widget = (selection) ->
       .attr("height", thumbnail)
 
   placeVisuals = (data, whenDone = enableEvents) ->
-    # initialize positioning of commits
-    # pos = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
-    pos = DiagonalPosition(vis.attr('width'), vis.attr('height'), data.steps.length)
-    i = 0
-    data.steps.forEach (n) ->
-      p = pos(i++)
-      n.x = p.x
-      n.y = p.y
+    parentsMap = d3.map()
+    data.links.forEach (l) ->
+      parentsMap.set(l.target.id, l.source.id)
 
+    root = d3.stratify()
+      .id((d) -> d.id)
+      .parentId((d) -> parentsMap.get(d.id))
+    root = root(data.steps)
+
+    root.sort()
+    tree = d3.tree()
+      .size([vis.attr("width") - thumbnail, vis.attr("height") - thumbnail - 250])
+    root = tree(root)
+
+    nodesMap = mapNodes(data.steps)
+    root.each (n) ->
+      s = nodesMap.get(n.id)
+      s.x = n.x + thumbnail/2
+      s.y = n.y + thumbnail/2
+    
+    console.log(data.steps)
+    
     updatePositions()
     whenDone()
 #    force = d3.forceSimulation(data.steps)

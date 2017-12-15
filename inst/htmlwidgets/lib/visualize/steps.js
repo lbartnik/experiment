@@ -125,17 +125,28 @@
     placeVisuals = function placeVisuals(data) {
       var whenDone = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : enableEvents;
 
-      var i, pos;
-      // initialize positioning of commits
-      // pos = RoundPosition({x: width/2, y: height/2}, 120, data.steps.length)
-      pos = DiagonalPosition(vis.attr('width'), vis.attr('height'), data.steps.length);
-      i = 0;
-      data.steps.forEach(function (n) {
-        var p;
-        p = pos(i++);
-        n.x = p.x;
-        return n.y = p.y;
+      var nodesMap, parentsMap, root, tree;
+      parentsMap = d3.map();
+      data.links.forEach(function (l) {
+        return parentsMap.set(l.target.id, l.source.id);
       });
+      root = d3.stratify().id(function (d) {
+        return d.id;
+      }).parentId(function (d) {
+        return parentsMap.get(d.id);
+      });
+      root = root(data.steps);
+      root.sort();
+      tree = d3.tree().size([vis.attr("width") - thumbnail, vis.attr("height") - thumbnail - 250]);
+      root = tree(root);
+      nodesMap = mapNodes(data.steps);
+      root.each(function (n) {
+        var s;
+        s = nodesMap.get(n.id);
+        s.x = n.x + thumbnail / 2;
+        return s.y = n.y + thumbnail / 2;
+      });
+      console.log(data.steps);
       updatePositions();
       return whenDone();
     };
