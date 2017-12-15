@@ -106,7 +106,7 @@
       enter.append("text").attr("class", "label").attr("text-anchor", "middle").attr("alignment-baseline", "middle").attr("y", '50%').attr("x", '50%').text(function (d) {
         return d.name;
       });
-      nodeSize(enter.append("rect")).attr("class", "face").style('fill', 'transparent');
+      nodeSize(enter.append("rect")).attr("class", "face");
       node.exit().remove();
       ref = data.steps;
       for (j = 0, len = ref.length; j < len; j++) {
@@ -134,7 +134,7 @@
       step.width = bb.width - bb.x;
       step.height = bb.height - bb.y;
       // add the visual
-      return d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height).attr("width", thumbnail).attr("height", thumbnail);
+      return d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height).attr("width", thumbnail).attr("height", thumbnail).append("rect").attr("class", "face").attr('width', '100%').attr('height', '100%');
     };
     placeVisuals = function placeVisuals(data) {
       var whenDone = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : enableEvents;
@@ -210,8 +210,8 @@
       });
     };
     enableEvents = function enableEvents() {
-      vis.selectAll("svg.plot").on("mouseover", showPlot).on("mouseout", hidePlot);
-      return vis.selectAll("rect.face").on("mouseover", showVariable).on("mouseout", hideVariable);
+      vis.selectAll(".plot > rect.face").on("mouseover", showPlot).on("mouseout", hidePlot);
+      return vis.selectAll(".variable > rect.face").on("mouseover", showVariable).on("mouseout", hideVariable);
     };
     // transition outside
     showPlot = function showPlot(step) {

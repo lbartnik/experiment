@@ -59,10 +59,10 @@ simulate_modelling <- function ()
 
 simulate_london_meters <- function ()
 {
-  library(dplyr)
-  library(lubridate)
-  library(magrittr)
-  library(ggplot2)
+  library(dplyr, quietly = TRUE)
+  library(lubridate, quietly = TRUE)
+  library(magrittr, quietly = TRUE)
+  library(ggplot2, quietly = TRUE)
 
   user_space <- eval_space()
   try(dev.off(), silent = TRUE)

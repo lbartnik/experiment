@@ -104,7 +104,6 @@ Widget = (selection) ->
       .text((d) -> d.name)
     nodeSize enter.append("rect")
       .attr("class", "face")
-      .style('fill', 'transparent')
     node.exit().remove()
     
     # add plots
@@ -135,6 +134,11 @@ Widget = (selection) ->
       .attr("viewBox", "#{bb.x} #{bb.y} #{bb.width} #{bb.height}")
       .attr("width", thumbnail)
       .attr("height", thumbnail)
+      .append("rect")
+      .attr("class", "face")
+      .attr('width', '100%')
+      .attr('height', '100%')
+
 
   placeVisuals = (data, whenDone = enableEvents) ->
     parentsMap = d3.map()
@@ -200,10 +204,10 @@ Widget = (selection) ->
       .attr("y2", (d) -> d.target.y)
 
   enableEvents = () ->
-    vis.selectAll("svg.plot")
+    vis.selectAll(".plot > rect.face")
       .on("mouseover", showPlot)
       .on("mouseout", hidePlot)
-    vis.selectAll("rect.face")
+    vis.selectAll(".variable > rect.face")
       .on("mouseover", showVariable)
       .on("mouseout", hideVariable)
 

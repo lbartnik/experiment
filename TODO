@@ -1,5 +1,3 @@
-* history by new objects introduced to the session, not by commits
-
 * search:
   query_by(inherits("lm"))
   query_by(name("input"))
