@@ -30,9 +30,10 @@
   };
 
   Widget = function Widget(selection) {
-    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, updatePositions, vis, widget, zoomFrame;
+    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, updatePositions, vis, widget, zoomFrame, zoomed;
     timeout = 150;
     thumbnail = 25;
+    zoomed = 250;
     data = null;
     vis = d3.select(selection).append("svg");
     linksG = vis.append("g").attr("id", "links");
@@ -128,7 +129,11 @@
       parser = new DOMParser();
       doc = parser.parseFromString(fromBase64, "application/xml");
       plot = vis.node().appendChild(doc.documentElement);
+      // extract and remember the original size
       bb = plot.getBBox();
+      step.width = bb.width - bb.x;
+      step.height = bb.height - bb.y;
+      // add the visual
       return d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height).attr("width", thumbnail).attr("height", thumbnail);
     };
     placeVisuals = function placeVisuals(data) {
@@ -205,6 +210,8 @@
     // transition outside
     showPlot = function showPlot(step) {
       var ref, self;
+      step.dx = Math.max(0, step.x + zoomed - vis.attr("width"));
+      step.dy = Math.max(0, step.y + zoomed / step.width * step.height - vis.attr("height"));
       if ((ref = this.animation) != null) {
         ref.stop();
       }
@@ -230,11 +237,9 @@
     };
     zoomFrame = function zoomFrame(step, alpha) {
       var zoom;
-      zoom = Math.max(250 * alpha, thumbnail);
-      return vis.select("#plot" + step.id).attr("width", zoom).attr("height", zoom);
+      zoom = Math.max(zoomed * alpha, thumbnail);
+      return vis.select("#plot" + step.id).attr("width", zoom).attr("height", zoom / step.width * step.height).attr("x", step.x - thumbnail / 2 - step.dx * alpha).attr("y", step.y - thumbnail / 2 - step.dy * alpha);
     };
-    //      .attr("x", step.x - zoom /2)
-    //      .attr("y", step.y - zoom /2)
     showVariable = function showVariable(step) {
       var bcr, code, ref, rendered, tooltip;
       Mustache.parse(template);

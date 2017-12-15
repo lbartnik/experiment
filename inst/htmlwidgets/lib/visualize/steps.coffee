@@ -19,6 +19,7 @@ Widget = (selection) ->
 
   timeout = 150
   thumbnail = 25
+  zoomed = 250
   data  = null
   vis  = d3.select(selection)
     .append("svg")
@@ -120,7 +121,11 @@ Widget = (selection) ->
     doc = parser.parseFromString(fromBase64, "application/xml")
     plot = vis.node()
       .appendChild(doc.documentElement)
+    # extract and remember the original size
     bb = plot.getBBox()
+    step.width = bb.width - bb.x
+    step.height = bb.height - bb.y
+    # add the visual
     d3.select(plot)
       .data([step])
       .attr("id", "plot#{step.id}")
@@ -188,6 +193,9 @@ Widget = (selection) ->
 
   # transition outside
   showPlot = (step) ->
+    step.dx = Math.max(0, step.x + zoomed - vis.attr("width"))
+    step.dy = Math.max(0, step.y + zoomed/step.width*step.height - vis.attr("height"))
+    
     this.animation?.stop()
     this.animation = self = d3.timer (elapsed) ->
       if elapsed >= timeout
@@ -203,12 +211,12 @@ Widget = (selection) ->
       zoomFrame(step, Math.max(1 - elapsed/timeout, 0))
 
   zoomFrame = (step, alpha) ->
-    zoom = Math.max(250 * alpha, thumbnail)
+    zoom = Math.max(zoomed * alpha, thumbnail)
     vis.select("#plot#{step.id}")
       .attr("width", zoom)
-      .attr("height", zoom)
-#      .attr("x", step.x - zoom /2)
-#      .attr("y", step.y - zoom /2)
+      .attr("height", zoom/step.width * step.height)
+      .attr("x", step.x - thumbnail/2 - step.dx * alpha)
+      .attr("y", step.y - thumbnail/2 - step.dy * alpha)
 
   showVariable = (step) ->
     Mustache.parse(template)
