@@ -217,7 +217,7 @@
     showPlot = function showPlot(step) {
       var ref, self;
       step.dx = Math.max(0, step.x + zoomed - vis.attr("width"));
-      step.dy = Math.max(0, step.y + zoomed / step.width * step.height - vis.attr("height"));
+      step.dy = Math.max(0, step.y + zoomed / step.width * step.height - vis.attr("height") + 100);
       if ((ref = this.animation) != null) {
         ref.stop();
       }

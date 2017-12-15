@@ -31,6 +31,14 @@ test_that("filter", {
   expect_equal(introduced_in(g, 'c'), 'x')
 })
 
+test_that("filter on plots", {
+  g <- structure(list(a = list(parent = 'b',
+                               objects = list(.plot = 1)),
+                      b = list(parent = NA,
+                               objects = list())))
+  expect_equal(introduced_in(g, 'a'), '.plot')
+})
+
 
 test_that("convert commit", {
   g <- sample_graph()

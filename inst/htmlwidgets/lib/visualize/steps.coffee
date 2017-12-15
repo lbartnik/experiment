@@ -210,7 +210,7 @@ Widget = (selection) ->
   # transition outside
   showPlot = (step) ->
     step.dx = Math.max(0, step.x + zoomed - vis.attr("width"))
-    step.dy = Math.max(0, step.y + zoomed/step.width*step.height - vis.attr("height"))
+    step.dy = Math.max(0, step.y + zoomed/step.width*step.height - vis.attr("height") + 100)
     
     this.animation?.stop()
     this.animation = self = d3.timer (elapsed) ->

@@ -85,23 +85,33 @@ graph_to_steps <- function (graph)
   # convert each single commit
   all <- lapply(graph, function (commit) {
     new_objects <- introduced_in(graph, commit$id)
+    if (!length(new_objects)) return(NULL)
     commit_to_steps(commit, new_objects)
   })
+  out <- vapply(all, is.null, logical(1))
+  all <- all[!out]
 
   steps <- unlist(lapply(all, `[[`, i = 'steps'), recursive = FALSE)
   links <- unlist(lapply(all, `[[`, i = 'links'), recursive = FALSE)
 
+  find_parent <- function (id)
+  {
+    parent <- graph[[id]]$parent
+    if (is.na(parent) || length(all[[parent]]$steps)) return(parent)
+    return(find_parent(parent))
+  }
+
   # connect the last object of each "parent" commit with the first
   # object of each of its "children"
-  bridges <- lapply(graph, function (commit) {
-    lapply(commit$children, function (child) {
-      list(
-        source = last(all[[commit$id]]$steps)$id,
-        target = first(all[[child]]$steps)$id
-      )
-    })
-  })
-  bridges <- unlist(bridges, recursive = FALSE)
+  bridges <- unname(lapply(graph[!out], function (commit) {
+    parent <- find_parent(commit$id)
+    if (is.na(parent)) return(NULL)
+    list(
+      source = last(all[[parent]]$steps)$id,
+      target = first(all[[commit$id]]$steps)$id
+    )
+  }))
+  bridges <- bridges[!vapply(bridges, is.null, logical(1))]
   links <- c(links, bridges)
 
   # return the final "steps" structure
@@ -179,10 +189,46 @@ introduced_in <- function (graph, id)
   if (is.na(c$parent)) return(names(c$objects))
 
   p <- graph[[c$parent]]
-  Filter(function (n) {
+  new_objs <- Filter(function (n) {
     is.na(match(n, names(p$objects))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
-  }, names(c$objects))
+  }, setdiff(names(c$objects), '.plot'))
+
+  if (!is.null(c$objects$.plot) &&
+      !svg_equal(c$objects$.plot, p$objects$.plot))
+  {
+    return(c(new_objs, '.plot'))
+  }
+
+  new_objs
 }
+
+
+#' Compare two SVG images.
+#'
+#' SVG images are processed in this package as base64-encoded, XML text
+#' data. When produced, certain differences are introduced in XML
+#' attributes that have no effect on the final plots. That is why,
+#' however, SVG plots need to be compared graphically and not textually.
+#' This function produces a thumbnail of each SVG image and then
+#' compares the raster graphic.
+#'
+#' @param a First SVG image.
+#' @param b Second SVG image.
+#' @return `TRUE` if SVGs are the same plot-wise.
+#'
+#' @import rsvg
+#' @import jsonlite
+#'
+svg_equal <- function (a, b)
+{
+  if (is.null(a)) return(is.null(b))
+  if (is.null(b)) return(FALSE)
+
+  a <- rsvg(base64_dec(a), 100, 100)
+  b <- rsvg(base64_dec(b), 100, 100)
+  isTRUE(all.equal(a, b))
+}
+
 
 
 find_root_id <- function (g)

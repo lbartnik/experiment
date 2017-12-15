@@ -33,7 +33,10 @@ simulate_user_command <- function (expr)
   expr <- substitute(expr)
   message("Evaluating: ", deparse(expr)[[1]], "...")
 
-  eval(expr, env$state, enclos = baseenv())
+  # print is necessary for graphics, but we don't want to see the
+  # output on the console, thus - print and capture at the same time
+  eval_expr <- substitute(print(expr), list(expr = expr))
+  capture.output(eval(eval_expr, env$state, enclos = baseenv()))
 
   plot <- tryCatch(recordPlot(), error = function(e)'error')
   if (identical(plot, 'error')) plot <- NULL
@@ -121,12 +124,10 @@ simulate_london_meters <- function ()
   )
 
   user_space$simulate(
-    ggplot(x) + geom_point(aes(x = hour, y = usage)) +
-      facet_wrap(~dow)
+    ggplot(x) + geom_point(aes(x = hour, y = usage)) + facet_wrap(~dow)
   )
 
   user_space$simulate(
-    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) +
-      facet_wrap(~dow)
+    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
   )
 }
