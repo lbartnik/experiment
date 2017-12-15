@@ -30,3 +30,7 @@
 .tooltip .name {
     font-weight: bold;
 }
+
+.tooltip code {
+    font-size: 8pt;
+}

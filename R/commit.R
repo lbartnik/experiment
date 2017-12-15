@@ -46,10 +46,17 @@ is_plot_commit <- function (x) is_commit(x) && inherits(x, 'plot')
   co
 }
 
+
+# it has to be optimizd in case commits are bulky
 commit_equal <- function (a, b)
 {
   stopifnot(is_commit(a), is_commit(b))
-  setequal(a$objects, b$objects)
+
+  an <- names(a$objects)
+  bn <- names(b$objects)
+  if (!setequal(an, bn)) return(FALSE)
+
+  identical(a$objects[an], b$objects[bn])
 }
 
 
