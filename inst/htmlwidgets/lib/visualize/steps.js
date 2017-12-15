@@ -35,17 +35,17 @@
     thumbnail = 25;
     zoomed = 250;
     data = null;
-    vis = d3.select(selection).append("svg");
+    vis = d3.select(selection).style("overflow", "scroll").style('overflow-y', 'scroll').append("svg");
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     widget = function widget() {};
     widget.setSize = function (width, height) {
-      vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
-      if (data) {
-        return refreshVisuals();
-      }
+      return vis.attr("width", width).attr("height", height);
     };
+    //       .attr("viewBox", "0 0 #{width} #{height}")
+    //    if data
+    //      refreshVisuals()
     widget.setData = function (Data) {
       data = setupData(Data);
       return refreshVisuals();
@@ -139,7 +139,7 @@
     placeVisuals = function placeVisuals(data) {
       var whenDone = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : enableEvents;
 
-      var min_x, min_y, nodesMap, parentsMap, root, stratify, tree;
+      var force, innerWhenDone, min_x, min_y, nodesMap, parentsMap, root, stratify, tree;
       parentsMap = d3.map();
       data.links.forEach(function (l) {
         return parentsMap.set(l.target.id, l.source.id);
@@ -151,7 +151,7 @@
       });
       root = stratify(data.steps);
       root.sort();
-      tree = d3.tree().size([vis.attr("width") - thumbnail * 1.5, vis.attr("height") - thumbnail * 1.5 - 150]);
+      tree = d3.tree().size([vis.attr("width") - thumbnail * 1.5, vis.attr("height") - thumbnail * 1.5]);
       root = tree(root);
       min_x = root.descendants().map(function (n) {
         return n.x;
@@ -170,17 +170,23 @@
         s.x = n.x + thumbnail - min_x;
         return s.y = n.y + thumbnail / 1.75 - min_y;
       });
-      updatePositions();
-      return whenDone();
+
+      //    updatePositions()
+      //    whenDone()
+      innerWhenDone = function innerWhenDone() {
+        var bb, height, width, x, y;
+        bb = vis.node().getBBox();
+        x = bb.x - thumbnail;
+        y = bb.y - thumbnail;
+        width = Math.max(bb.width + 2 * thumbnail, vis.attr("width"));
+        height = Math.max(bb.height + 2 * thumbnail, vis.attr("height"));
+        vis.attr("width", width).attr("height", height).attr("viewBox", x + " " + y + " " + width + " " + height);
+        return whenDone();
+      };
+      return force = d3.forceSimulation().force("charge", d3.forceManyBody()).force("link", d3.forceLink(data.links).distance(50)).force("collision", d3.forceCollide(thumbnail / 2)).alphaMin(.75).on("tick", function (e) {
+        return updatePositions();
+      }).on("end", innerWhenDone).nodes(data.steps);
     };
-    //    force = d3.forceSimulation()
-    //      .force("charge", d3.forceManyBody())
-    //      .force("link", d3.forceLink(data.links).distance(50))
-    //      .force("collision", d3.forceCollide(thumbnail/2))
-    //      .alphaMin(.3)
-    //      .on("tick", (e) -> updatePositions())
-    //      .on("end", whenDone)
-    //      .nodes(data.steps)
     updatePositions = function updatePositions() {
       var link;
       nodesG.selectAll("svg.variable").attr("x", function (d) {

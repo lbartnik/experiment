@@ -21,9 +21,11 @@ Widget = (selection) ->
   thumbnail = 25
   zoomed = 250
   data  = null
-  vis  = d3.select(selection)
+  vis = d3.select(selection)
+    .style("overflow", "scroll")
+    .style('overflow-y', 'scroll')
     .append("svg")
-
+  
   linksG = vis.append("g").attr("id", "links")
   nodesG = vis.append("g").attr("id", "nodes")
 
@@ -42,9 +44,9 @@ Widget = (selection) ->
   widget.setSize = (width, height) ->
     vis.attr("width", width)
        .attr("height", height)
-       .attr("viewBox", "0 0 #{width} #{height}")
-    if data
-      refreshVisuals()
+#       .attr("viewBox", "0 0 #{width} #{height}")
+#    if data
+#      refreshVisuals()
 
   widget.setData = (Data) ->
     data = setupData(Data)
@@ -147,7 +149,7 @@ Widget = (selection) ->
     root.sort()
     tree = d3.tree()
       .size([vis.attr("width") - thumbnail * 1.5,
-             vis.attr("height") - thumbnail * 1.5 - 150])
+             vis.attr("height") - thumbnail * 1.5])
     root = tree(root)
 
     min_x = root.descendants().map((n) -> n.x).reduce((a,b) -> Math.min(a,b))
@@ -159,16 +161,30 @@ Widget = (selection) ->
       s.x = n.x + thumbnail - min_x
       s.y = n.y + thumbnail/1.75 - min_y
     
-    updatePositions()
-    whenDone()
-#    force = d3.forceSimulation()
-#      .force("charge", d3.forceManyBody())
-#      .force("link", d3.forceLink(data.links).distance(50))
-#      .force("collision", d3.forceCollide(thumbnail/2))
-#      .alphaMin(.3)
-#      .on("tick", (e) -> updatePositions())
-#      .on("end", whenDone)
-#      .nodes(data.steps)
+#    updatePositions()
+#    whenDone()
+
+    innerWhenDone = () ->
+      bb = vis.node().getBBox()
+      x      = bb.x - thumbnail
+      y      = bb.y - thumbnail
+      width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
+      height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
+
+      vis
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", "#{x} #{y} #{width} #{height}")
+      whenDone()
+    
+    force = d3.forceSimulation()
+      .force("charge", d3.forceManyBody())
+      .force("link", d3.forceLink(data.links).distance(50))
+      .force("collision", d3.forceCollide(thumbnail/2))
+      .alphaMin(.75)
+      .on("tick", (e) -> updatePositions())
+      .on("end", innerWhenDone)
+      .nodes(data.steps)
 
   updatePositions = () ->
     nodesG.selectAll("svg.variable")
