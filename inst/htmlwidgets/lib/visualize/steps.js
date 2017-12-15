@@ -125,37 +125,48 @@
     placeVisuals = function placeVisuals(data) {
       var whenDone = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : enableEvents;
 
-      var nodesMap, parentsMap, root, tree;
+      var min_x, min_y, nodesMap, parentsMap, root, stratify, tree;
       parentsMap = d3.map();
       data.links.forEach(function (l) {
         return parentsMap.set(l.target.id, l.source.id);
       });
-      root = d3.stratify().id(function (d) {
+      stratify = d3.stratify().id(function (d) {
         return d.id;
       }).parentId(function (d) {
         return parentsMap.get(d.id);
       });
-      root = root(data.steps);
+      root = stratify(data.steps);
       root.sort();
-      tree = d3.tree().size([vis.attr("width") - thumbnail, vis.attr("height") - thumbnail - 250]);
+      tree = d3.tree().size([vis.attr("width") - thumbnail, vis.attr("height") - thumbnail - 150]);
       root = tree(root);
+      min_x = root.descendants().map(function (n) {
+        return n.x;
+      }).reduce(function (a, b) {
+        return Math.min(a, b);
+      });
+      min_y = root.descendants().map(function (n) {
+        return n.y;
+      }).reduce(function (a, b) {
+        return Math.min(a, b);
+      });
       nodesMap = mapNodes(data.steps);
       root.each(function (n) {
         var s;
         s = nodesMap.get(n.id);
-        s.x = n.x + thumbnail / 2;
-        return s.y = n.y + thumbnail / 2;
+        s.x = n.x + thumbnail / 2 - min_x;
+        return s.y = n.y + thumbnail / 2 - min_y;
       });
-      console.log(data.steps);
       updatePositions();
       return whenDone();
     };
-    //    force = d3.forceSimulation(data.steps)
+    //    force = d3.forceSimulation()
     //      .force("charge", d3.forceManyBody())
     //      .force("link", d3.forceLink(data.links).distance(50))
+    //      .force("collision", d3.forceCollide(thumbnail/2))
     //      .alphaMin(.3)
     //      .on("tick", (e) -> updatePositions())
     //      .on("end", whenDone)
+    //      .nodes(data.steps)
     updatePositions = function updatePositions() {
       var link;
       nodesG.selectAll("circle.variable").attr("cx", function (d) {
