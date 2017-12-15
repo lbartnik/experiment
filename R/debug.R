@@ -51,6 +51,7 @@ simulate_london_meters <- function ()
 {
   library(dplyr)
   library(lubridate)
+  library(magrittr)
 
   user_space <- new.env()
   try(dev.off())
@@ -65,9 +66,6 @@ simulate_london_meters <- function ()
     user_space
   )
 
-  # dplyr adds attributes to objects when filter is called
-  # it's probably some kind of smart pre-computed cache but
-  # it messes up object tracking
   simulate_user_command(
     input %<>%
       mutate(timestamp = floor_date(timestamp, 'hours')) %>%
@@ -76,10 +74,19 @@ simulate_london_meters <- function ()
     user_space
   )
 
-  # use subset() instead of filter() to maintain object id
+  # dplyr adds attributes to objects when filter is called
+  # it's probably some kind of smart pre-computed cache but
+  # it messes up object tracking
+  #
+  # if filter is not a separate step, use subset() instead of
+  # filter() to maintain the same object id between commits
   simulate_user_command(
-    with(subset(input, meter == "MAC004929"),
-         plot(timestamp, usage, type = 'p', pch = '.')),
+    input %<>% filter(meter == "MAC004929"),
+    user_space
+  )
+
+  simulate_user_command(
+    with(input, plot(timestamp, usage, type = 'p', pch = '.')),
     user_space
   )
 }
