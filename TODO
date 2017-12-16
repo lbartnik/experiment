@@ -10,9 +10,6 @@
     it similarly to plots - the mouse cursor will stay "mouseover" throught
     the interaction
 
-  - clicking on object/plot copies its ID to clipboard; the it can be
-    restored in the session
-
   - export plots as PNG miniatures rather than SVG; for big/complex plots
     that might be much more efficient
 
