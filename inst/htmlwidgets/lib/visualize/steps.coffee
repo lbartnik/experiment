@@ -22,8 +22,8 @@ Widget = (selection) ->
   zoomed = 250
   data  = null
   vis = d3.select(selection)
-    .style("overflow", "scroll")
-    .style('overflow-y', 'scroll')
+    .style("overflow", "auto")
+    .style('overflow-y', 'auto')
     .append("svg")
   
   linksG = vis.append("g").attr("id", "links")
@@ -44,7 +44,7 @@ Widget = (selection) ->
   widget.setSize = (width, height) ->
     vis.attr("width", width)
        .attr("height", height)
-#       .attr("viewBox", "0 0 #{width} #{height}")
+       .attr("viewBox", "0 0 #{width} #{height}")
 #    if data
 #      refreshVisuals()
 
@@ -165,9 +165,6 @@ Widget = (selection) ->
       s.x = n.x + thumbnail - min_x
       s.y = n.y + thumbnail/1.75 - min_y
     
-#    updatePositions()
-#    whenDone()
-
     innerWhenDone = () ->
       bb = vis.node().getBBox()
       x      = bb.x - thumbnail
@@ -180,15 +177,18 @@ Widget = (selection) ->
         .attr("height", height)
         .attr("viewBox", "#{x} #{y} #{width} #{height}")
       whenDone()
+
+    updatePositions()
+    innerWhenDone()
     
-    force = d3.forceSimulation()
-      .force("charge", d3.forceManyBody())
-      .force("link", d3.forceLink(data.links).distance(50))
-      .force("collision", d3.forceCollide(thumbnail/2))
-      .alphaMin(.75)
-      .on("tick", (e) -> updatePositions())
-      .on("end", innerWhenDone)
-      .nodes(data.steps)
+#    force = d3.forceSimulation()
+#      .force("charge", d3.forceManyBody())
+#      .force("link", d3.forceLink(data.links).distance(50))
+#      .force("collision", d3.forceCollide(thumbnail/2))
+#      .alphaMin(.75)
+#      .on("tick", (e) -> updatePositions())
+#      .on("end", innerWhenDone)
+#      .nodes(data.steps)
 
   updatePositions = () ->
     nodesG.selectAll("svg.variable")

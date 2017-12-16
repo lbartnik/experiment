@@ -175,6 +175,12 @@ restore_commit <- function (state, id, env)
   mapply(function (name, value) assign(x = name, value = value, envir = env),
          name = names(co$objects), value = co$objects)
 
+  # clean the current plot and restore the one that came with the commit
+  try(dev.off(), silent = TRUE)
+  if (!is.null(co$objects$.plot)) {
+    replayPlot(co$objects$.plot)
+  }
+
   invisible()
 }
 

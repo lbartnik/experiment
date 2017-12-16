@@ -19,7 +19,7 @@ eval_space <- function ()
   e$simulate <- simulate_user_command
   environment(e$simulate) <- e
 
-  e$state <- new.env(parent = globalenv())
+  e$session <- new.env(parent = globalenv())
 
   structure(e, class = 'eval_space')
 }
@@ -36,12 +36,12 @@ simulate_user_command <- function (expr)
   # print is necessary for graphics, but we don't want to see the
   # output on the console, thus - print and capture at the same time
   eval_expr <- substitute(print(expr), list(expr = expr))
-  capture.output(eval(eval_expr, env$state, enclos = baseenv()))
+  capture.output(eval(eval_expr, env$session, enclos = baseenv()))
 
   plot <- tryCatch(recordPlot(), error = function(e)'error')
   if (identical(plot, 'error')) plot <- NULL
 
-  update_current_commit(internal_state, env$state, plot, expr)
+  update_current_commit(internal_state, env$session, plot, expr)
 }
 
 
@@ -76,7 +76,8 @@ simulate_london_meters <- function ()
              year(timestamp) == 2013)
   )
 
-  user_space$simulate(
+  # remember the commit id so that later we can come back to this point in history
+  go_back <- user_space$simulate(
     input %<>%
       mutate(timestamp = floor_date(timestamp, 'hours')) %>%
       group_by(meter, timestamp) %>%
@@ -130,4 +131,51 @@ simulate_london_meters <- function ()
   user_space$simulate(
     ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
   )
+
+  message('Restoring commit ', go_back)
+  restore_commit(internal_state, go_back, user_space$session)
+
+  # now try a different house
+  user_space$simulate(
+    input %<>% filter(meter == "MAC000010")
+  )
+
+  user_space$simulate(
+    x <-
+      input %>%
+      mutate(hour = hour(timestamp),
+             dow  = wday(timestamp, label = TRUE)) %>%
+      mutate_at(vars(hour, dow), funs(as.factor)) %>%
+      group_by(hour, dow) %>%
+      summarise(usage = mean(usage, na.rm = TRUE))
+  )
+
+  user_space$simulate(
+    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+  )
+
+  # go back again, and try the third house
+  message('Restoring commit ', go_back)
+  restore_commit(internal_state, go_back, user_space$session)
+
+  user_space$simulate(
+    input %<>% filter(meter == "MAC004391")
+  )
+
+  user_space$simulate(
+    x <-
+      input %>%
+      mutate(hour = hour(timestamp),
+             dow  = wday(timestamp, label = TRUE)) %>%
+      mutate_at(vars(hour, dow), funs(as.factor)) %>%
+      group_by(hour, dow) %>%
+      summarise(usage = mean(usage, na.rm = TRUE))
+  )
+
+  user_space$simulate(
+    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+  )
+
+
+  invisible(user_space)
 }
