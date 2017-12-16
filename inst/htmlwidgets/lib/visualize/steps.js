@@ -277,19 +277,24 @@
     };
     toClipboard = function toClipboard(step) {
       var input;
-      input = $("<input>").css({
-        visibility: 'hidden'
-      }).appendTo(selection).val(step.id).select();
+      input = $("<input>").appendTo(selection).val(step.id).select();
       document.execCommand("copy");
       input.remove();
       return $.notify("ID copied to clipboard", {
         autoHideDelay: 1000,
-        className: 'info'
+        className: 'info',
+        style: 'simplenotification'
       });
     };
     widget.setSize($(selection).width(), $(selection).height());
     return widget;
   };
 
+  // add style to notifyjs, just once
+  $.notify.addStyle('simplenotification', {
+    html: "<div><span data-notify-text/></div>"
+  });
+
+  // export the Widget
   window.Widget = Widget;
 }).call(undefined);

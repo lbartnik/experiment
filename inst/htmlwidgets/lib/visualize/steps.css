@@ -38,3 +38,10 @@
 .tooltip code {
     font-size: 8pt;
 }
+.notifyjs-simplenotification-base {
+    white-space: nowrap;
+    background-color: lightgrey;
+    padding: 3pt;
+    font-size: 9pt;
+    border-radius: 4pt;
+}

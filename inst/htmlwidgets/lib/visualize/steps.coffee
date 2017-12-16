@@ -262,16 +262,20 @@ Widget = (selection) ->
 
   toClipboard = (step) ->
     input = $("<input>")
-      .css({visibility: 'hidden'})
       .appendTo(selection)
       .val(step.id)
       .select()
     document.execCommand("copy")
     input.remove()
-    $.notify("ID copied to clipboard", {autoHideDelay: 1000, className: 'info'})
-
+    $.notify("ID copied to clipboard", {autoHideDelay: 1000, className: 'info', style: 'simplenotification'})
 
   widget.setSize($(selection).width(), $(selection).height())
   widget
 
+# add style to notifyjs, just once
+$.notify.addStyle('simplenotification', {
+  html: "<div><span data-notify-text/></div>"
+})
+
+# export the Widget
 window.Widget = Widget
