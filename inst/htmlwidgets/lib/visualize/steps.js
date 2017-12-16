@@ -30,7 +30,7 @@
   };
 
   Widget = function Widget(selection) {
-    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, updatePositions, vis, widget, zoomFrame, zoomed;
+    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, toClipboard, updatePositions, vis, widget, zoomFrame, zoomed;
     timeout = 150;
     thumbnail = 25;
     zoomed = 250;
@@ -41,10 +41,11 @@
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     widget = function widget() {};
     widget.setSize = function (width, height) {
-      return vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
+      vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
+      if (data) {
+        return refreshVisuals();
+      }
     };
-    //    if data
-    //      refreshVisuals()
     widget.setData = function (Data) {
       data = setupData(Data);
       return refreshVisuals();
@@ -53,7 +54,8 @@
       var filtered;
       filtered = filterData(data);
       createVisuals(filtered);
-      return placeVisuals(filtered);
+      placeVisuals(filtered);
+      return enableEvents();
     };
     setupData = function setupData(data) {
       var stepsMap;
@@ -136,9 +138,7 @@
       return d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height).attr("width", thumbnail).attr("height", thumbnail).append("rect").attr("class", "face").attr('width', '100%').attr('height', '100%');
     };
     placeVisuals = function placeVisuals(data) {
-      var whenDone = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : enableEvents;
-
-      var innerWhenDone, min_x, min_y, nodesMap, parentsMap, root, stratify, tree;
+      var bb, height, min_x, min_y, nodesMap, parentsMap, root, stratify, tree, width, x, y;
       parentsMap = d3.map();
       data.links.forEach(function (l) {
         return parentsMap.set(l.target.id, l.source.id);
@@ -169,28 +169,14 @@
         s.x = n.x + thumbnail - min_x;
         return s.y = n.y + thumbnail / 1.75 - min_y;
       });
-      innerWhenDone = function innerWhenDone() {
-        var bb, height, width, x, y;
-        bb = vis.node().getBBox();
-        x = bb.x - thumbnail;
-        y = bb.y - thumbnail;
-        width = Math.max(bb.width + 2 * thumbnail, vis.attr("width"));
-        height = Math.max(bb.height + 2 * thumbnail, vis.attr("height"));
-        vis.attr("width", width).attr("height", height).attr("viewBox", x + " " + y + " " + width + " " + height);
-        return whenDone();
-      };
       updatePositions();
-      return innerWhenDone();
+      bb = vis.node().getBBox();
+      x = bb.x - thumbnail;
+      y = bb.y - thumbnail;
+      width = Math.max(bb.width + 2 * thumbnail, vis.attr("width"));
+      height = Math.max(bb.height + 2 * thumbnail, vis.attr("height"));
+      return vis.attr("width", width).attr("height", height).attr("viewBox", x + " " + y + " " + width + " " + height);
     };
-
-    //    force = d3.forceSimulation()
-    //      .force("charge", d3.forceManyBody())
-    //      .force("link", d3.forceLink(data.links).distance(50))
-    //      .force("collision", d3.forceCollide(thumbnail/2))
-    //      .alphaMin(.75)
-    //      .on("tick", (e) -> updatePositions())
-    //      .on("end", innerWhenDone)
-    //      .nodes(data.steps)
     updatePositions = function updatePositions() {
       var link;
       nodesG.selectAll("svg.variable").attr("x", function (d) {
@@ -214,8 +200,8 @@
       });
     };
     enableEvents = function enableEvents() {
-      vis.selectAll(".plot > rect.face").on("mouseover", showPlot).on("mouseout", hidePlot);
-      return vis.selectAll(".variable > rect.face").on("mouseover", showVariable).on("mouseout", hideVariable);
+      vis.selectAll(".plot > rect.face").on("mouseover", showPlot).on("mouseout", hidePlot).on("click", toClipboard);
+      return vis.selectAll(".variable > rect.face").on("mouseover", showVariable).on("mouseout", hideVariable).on("click", toClipboard);
     };
     // transition outside
     showPlot = function showPlot(step) {
@@ -288,6 +274,18 @@
         var ref1;
         return (ref1 = thisNode.tooltip) != null ? ref1.remove() : void 0;
       }) : void 0;
+    };
+    toClipboard = function toClipboard(step) {
+      var input;
+      input = $("<input>").css({
+        visibility: 'hidden'
+      }).appendTo(selection).val(step.id).select();
+      document.execCommand("copy");
+      input.remove();
+      return $.notify("ID copied to clipboard", {
+        autoHideDelay: 1000,
+        className: 'info'
+      });
     };
     widget.setSize($(selection).width(), $(selection).height());
     return widget;

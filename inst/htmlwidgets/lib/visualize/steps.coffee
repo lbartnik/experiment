@@ -45,8 +45,8 @@ Widget = (selection) ->
     vis.attr("width", width)
        .attr("height", height)
        .attr("viewBox", "0 0 #{width} #{height}")
-#    if data
-#      refreshVisuals()
+    if data
+      refreshVisuals()
 
   widget.setData = (Data) ->
     data = setupData(Data)
@@ -56,6 +56,7 @@ Widget = (selection) ->
     filtered = filterData(data)
     createVisuals(filtered)
     placeVisuals(filtered)
+    enableEvents()
 
   setupData = (data) ->
     # replace target/source references in links with actual objects
@@ -139,8 +140,7 @@ Widget = (selection) ->
       .attr('width', '100%')
       .attr('height', '100%')
 
-
-  placeVisuals = (data, whenDone = enableEvents) ->
+  placeVisuals = (data) ->
     parentsMap = d3.map()
     data.links.forEach (l) ->
       parentsMap.set(l.target.id, l.source.id)
@@ -165,30 +165,18 @@ Widget = (selection) ->
       s.x = n.x + thumbnail - min_x
       s.y = n.y + thumbnail/1.75 - min_y
     
-    innerWhenDone = () ->
-      bb = vis.node().getBBox()
-      x      = bb.x - thumbnail
-      y      = bb.y - thumbnail
-      width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
-      height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
-
-      vis
-        .attr("width", width)
-        .attr("height", height)
-        .attr("viewBox", "#{x} #{y} #{width} #{height}")
-      whenDone()
-
     updatePositions()
-    innerWhenDone()
-    
-#    force = d3.forceSimulation()
-#      .force("charge", d3.forceManyBody())
-#      .force("link", d3.forceLink(data.links).distance(50))
-#      .force("collision", d3.forceCollide(thumbnail/2))
-#      .alphaMin(.75)
-#      .on("tick", (e) -> updatePositions())
-#      .on("end", innerWhenDone)
-#      .nodes(data.steps)
+
+    bb = vis.node().getBBox()
+    x      = bb.x - thumbnail
+    y      = bb.y - thumbnail
+    width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
+    height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
+
+    vis
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", "#{x} #{y} #{width} #{height}")
 
   updatePositions = () ->
     nodesG.selectAll("svg.variable")
@@ -207,9 +195,11 @@ Widget = (selection) ->
     vis.selectAll(".plot > rect.face")
       .on("mouseover", showPlot)
       .on("mouseout", hidePlot)
+      .on("click", toClipboard)
     vis.selectAll(".variable > rect.face")
       .on("mouseover", showVariable)
       .on("mouseout", hideVariable)
+      .on("click", toClipboard)
 
   # transition outside
   showPlot = (step) ->
@@ -266,10 +256,20 @@ Widget = (selection) ->
       .find(".inner")
       .animate({zoom: 1}, 'fast')
 
-
   hideVariable = (step) ->
     thisNode = this
     this.tooltip?.find('.inner').animate({zoom: 0}, 'fast', 'swing', () -> thisNode.tooltip?.remove())
+
+  toClipboard = (step) ->
+    input = $("<input>")
+      .css({visibility: 'hidden'})
+      .appendTo(selection)
+      .val(step.id)
+      .select()
+    document.execCommand("copy")
+    input.remove()
+    $.notify("ID copied to clipboard", {autoHideDelay: 1000, className: 'info'})
+
 
   widget.setSize($(selection).width(), $(selection).height())
   widget
