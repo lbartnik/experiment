@@ -129,15 +129,53 @@ plot_as_svg <- function (pl)
 }
 
 
-
-restore_historical_commit <- function (co)
+#' Restore a snapshot from history.
+#'
+#' Restores a historical [commit] from commit or object `id`:
+#' * commit `id` brings back that specific commit
+#' * object `id` brings back the earlies commit where that
+#'   object can be found, which should be the commit where that
+#'   object has been created
+#'
+#' @param id `commit` or object identifier, a SHA1 string (__long id__)
+#'        or its first 8 characters (__short id__).
+#'
+#' @export
+#' @import storage
+#'
+restore <- function (id)
 {
-  stopifnot(is_commit(co))
+  long_id <- enlongate(id, internal_state$stash)
+  if (!os_exists(internal_state$stash, long_id)) {
+    stop('cannot find commit or object with id ', id, call. = FALSE)
+  }
 
-  internal_state$last_commit <- co$id
-  rm(list = ls(envir = globalenv()), envir = globalenv())
-  mapply(function (name, value) assign(x = name, value = value, envir = globalenv()),
+  tags <- os_read_tags(internal_state$stash, long_id)
+
+  if (identical(tags$class, 'commit')) {
+    restore_commit(internal_state, long_id, globalenv())
+    return(invisible(TRUE))
+  }
+
+  stop('object id not implemented yet', call. = FALSE)
+}
+
+
+#' @import storage
+restore_commit <- function (state, id, env)
+{
+  stopifnot(is_object_store(state$stash))
+  stopifnot(os_exists(state$stash, id))
+
+  co <- commit_restore(id, state$stash, .data = TRUE)
+
+  state$last_commit <- co
+  rm(list = ls(envir = env), envir = env)
+
+  mapply(function (name, value) assign(x = name, value = value, envir = env),
          name = names(co$objects), value = co$objects)
+
+  invisible()
 }
 
 

@@ -3,14 +3,36 @@
   query_by(name("input"))
 
 * Widget:
-  maximize tooltip/plot towards the center of the canvas
-  add onmouseout to tooltip/plot in case it covers the node/miniature
+  - maximize tooltip/plot towards the center of the canvas
+    add onmouseout to tooltip/plot in case it covers the node/miniature
+
+  - make tooltip the size of the node and transparent, and then maximize
+    it similarly to plots - the mouse cursor will stay "mouseover" throught
+    the interaction
+
+  - clicking on object/plot copies its ID to clipboard; the it can be
+    restored in the session
+
+  - export plots as PNG miniatures rather than SVG; for big/complex plots
+    that might be much more efficient
+
+* tracking
+  wait for failed commands and if one arrives, check if the user entered
+  a valid commit/object id, and if so, restore it
 
 * explain: find a full sequence of calls leading to a given object
   - option to plot explanation as a graph with vis.js
+
 * UI:
   - show history of commits
   - print commits
   - do not print commits in stashed()
+  - show history of expressions in the current branch
+  - list branches
+  - name branches
+  - clean the stash
+
+
 * move plot.result to compare - plot.result should show something
   similar to plot.graph - a graph of inter-related objects
+

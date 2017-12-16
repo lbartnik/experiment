@@ -55,3 +55,33 @@ test_that("multiple plots", {
   root <- commit_restore(prv2$parent, state$stash)
   expect_identical(root$objects, list(x = 1))
 })
+
+
+test_that("restoring by commit", {
+  # long (full) id
+  modelling(overwrite = TRUE)
+
+  id <- '96ea722bf140a98c6854f9532985372a768df257'
+  restore(id)
+  expect_equal(internal_state$last_commit$id, id)
+
+  # short it
+  modelling(overwrite = TRUE)
+
+  restore('96ea722b')
+  expect_equal(internal_state$last_commit$id, id)
+})
+
+
+test_that("commit restored correctly", {
+  session <- new.env()
+  state <- empty_state()
+  modelling(TRUE, state)
+
+  restore_commit(state, '96ea722bf140a98c6854f9532985372a768df257', session)
+
+  expect_equal(state$last_commit$id, '96ea722bf140a98c6854f9532985372a768df257')
+  expect_named(session, c('iris2', 'x'), ignore.order = TRUE)
+  expect_equal(session$iris2, iris)
+  expect_s3_class(session$x, 'lm')
+})
