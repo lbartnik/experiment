@@ -4,6 +4,9 @@
 \alias{graph_to_steps}
 \alias{commit_to_steps}
 \alias{introduced_in}
+\alias{find_root_id}
+\alias{format_expression}
+\alias{description}
 \title{Transform a graph of commits into a graph of steps.}
 \usage{
 graph_to_steps(graph)
@@ -11,6 +14,12 @@ graph_to_steps(graph)
 commit_to_steps(commit, objects)
 
 introduced_in(graph, id)
+
+find_root_id(g)
+
+format_expression(code)
+
+description(object)
 }
 \arguments{
 \item{graph}{Object returned by [graph()].}
@@ -43,6 +52,15 @@ first step to visualize the history stored in commits.
 `introduced_in` generates the filter for
 `commit_to_steps`'s `objects` parameter. It does it by comparing the
 contents of the commit `id` against the contents of its parent.
+
+`find_root_id` searches for the single commit
+in the graph without a parent.
+
+`format` prepares the expression for display
+in a HTML page.
+
+`description` format the expression for display
+in a HTML page.
 }
 \details{
 `graph_to_steps` is the main function that orchestrates the

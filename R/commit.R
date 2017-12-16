@@ -20,26 +20,6 @@ commit <- function (contents, expression, parent, id, object_ids)
 is_commit <- function (x) inherits(x, 'commit')
 
 
-plot_commit <- function (plots, expression, parent)
-{
-  plots <- as.list(plots)
-
-  # name plots
-  width <- ceiling(log10(length(plots) + 1))
-  names(plots) <- paste0('plot', formatC(seq_along(plots), width = width, flag = "0"))
-
-  if (missing(parent)) parent <- NA_character_
-
-  co <- commit(plots, expression, parent)
-  class(co) <- c('plot', class(co))
-
-  co
-}
-
-
-is_plot_commit <- function (x) is_commit(x) && inherits(x, 'plot')
-
-
 `parent<-` <- function (co, value)
 {
   co$parent <- value

@@ -254,7 +254,7 @@ description <- function (object)
                  'df: ', g$df))
   }
 
-  toString(g)
+  toString(object)
 }
 
 
