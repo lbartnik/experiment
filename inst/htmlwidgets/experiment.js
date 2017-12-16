@@ -1,28 +1,3 @@
-function experiment () {
-  function impl () {}
-
-  impl.create = function (el) {
-    this.tooltip = $('<div>slowa</div>').appendTo($(el).parent()).attr('id', 'tooltip');
-    return this;
-  };
-
-  impl.show = function (x, y, text) {
-      this.tooltip
-      .css({
-        top: y,
-        left: x,
-        position: 'absolute'
-      })
-      .show();
-  };
-
-  impl.hide = function () {
-    this.tooltip.hide();
-  };
-
-  return impl;
-}
-
 HTMLWidgets.widget({
 
   name: "experiment",
@@ -31,11 +6,8 @@ HTMLWidgets.widget({
 
   factory: function(el, width, height) {
 
-    // dependencies: tooltip
-    //var tooltip = experiment().create(el);
-
     // create our vis object and bind it to the element
-    var visvis = new Network(el);
+    var visvis = new Widget(el);
 
     // return widget instance
     return {

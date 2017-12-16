@@ -12,3 +12,8 @@
 .Rproj.user/
 .Rproj.user
 .Rbuildignore
+
+# development files
+/htmlwidgets
+/examples
+/extdata

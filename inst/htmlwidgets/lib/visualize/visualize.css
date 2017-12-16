@@ -14,3 +14,22 @@
     stroke: none;
     font-size: 10pt;
 }
+
+.tooltip {
+    position: absolute;
+    width: 200;
+    height: 200;
+    display: 'block';
+    border: 1px black;
+}
+
+.tooltip {
+    position: 'relative';
+    left: '50%';
+    top: '50%';
+    zoom: .1;
+}
+
+.tooltip .name {
+    font-weight: bold;
+}

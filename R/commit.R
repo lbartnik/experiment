@@ -7,6 +7,7 @@ commit <- function (contents, expression, parent, id, object_ids)
   objects <- as.list(contents)
   stopifnot(all_named(objects))
 
+  if (missing(parent)) parent <- NA_character_
   if (missing(id)) id <- NA_character_
   if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
 
@@ -18,10 +19,24 @@ commit <- function (contents, expression, parent, id, object_ids)
 
 is_commit <- function (x) inherits(x, 'commit')
 
+
+`parent<-` <- function (co, value)
+{
+  co$parent <- value
+  co
+}
+
+
+# it has to be optimizd in case commits are bulky
 commit_equal <- function (a, b)
 {
   stopifnot(is_commit(a), is_commit(b))
-  setequal(a$objects, b$objects)
+
+  an <- names(a$objects)
+  bn <- names(b$objects)
+  if (!setequal(an, bn)) return(FALSE)
+
+  identical(a$objects[an], b$objects[bn])
 }
 
 
@@ -34,7 +49,7 @@ commit_store <- function (commit, store)
   stopifnot(storage::is_object_store(store))
 
   # name -> ID in object store
-  objects <- lapply(commit$objects, function (o) {
+  commit$object_ids <- lapply(commit$objects, function (o) {
     o  <- cleanup_object(o)
     id <- storage::compute_id(o)
     if (storage::os_exists(store, id)) return(id)
@@ -57,8 +72,8 @@ commit_store <- function (commit, store)
   }
 
   # store list of object pointers + basic 'history' tags
-  id <- storage::os_write(store, list(objects = objects, expr = commit$expr),
-                          tags = list(class = 'commit', parent = commit$parent),
+  id <- storage::os_write(store, list(objects = commit$object_ids, expr = commit$expr),
+                          tags = list(class = class(commit), parent = commit$parent),
                           id = commit$id)
 
   commit
