@@ -21,7 +21,8 @@
         "id": "1",
         "type": "object",
         "name": "input",
-        "expr": ["input <- readr::read_csv(\"halfhourly/block_62.csv\", na = \"Null\") %>% ", "    rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>% ", "    filter(meter %in% c(\"MAC004929\", \"MAC000010\", \"MAC004391\"), ", "        year(timestamp) == 2013)"]
+        "expr": ["input <- readr::read_csv(\"halfhourly/block_62.csv\", na = \"Null\") %>% ", "    rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>% ", "    filter(meter %in% c(\"MAC004929\", \"MAC000010\", \"MAC004391\"), ", "        year(timestamp) == 2013)"],
+        "desc": "data.frame [3x8192]"
       },
       {
         "id": "2",

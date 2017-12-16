@@ -38,7 +38,7 @@
     vis = d3.select(selection).style("overflow", "auto").style('overflow-y', 'auto').append("svg");
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
-    template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
+    template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     widget = function widget() {};
     widget.setSize = function (width, height) {
       vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
@@ -207,7 +207,7 @@
     showPlot = function showPlot(step) {
       var ref, self;
       step.dx = Math.max(0, step.x + zoomed - vis.attr("width"));
-      step.dy = Math.max(0, step.y + zoomed / step.width * step.height - vis.attr("height") + 100);
+      step.dy = Math.max(0, step.y + zoomed / step.width * step.height - vis.attr("height"));
       if ((ref = this.animation) != null) {
         ref.stop();
       }
@@ -242,7 +242,8 @@
       code = step.expr.constructor === Array ? step.expr.join('\n') : step.expr;
       rendered = Mustache.render(template, {
         name: step.name,
-        code: code
+        code: code,
+        description: step.desc
       });
       tooltip = $(rendered);
       bcr = this.getBoundingClientRect();
@@ -277,7 +278,7 @@
     };
     toClipboard = function toClipboard(step) {
       var input;
-      input = $("<input>").appendTo(selection).val(step.id).select();
+      input = $("<input>").appendTo(selection).val("restore('" + step.id + "')").select();
       document.execCommand("copy");
       input.remove();
       return $.notify("ID copied to clipboard", {

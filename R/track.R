@@ -115,6 +115,8 @@ plot_as_svg <- function (pl)
 {
   if (is.null(pl)) return(NULL)
 
+  # TODO use svglite::stringSVG
+
   path <- tempfile(fileext = ".svg")
 
   # TODO if `pl` has been recorded without dev.control("enable"), the
@@ -152,12 +154,20 @@ restore <- function (id)
 
   tags <- os_read_tags(internal_state$stash, long_id)
 
-  if (identical(tags$class, 'commit')) {
-    restore_commit(internal_state, long_id, globalenv())
-    return(invisible(TRUE))
+  # if id does not point to a commit, it might be an object from a commit
+  if (!identical(tags$class, 'commit')) {
+    g <- graph(internal_state$stash, .data = FALSE)
+    co <- find_first_parent(g, id)
+    if (is.null(co)) {
+      stop('cannot find commit for object ', id, call. = FALSE)
+    }
+
+    # if found, pass it on to the final line
+    long_id <- co$id
   }
 
-  stop('object id not implemented yet', call. = FALSE)
+  # restore the actual commit
+  restore_commit(internal_state, long_id, globalenv())
 }
 
 
@@ -177,9 +187,12 @@ restore_commit <- function (state, id, env)
 
   # clean the current plot and restore the one that came with the commit
   try(dev.off(), silent = TRUE)
-  if (!is.null(co$objects$.plot)) {
-    replayPlot(co$objects$.plot)
-  }
+
+  # TODO currently there seems to be no way to plot *from* SVG onto
+  #      the interactive graphic device
+  #if (!is.null(co$objects$.plot)) {
+  #  replayPlot(co$objects$.plot)
+  #}
 
   invisible()
 }

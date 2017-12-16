@@ -34,6 +34,7 @@ Widget = (selection) ->
     <div class="tooltip">
         <div class="inner">
             <span class="name">{{name}}</span>
+            <span class="description">{{description}}</span>
             <pre><code class="R">{{code}}</code></pre>
         </div>
     </div>
@@ -204,7 +205,7 @@ Widget = (selection) ->
   # transition outside
   showPlot = (step) ->
     step.dx = Math.max(0, step.x + zoomed - vis.attr("width"))
-    step.dy = Math.max(0, step.y + zoomed/step.width*step.height - vis.attr("height") + 100)
+    step.dy = Math.max(0, step.y + zoomed/step.width*step.height - vis.attr("height"))
     
     this.animation?.stop()
     this.animation = self = d3.timer (elapsed) ->
@@ -234,7 +235,8 @@ Widget = (selection) ->
     code = if step.expr.constructor is Array then step.expr.join('\n') else step.expr
     rendered = Mustache.render(template, {
       name: step.name,
-      code: code
+      code: code,
+      description: step.desc
     })
     tooltip = $(rendered)
 
@@ -263,7 +265,7 @@ Widget = (selection) ->
   toClipboard = (step) ->
     input = $("<input>")
       .appendTo(selection)
-      .val(step.id)
+      .val("restore('#{step.id}')")
       .select()
     document.execCommand("copy")
     input.remove()

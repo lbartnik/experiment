@@ -140,7 +140,7 @@ commit_to_steps <- function (commit, objects)
       list(
         type = 'plot',
         id   = id,
-        expr = format(commit$expr),
+        expr = format_expression(commit$expr),
         contents = as.character(object)
       )
     }
@@ -149,7 +149,8 @@ commit_to_steps <- function (commit, objects)
         name = name,
         type = "object",
         id   = id,
-        expr = format(commit$expr)
+        expr = format_expression(commit$expr),
+        desc = description(object)
       )
     }
   }
@@ -203,6 +204,60 @@ introduced_in <- function (graph, id)
 }
 
 
+#' @description `find_root_id` searches for the single commit
+#' in the graph without a parent.
+#'
+#' @rdname steps
+#'
+find_root_id <- function (g)
+{
+  stopifnot(is_graph(g))
+  root <- names(Filter(function (co) is.na(co$parent), g))
+
+  stopifnot(length(root) == 1)
+  root
+}
+
+
+#' @description `format` prepares the expression for display
+#' in a HTML page.
+#'
+#' @import formatR
+#' @rdname steps
+#'
+format_expression <- function (code)
+{
+  return(paste(deparse(code), sep = '\n'))
+
+  form <- tryCatch(formatR::tidy_source(text = code, blank = FALSE, comment = FALSE,
+                                        width.cutoff = 72,
+                                        output = FALSE),
+                   error = function(e) 'error')
+  if (!identical(form, 'error')) return(form$text.tidy)
+}
+
+
+#' @description `description` format the expression for display
+#' in a HTML page.
+#'
+#' @import broom
+#' @rdname steps
+#'
+description <- function (object)
+{
+  if (is.data.frame(object)) return(paste0('data.frame [', nrow(object), ', ', ncol(object), ']'))
+
+  if (inherits(object, 'lm')) {
+    g <- glance(object)
+    return(paste('adj R2:', format(g$adj.r.squared, digits = 2),
+                 'AIC: ', format(g$AIC, digits = 2),
+                 'df: ', g$df))
+  }
+
+  toString(g)
+}
+
+
 #' Compare two SVG images.
 #'
 #' SVG images are processed in this package as base64-encoded, XML text
@@ -231,30 +286,6 @@ svg_equal <- function (a, b)
 
 
 
-find_root_id <- function (g)
-{
-  stopifnot(is_graph(g))
-  root <- names(Filter(function (co) is.na(co$parent), g))
-
-  stopifnot(length(root) == 1)
-  root
-}
-
-#' @import formatR
-format <- function (code)
-{
-  return(paste(deparse(code), sep = '\n'))
-
-  form <- tryCatch(formatR::tidy_source(text = code, blank = FALSE, comment = FALSE,
-                                        width.cutoff = 72,
-                                        output = FALSE),
-                   error = function(e) 'error')
-  if (!identical(form, 'error')) return(form$text.tidy)
-}
-
-
-
-
 
 #' @import jsonlite
 graph_to_json <- function (g)
@@ -268,6 +299,7 @@ find_first_parent <- function (g, id)
 {
   g <- Filter(function (co) (id %in% co$object_ids), g)
   i <- which.min(vapply(g, function (co) co$level, numeric(1)))
+  if (!length(i)) return(NULL)
   g[[i]]
 }
 
