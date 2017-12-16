@@ -1,0 +1,161 @@
+---
+title: "Introducion to history browser"
+author: "Lukasz A. Bartnik"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to Sub-Processes in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(experiment)
+library(knitr)
+
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=5, fig.height=4, fig.align = 'center')
+```
+
+
+```{r callback,include=FALSE}
+knit_hooks$set(evaluate = function(...) {
+  res  <- evaluate::evaluate(...)
+  plot <- Filter(evaluate::is.recordedplot, res)
+  plot <- if (length(plot)) plot[[1]]
+
+  args  <- list(...)
+  state <- experiment:::internal_state
+  env   <- args$envir
+  expr  <- parse(text = paste(args[[1]], collapse = '\n'))
+  experiment:::update_current_commit(state, env, plot, expr)
+
+  res
+})
+```
+
+
+```{r message=FALSE}
+library(dplyr)
+library(lubridate)
+library(magrittr)
+library(ggplot2)
+```
+
+
+
+```{r}
+input <-
+  system.file("extdata/block_62.csv", package = "experiment") %>%
+  readr::read_csv(na = 'Null') %>%
+  rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+  filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
+         year(timestamp) == 2013)
+```
+
+```{r}
+input %<>%
+  mutate(timestamp = floor_date(timestamp, 'hours')) %>%
+  group_by(meter, timestamp) %>%
+  summarise(usage = sum(usage))
+```
+
+
+```{r}
+input %<>% filter(meter == "MAC004929")
+```
+
+```{r}
+with(input, plot(timestamp, usage, type = 'p', pch = '.'))
+```
+
+```{r}
+x <-
+  input %>%
+  mutate(hour = hour(timestamp),
+         dow  = wday(timestamp)) %>%
+  mutate_at(vars(hour, dow), funs(as.factor))
+```
+
+```{r}
+m <- lm(usage ~ hour:dow, x)
+```
+
+```{r summarise}
+x <-
+  input %>%
+  mutate(hour = hour(timestamp),
+         dow  = wday(timestamp, label = TRUE)) %>%
+  mutate_at(vars(hour, dow), funs(as.factor)) %>%
+  group_by(hour, dow) %>%
+  summarise(usage = mean(usage, na.rm = TRUE))
+```
+
+```{r}
+with(x, plot(hour, usage))
+```
+
+```{r}
+ggplot(x) + geom_point(aes(x = hour, y = usage)) + facet_wrap(~dow)
+```
+
+```{r boxplot}
+ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+```
+
+
+```{r fullhistory,fig.width=7,fig.height=5}
+plot(fullhistory())
+```
+
+
+Let's go back to the last step before narrowing down to just one meter.
+Clicking on the second `input` node in the history window copies this
+object's identifier, which we can then use to bring back the state of
+R session just after it was created.
+
+
+```{r restore}
+restore('40692a8b662cc0327e12076193c13a8b730d2fc0')
+```
+
+
+Now we can try a different house.
+
+```{r}
+input %<>% filter(meter == "MAC000010")
+```
+
+```{r summarise}
+```
+
+```{r boxplot}
+```
+
+
+The history looks different now, there is a second branch reflecting
+the last three commands we issued.
+
+```{r fullhistory,fig.width=7,fig.height=5}
+```
+
+
+OK, so how about the third house in the data set? We restore the same
+point in time again, and repeat the commands.
+
+```{r restore}
+```
+
+```{r}
+input %<>% filter(meter == "MAC004391")
+```
+
+```{r summarise}
+```
+
+```{r boxplot}
+```
+
+```{r fullhistory,fig.width=7,fig.height=5}
+```
