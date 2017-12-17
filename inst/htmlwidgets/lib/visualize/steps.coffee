@@ -243,8 +243,6 @@ Widget = (selection) ->
 
     pos = $(selection).parent().position()
     bcr = this.getBoundingClientRect()
-    console.log(pos)
-    console.log(bcr)
 
     tooltip
       .attr("id", "tooltip_#{step.id}")

@@ -248,8 +248,6 @@
       tooltip = $(rendered);
       pos = $(selection).parent().position();
       bcr = this.getBoundingClientRect();
-      console.log(pos);
-      console.log(bcr);
       tooltip.attr("id", "tooltip_" + step.id).css({
         left: bcr.left + bcr.width,
         top: bcr.top + bcr.height
