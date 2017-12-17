@@ -1,3 +1,6 @@
+.widget {
+}
+
 .commit {
     fill: white;
     stroke: black;
@@ -20,7 +23,7 @@
 }
 
 .tooltip {
-    position: absolute;
+    position: fixed;
     display: block;
     visibility: hidden;
     font-size: 9pt;

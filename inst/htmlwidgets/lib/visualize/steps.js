@@ -35,7 +35,7 @@
     thumbnail = 25;
     zoomed = 250;
     data = null;
-    vis = d3.select(selection).style("overflow", "auto").style('overflow-y', 'auto').append("svg");
+    vis = d3.select(selection).attr("class", "widget").style("overflow", "auto").style('overflow-y', 'auto').append("svg");
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
@@ -246,11 +246,13 @@
         description: step.desc
       });
       tooltip = $(rendered);
-      pos = $(this).offset();
+      pos = $(selection).parent().position();
       bcr = this.getBoundingClientRect();
+      console.log(pos);
+      console.log(bcr);
       tooltip.attr("id", "tooltip_" + step.id).css({
-        left: pos.left + bcr.width,
-        top: pos.top + bcr.height
+        left: bcr.left + bcr.width,
+        top: bcr.top + bcr.height
       }).find("pre code").each(function (i, block) {
         return hljs.highlightBlock(block);
       });

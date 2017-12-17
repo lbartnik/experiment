@@ -28,7 +28,7 @@ knit_hooks$set(evaluate = function(...) {
   args  <- list(...)
   state <- experiment:::internal_state
   env   <- args$envir
-  expr  <- parse(text = paste(args[[1]], collapse = '\n'))
+  expr  <- parse(text = paste(args[[1]], collapse = '\n'))[[1]]
   experiment:::update_current_commit(state, env, plot, expr)
 
   res
@@ -69,19 +69,6 @@ input %<>% filter(meter == "MAC004929")
 ```{r}
 with(input, plot(timestamp, usage, type = 'p', pch = '.'))
 ```
-
-```{r}
-x <-
-  input %>%
-  mutate(hour = hour(timestamp),
-         dow  = wday(timestamp)) %>%
-  mutate_at(vars(hour, dow), funs(as.factor))
-```
-
-```{r}
-m <- lm(usage ~ hour:dow, x)
-```
-
 ```{r summarise}
 x <-
   input %>%
@@ -100,9 +87,22 @@ with(x, plot(hour, usage))
 ggplot(x) + geom_point(aes(x = hour, y = usage)) + facet_wrap(~dow)
 ```
 
+```{r}
+x <-
+  input %>%
+  mutate(hour = hour(timestamp),
+         dow  = wday(timestamp)) %>%
+  mutate_at(vars(hour, dow), funs(as.factor))
+```
+
 ```{r boxplot}
 ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
 ```
+
+```{r}
+m <- lm(usage ~ hour:dow, x)
+```
+
 
 
 ```{r fullhistory,fig.width=7,fig.height=5}

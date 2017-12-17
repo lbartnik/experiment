@@ -22,6 +22,7 @@ Widget = (selection) ->
   zoomed = 250
   data  = null
   vis = d3.select(selection)
+    .attr("class", "widget")
     .style("overflow", "auto")
     .style('overflow-y', 'auto')
     .append("svg")
@@ -240,12 +241,14 @@ Widget = (selection) ->
     })
     tooltip = $(rendered)
 
-    pos = $(this).offset()
+    pos = $(selection).parent().position()
     bcr = this.getBoundingClientRect()
+    console.log(pos)
+    console.log(bcr)
 
     tooltip
       .attr("id", "tooltip_#{step.id}")
-      .css({left: pos.left + bcr.width, top: pos.top + bcr.height})
+      .css({left: bcr.left + bcr.width, top: bcr.top + bcr.height})
       .find("pre code").each (i, block) -> hljs.highlightBlock(block)
     tooltip.find(".inner").css({zoom: .1})
     
