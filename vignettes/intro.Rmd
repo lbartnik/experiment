@@ -16,7 +16,7 @@ library(knitr)
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.align = 'center')
-knitr::opts_chunk$set(out.height=400, out.width=600)
+knitr::opts_chunk$set(out.width='65%')
 ```
 
 
@@ -106,7 +106,7 @@ m <- lm(usage ~ hour:dow, x)
 
 
 
-```{r fullhistory,fig.width=7,fig.height=5}
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
 plot(fullhistory())
 ```
 
@@ -138,7 +138,7 @@ input %<>% filter(meter == "MAC000010")
 The history looks different now, there is a second branch reflecting
 the last three commands we issued.
 
-```{r fullhistory,fig.width=7,fig.height=5}
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
 ```
 
 
@@ -158,5 +158,5 @@ input %<>% filter(meter == "MAC004391")
 ```{r boxplot}
 ```
 
-```{r fullhistory,fig.width=7,fig.height=5}
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
 ```
