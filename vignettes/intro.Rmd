@@ -15,7 +15,8 @@ library(knitr)
 
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(fig.width=5, fig.height=4, fig.align = 'center')
+knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.align = 'center')
+knitr::opts_chunk$set(out.height=400, out.width=600)
 ```
 
 
@@ -69,7 +70,7 @@ input %<>% filter(meter == "MAC004929")
 ```{r}
 with(input, plot(timestamp, usage, type = 'p', pch = '.'))
 ```
-```{r summarise}
+```{r}
 x <-
   input %>%
   mutate(hour = hour(timestamp),
@@ -87,7 +88,7 @@ with(x, plot(hour, usage))
 ggplot(x) + geom_point(aes(x = hour, y = usage)) + facet_wrap(~dow)
 ```
 
-```{r}
+```{r group}
 x <-
   input %>%
   mutate(hour = hour(timestamp),
@@ -127,7 +128,7 @@ Now we can try a different house.
 input %<>% filter(meter == "MAC000010")
 ```
 
-```{r summarise}
+```{r group}
 ```
 
 ```{r boxplot}
@@ -151,7 +152,7 @@ point in time again, and repeat the commands.
 input %<>% filter(meter == "MAC004391")
 ```
 
-```{r summarise}
+```{r group}
 ```
 
 ```{r boxplot}
