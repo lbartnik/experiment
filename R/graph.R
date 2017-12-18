@@ -120,6 +120,15 @@ graph_to_steps <- function (graph)
 }
 
 
+#' @description `is_steps` verifies if the given object is a valid
+#' `steps` structure.
+#'
+#' @param x Object to be verified.
+#'
+#' @rdname steps
+#'
+is_steps <- function (x) inherits(x, 'steps')
+
 
 #' @description `commit_to_steps` generates a `list` with two elements:
 #' * `steps` with a separate entry for each variable/plot that matches

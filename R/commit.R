@@ -49,14 +49,16 @@ commit_store <- function (commit, store)
   stopifnot(storage::is_object_store(store))
 
   # name -> ID in object store
-  commit$object_ids <- lapply(commit$objects, function (o) {
+  store_object <- function (o, id) {
     o  <- cleanup_object(o)
-    id <- storage::compute_id(o)
+    if (is.null(id) || is.na(id)) id <- storage::compute_id(o)
     if (storage::os_exists(store, id)) return(id)
 
     tg <- auto_tags(o)
     storage::os_write(store, o, id = id, tags = tg)
-  })
+  }
+  commit$object_ids <- mapply(store_object, o = commit$objects,
+                              id = not_null(commit$object_ids, list(NULL)))
 
   if (is.na(commit$id))
   {
@@ -76,7 +78,7 @@ commit_store <- function (commit, store)
                           tags = list(class = class(commit), parent = commit$parent),
                           id = commit$id)
 
-  commit
+  invisible(commit)
 }
 
 

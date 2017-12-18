@@ -2,6 +2,7 @@
 % Please edit documentation in R/graph.R
 \name{graph_to_steps}
 \alias{graph_to_steps}
+\alias{is_steps}
 \alias{commit_to_steps}
 \alias{introduced_in}
 \alias{find_root_id}
@@ -10,6 +11,8 @@
 \title{Transform a graph of commits into a graph of steps.}
 \usage{
 graph_to_steps(graph)
+
+is_steps(x)
 
 commit_to_steps(commit, objects)
 
@@ -23,6 +26,8 @@ description(object)
 }
 \arguments{
 \item{graph}{Object returned by [graph()].}
+
+\item{x}{Object to be verified.}
 
 \item{commit}{A [commit()] object.}
 
@@ -43,6 +48,9 @@ session. Graph of steps is easier to read for humans than a graph of
 commits becase only the relevant (new) information is shown in each
 node of the graph. Thus, translating from commits to steps is the
 first step to visualize the history stored in commits.
+
+`is_steps` verifies if the given object is a valid
+`steps` structure.
 
 `commit_to_steps` generates a `list` with two elements:
 * `steps` with a separate entry for each variable/plot that matches

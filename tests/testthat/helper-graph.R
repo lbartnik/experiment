@@ -1,3 +1,21 @@
+sample_store <- function ()
+{
+  m <- storage::memory()
+
+  c <- commit(list(x = 3, y = 2), bquote(), 'b', 'a', list(x = 'r', y = 'q'))
+  commit_store(c, m)
+
+
+         list(   b = list(id         = 'b',
+                          parent     = 'c',
+                          objects    = list(x = 1, y = 2),
+                          object_ids = list(x = 'p', y = 'q')),
+                 c = list(id         = 'c',
+                          parent     = NA,
+                          objects    = list(x = 1),
+                          object_ids = list(x = 'p')))
+}
+
 sample_graph <- function ()
 {
   structure(list(a = list(id         = 'a',

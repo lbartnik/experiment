@@ -1,4 +1,50 @@
 
+#' @import lazyeval
+#' @import storage
+#'
+query_by <- function (..., .related = "plots")
+{
+  dots <- lazyeval::lazy_dots(...)
+
+  g <- graph(internal_state$stash)
+  s <- graph_to_steps(g)
+
+  s <- reduce_steps(s, dots, internal_state$stash)
+}
+
+
+
+reduce_steps <- function (s, dots, store)
+{
+  stopifnot(is_steps(s))
+  stopifnot(is_lazy_dots(dots))
+
+
+  search_funs <- list(
+    inherits = function(...) {
+      classes <- as.character(list(...))
+      any(class %in% classes)
+    },
+    name = function(...) {
+      names <- as.character(list(...))
+      any(name %in% names)
+    }
+  )
+
+  lapply(s$steps, function (step) {
+    tags <- storage::os_read_tags(store, step$id)
+    data <- as.environment(c(search_funs, tags))
+
+    ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = data),
+                                                 error = function(e) NA_character_))
+    all(unlist(ans))
+  })
+
+}
+
+
+
+
 # --- querying ---
 
 #' @export
@@ -18,18 +64,6 @@ stashed <- function (..., ids)
 
 
 #' @export
-query_by <- function (...)
-{
-  dots <- lazyeval::lazy_dots(...)
-
-  check <- list(class = function(...) "class",
-                name = function(...) "name")
-
-  what <- vapply(dots, function (le) tryCatch(lazyeval::lazy_eval(le, data = check),
-                                              error = function(e) NA_character_),
-                 character(1))
-}
-
 
 #' @export
 query_by_class <- function (value) results(stashed(class == value))
