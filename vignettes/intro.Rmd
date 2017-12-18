@@ -245,15 +245,19 @@ Now we can try a different house.
 input %<>% filter(meter == "MAC000010")
 ```
 
+We aggregate the data with the same query as before and look at the
+boxplot. Anything interesting here?
+
 ```{r group}
 ```
 
 ```{r boxplot}
 ```
 
+# History, again
 
-The history looks different now, there is a second branch reflecting
-the last three commands we issued.
+The history looks different now, as there is a second branch reflecting
+the last three commands we have just issued.
 
 ```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
 ```
@@ -262,7 +266,7 @@ the last three commands we issued.
 # Third house
 
 OK, so how about the third house in the data set? We restore the same
-point in time again, and repeat the commands.
+point in time again, and repeat the same sequence of commands.
 
 ```{r restore}
 ```
@@ -276,6 +280,9 @@ input %<>% filter(meter == "MAC004391")
 
 ```{r boxplot}
 ```
+
+As we can see, the history gets updated again to reflect the third
+branching on the third house in the data set.
 
 ```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
 ```
