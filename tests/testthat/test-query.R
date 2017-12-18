@@ -37,7 +37,7 @@ test_that("reducing by class", {
 
   expect_length(t$steps, 2)
   expect_length(t$links, 1)
-  expect_equal(t$links[[1]], list(source = 'p', target = 's'))
+  expect_equal(first(t$links), list(source = 'p', target = 's'))
 })
 
 
@@ -50,5 +50,11 @@ test_that("reducing by name", {
 
   expect_length(t$steps, 1)
   expect_length(t$links, 0)
-})
 
+  d <- to_lazy_dots(is_named('x'))
+  t <- reduce_steps(s, d, m)
+
+  expect_length(t$steps, 2)
+  expect_length(t$links, 1)
+  expect_equal(first(t$links), list(source = 'p', target = 'r'))
+})
