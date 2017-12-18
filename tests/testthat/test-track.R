@@ -66,7 +66,7 @@ test_that("restoring by commit", {
   expect_equal(internal_state$last_commit$id, id)
 
   # short it
-  modelling(overwrite = TRUE)
+  expect_warning(modelling(overwrite = TRUE))
 
   restore('96ea722b')
   expect_equal(internal_state$last_commit$id, id)
