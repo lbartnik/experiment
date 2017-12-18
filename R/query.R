@@ -38,6 +38,7 @@ reduce_steps <- function (s, dots, store)
 
   ids <- vapply(s$steps, `[[`, character(1), i = 'id')
 
+  # remove all nodes that do not match the criteria
   for (id in ids[!matching]) {
     s <- remove_step(s, id)
   }
@@ -65,16 +66,21 @@ remove_step <- function (s, id)
 
   stopifnot(sum(target) <= 1)
 
-  # move children "up"
-  parent <- if (sum(target)) s$links[target][[1]]$source else NA_character_
-  s$links[source] <- lapply(s$links[source], function (link) {
-    link$source <- parent
-    link
-  })
+  # if thsi node has a parent, move its children "up"
+  if (sum(target)) {
+    parent <- s$links[target][[1]]$source
+    s$links[source] <- lapply(s$links[source], function (link) {
+      link$source <- parent
+      link
+    })
 
-  # remove "dangling" parent
-  if (sum(target))
+    # remove "dangling" parent
     s$links[target] <- NULL
+  }
+  # otherwise, remove its links altogether
+  else {
+    s$links[source] <- NULL
+  }
 
   # once edges are updated, remove nodes
   s$steps[vapply(s$steps, `[[`, character(1), i = 'id') == id] <- NULL
@@ -100,34 +106,45 @@ verify_step <- function (step, dots, parent_env, store)
   stopifnot(is.environment(parent_env))
   stopifnot(storage::is_object_store(store))
 
-  # prepare the search verbs
-  search_env <- new.env(parent = parent_env)
-  search_funs <- list(
-    inherits = function(...) {
-      classes <- as.character(list(...))
-      any(class %in% classes)
-    },
-    name = function(...) {
-      names <- as.character(list(...))
-      any(name %in% names)
-    }
-  )
-  search_funs <- lapply(search_funs, `environment<-`, value = search_env)
-
   # prepare the hierarchy of environments in which lazy dots will be evaluated
   tags <- storage::os_read_tags(store, step$id)
-  data <- as.environment(c(search_funs, tags))
-  parent.env(data) <- parent_env
-  parent.env(search_env) <- data
+  data_env <- as.environment(c(tags, step))
+  parent.env(data_env) <- parent_env
+
+  # prepare the search verbs; functions' environment is data_env
+  # and they belong to a search environment, which is also a child
+  # of data_env
+  dots_env <- search_funs(data_env)
 
   # evaluate all lazy dots in the bottom-most environment in that hierarchy
-  ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = data),
+  ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = dots_env),
                                                  error = function(e) NA_character_))
 
   # all must match
   all(unlist(ans))
 }
 
+
+search_funs <- function (data_env)
+{
+  search_funs <- list(
+    inherits = function(...) {
+      classes <- as.character(list(...))
+      any(class %in% classes)
+    },
+    is_named = function(...) {
+      names <- as.character(list(...))
+      any(name %in% names)
+    }
+  )
+
+  search_funs <- lapply(search_funs, `environment<-`, value = data_env)
+
+  env <- as.environment(search_funs)
+  parent.env(env) <- data_env
+
+  env
+}
 
 
 

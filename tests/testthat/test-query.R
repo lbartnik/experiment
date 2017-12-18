@@ -40,3 +40,15 @@ test_that("reducing by class", {
   expect_equal(t$links[[1]], list(source = 'p', target = 's'))
 })
 
+
+test_that("reducing by name", {
+  m <- sample_memory_store()
+  s <- graph_to_steps(graph(m, .data = FALSE))
+
+  d <- to_lazy_dots(is_named('z'))
+  t <- reduce_steps(s, d, m)
+
+  expect_length(t$steps, 1)
+  expect_length(t$links, 0)
+})
+
