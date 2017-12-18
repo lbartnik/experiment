@@ -110,27 +110,44 @@ remove_step <- function (s, id)
   # "merge" links by connecting its children to its parent
   target <- (vapply(s$links, `[[`, character(1), i = 'target') == id)
   source <- (vapply(s$links, `[[`, character(1), i = 'source') == id)
+  node_i <- which(vapply(s$steps, `[[`, character(1), i = 'id') == id)
 
   stopifnot(sum(target) <= 1)
 
-  # if thsi node has a parent, move its children "up"
+  # if we're about to remove the current root and if it has more
+  # than one child, rename it to 'virtual root' and keep it in the
+  # tree
+  if (!sum(target) && sum(source) > 1) {
+    s$steps[[node_i]] <- list(
+      name = 'virtual root',
+      type = 'object',
+      expr = '',
+      id   = id
+    )
+    return(s)
+  }
+
+  # if there is at least one child, move this children "up" by replacing
+  # its "source" with this node's parent id
   if (sum(target)) {
     parent <- s$links[target][[1]]$source
+
     s$links[source] <- lapply(s$links[source], function (link) {
       link$source <- parent
       link
     })
 
     # remove "dangling" parent
-    s$links[target] <- NULL
+    s$links <- s$links[!target]
   }
-  # otherwise, remove its links altogether
   else {
-    s$links[source] <- NULL
+    # we know that there is at most one child, so it's safe to remove
+    # the link altogether
+    s$links <- s$links[!source]
   }
 
   # once edges are updated, remove nodes
-  s$steps[vapply(s$steps, `[[`, character(1), i = 'id') == id] <- NULL
+  s$steps[[node_i]] <- NULL
 
   s
 }

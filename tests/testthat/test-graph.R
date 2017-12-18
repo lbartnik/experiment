@@ -76,3 +76,11 @@ test_that("convert graph", {
   expect_exists(list(source = 'p', target = 'q'), s$links)
   expect_exists(list(source = 'q', target = 'r'), s$links)
 })
+
+
+test_that("replace with virtual root", {
+  # this is necessary when we are supposed to remove a node that
+  # has no parent and more than one child
+
+  stop("not implemented")
+})
