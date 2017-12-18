@@ -161,14 +161,25 @@ verify_step <- function (step, dots, parent_env, store)
   data_env <- as.environment(c(tags, step))
   parent.env(data_env) <- parent_env
 
+  # fill in missing elements
+  if (identical(step$type, 'plot')) {
+    data_env$name  <- '.plot'
+    data_env$class <- 'plot'
+  }
+
   # prepare the search verbs; functions' environment is data_env
   # and they belong to a search environment, which is also a child
   # of data_env
   dots_env <- search_funs(data_env)
 
   # evaluate all lazy dots in the bottom-most environment in that hierarchy
+  error_handler <- function (e) {
+    warning('could not evaluate the query ', toString(e$call), ': ', toString(e$message),
+            call. = FALSE)
+    FALSE
+  }
   ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = dots_env),
-                                                 error = function(e) NA_character_))
+                                               error = error_handler))
 
   # all must match
   all(unlist(ans))
