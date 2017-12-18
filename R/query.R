@@ -1,6 +1,36 @@
 
+#' Query the current history.
+#'
+#' The following helper functions can be use in expressions to define
+#' conditions:
+#' * `is_named(...)` name matches any from the list
+#' * `inherits` object inherits from any of the specified classes
+#'
+#' The following variables can be used in expressions when defining
+#' conditions:
+#' * `name` object name
+#' * `class` object class
+#' * `id` object identifier`
+#'
+#' @param ... Search conditions.
+#' @param .related Included related entities (objects or plots).
+#' @return A reduced history graph.
+#'
+#' @export
 #' @import lazyeval
-#' @import storage
+#'
+#' @rdname query
+#'
+#' @examples
+#' \dontrun{
+#' # search for a specific class
+#' query_by(inherits("lm", "data.frame"))
+#' query_by(lm %in% class || "data.frame" %in% class)
+#'
+#' # search for a specific name
+#' query_by(is_named("input", "x", "model"))
+#' query_by(name == "input" || name == "x" || name == "model")
+#' }
 #'
 query_by <- function (..., .related = "plots")
 {
@@ -100,6 +130,9 @@ remove_step <- function (s, id)
 #'
 #' @rdname steps_internal
 #'
+#' @import storage
+#' @import lazyeval
+#'
 verify_step <- function (step, dots, parent_env, store)
 {
   stopifnot(is_lazy_dots(dots))
@@ -130,7 +163,7 @@ search_funs <- function (data_env)
   search_funs <- list(
     inherits = function(...) {
       classes <- as.character(list(...))
-      any(class %in% classes)
+      as.logical(length(intersect(class, classes)) > 0)
     },
     is_named = function(...) {
       names <- as.character(list(...))
