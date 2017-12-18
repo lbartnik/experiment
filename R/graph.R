@@ -9,7 +9,6 @@
 #' @param .data Wether to read full object data.
 #' @return An object of S3 class `graph`.
 #'
-#' @export
 #' @import storage
 #' @rdname graph
 #'
@@ -20,6 +19,11 @@ graph <- function (store, .data = FALSE)
 
   commits <- lapply(ids, function (commit_id)
     commit_restore(commit_id, store, .data = .data))
+
+  if (!length(commits)) {
+    stop("history is empty", call. = FALSE)
+  }
+
   names(commits) <- ids
 
   commits <- structure(commits, class = 'graph')
@@ -55,11 +59,8 @@ is_graph <- function (x) inherits(x, 'graph')
 #'
 plot.graph <- function (x, ...)
 {
-  input <- list(data = graph_to_steps(x))
-  # create the widget
-  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
+  plot(graph_to_steps(x))
 }
-
 
 
 #' Transform a graph of commits into a graph of steps.
@@ -76,7 +77,7 @@ plot.graph <- function (x, ...)
 #' @param graph Object returned by [graph()].
 #' @return Object of S3 class `steps`.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 graph_to_steps <- function (graph)
 {
@@ -120,6 +121,48 @@ graph_to_steps <- function (graph)
 }
 
 
+#' @description `is_steps` verifies if the given object is a valid
+#' `steps` structure.
+#'
+#' @param x Object to be verified.
+#'
+#' @rdname steps
+#'
+is_steps <- function (x) inherits(x, 'steps')
+
+
+#' Interactive history.
+#'
+#' @description `plot.steps` open an interactive history viewer.
+#' @param x The `steps` history object to be printed or viewed.
+#' @param ... Extra arguments for printing/plotting.
+#'
+#' @export
+#' @rdname steps
+#'
+plot.steps <- function (x, ...)
+{
+  input <- list(data = x)
+  # create the widget
+  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
+}
+
+
+#' @description `plot.steps` open an interactive history viewer.
+#'
+#' @export
+#' @rdname steps
+#'
+print.steps <- function(x, ...)
+{
+  cat("A `steps` history object, contains ", length(x$steps), " step(s).\n")
+
+  type <- vapply(x$steps, `[[`, character(1), i = 'type')
+  cat(sum(type == 'object'), " object(s) and ", sum(type == 'plot'), " plot(s)\n")
+
+  invisible(x)
+}
+
 
 #' @description `commit_to_steps` generates a `list` with two elements:
 #' * `steps` with a separate entry for each variable/plot that matches
@@ -130,7 +173,7 @@ graph_to_steps <- function (graph)
 #' @param objects Filter for objects present in the commit.
 #' @return `commit_to_steps` returns a `list` of `steps` and `links`.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 commit_to_steps <- function (commit, objects)
 {
@@ -182,7 +225,7 @@ commit_to_steps <- function (commit, objects)
 #' @param id Identifier of a commit in `graph`.
 #' @return `introduced_in` returns a `character` vector.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 introduced_in <- function (graph, id)
 {
@@ -194,8 +237,10 @@ introduced_in <- function (graph, id)
     is.na(match(n, names(p$objects))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
   }, setdiff(names(c$objects), '.plot'))
 
-  if (!is.null(c$objects$.plot) &&
-      !svg_equal(c$objects$.plot, p$objects$.plot))
+  # there is a plot (first condition) and it's different from
+  # what was there before (second condition)
+  if (!is.null(c$object_ids$.plot) &&
+      !identical(c$object_ids$.plot, p$object_ids$.plot))
   {
     return(c(new_objs, '.plot'))
   }
@@ -204,10 +249,37 @@ introduced_in <- function (graph, id)
 }
 
 
+#' @description `read_objects` reads every object/plot and fills in the
+#' `contents` or `desc`ription. It is particularly useful when initial
+#' `steps` graph has been read without objects' contents, e.g. in
+#' [query_by].
+#'
+#' @rdname steps_internal
+#'
+read_objects <- function (s, store)
+{
+  s$steps <- lapply(s$steps, function (step) {
+    if (!is_empty(step$contents) || !is_empty(step$desc)) return(step)
+    obj <- storage::os_read_object(store, step$id)
+
+    if (identical(s$type, 'object')) {
+      step$desc <- description(obj)
+    }
+    else {
+      step$contents <- as.character(obj)
+    }
+
+    step
+  })
+
+  s
+}
+
+
 #' @description `find_root_id` searches for the single commit
 #' in the graph without a parent.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 find_root_id <- function (g)
 {
@@ -223,7 +295,7 @@ find_root_id <- function (g)
 #' in a HTML page.
 #'
 #' @import formatR
-#' @rdname steps
+#' @rdname steps_internal
 #'
 format_expression <- function (code)
 {
@@ -241,7 +313,7 @@ format_expression <- function (code)
 #' in a HTML page.
 #'
 #' @import broom
-#' @rdname steps
+#' @rdname steps_internal
 #'
 description <- function (object)
 {
@@ -276,11 +348,13 @@ description <- function (object)
 #'
 svg_equal <- function (a, b)
 {
-  if (is.null(a)) return(is.null(b))
-  if (is.null(b)) return(FALSE)
+  if (is_empty(a)) return(is_empty(b))
+  if (is_empty(b)) return(FALSE)
 
-  a <- rsvg(base64_dec(a), 100, 100)
-  b <- rsvg(base64_dec(b), 100, 100)
+  a <- try(rsvg(base64_dec(a), 100, 100), silent = TRUE)
+  b <- try(rsvg(base64_dec(b), 100, 100), silent = TRUE)
+  if (is_error(a) && is_error(b)) return(TRUE)
+
   isTRUE(all.equal(a, b))
 }
 
@@ -302,6 +376,3 @@ find_first_parent <- function (g, id)
   if (!length(i)) return(NULL)
   g[[i]]
 }
-
-#' @export
-fullhistory <- function() graph(internal_state$stash, TRUE)

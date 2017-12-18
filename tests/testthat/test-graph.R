@@ -33,9 +33,9 @@ test_that("filter", {
 
 test_that("filter on plots", {
   g <- structure(list(a = list(parent = 'b',
-                               objects = list(.plot = 1)),
+                               object_ids = list(.plot = 1)),
                       b = list(parent = NA,
-                               objects = list())))
+                               object_ids = list())))
   expect_equal(introduced_in(g, 'a'), '.plot')
 })
 
