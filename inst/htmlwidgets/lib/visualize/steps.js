@@ -126,10 +126,16 @@
     };
     addPlot = function addPlot(step) {
       var bb, doc, fromBase64, parser, plot;
-      fromBase64 = atob(step.contents.replace(/\s/g, ""));
-      parser = new DOMParser();
-      doc = parser.parseFromString(fromBase64, "application/xml");
-      plot = vis.node().appendChild(doc.documentElement);
+      if (step.contents) {
+        fromBase64 = atob(step.contents.replace(/\s/g, ""));
+        parser = new DOMParser();
+        doc = parser.parseFromString(fromBase64, "application/xml");
+        plot = vis.node().appendChild(doc.documentElement);
+      } else {
+        plot = vis.append("svg");
+        plot.append("rect").attr('width', 150).attr('height', 150).style("fill", "grey");
+        plot = plot.node();
+      }
       // extract and remember the original size
       bb = plot.getBBox();
       step.width = bb.width - bb.x;
