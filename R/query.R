@@ -19,7 +19,47 @@ reduce_steps <- function (s, dots, store)
   stopifnot(is_steps(s))
   stopifnot(is_lazy_dots(dots))
 
+  parent_env <- parent.frame(1)
 
+  matching <- vapply(s$steps, verify_step, logical(1),
+                     dots = dots, parent_env = parent_env, store = store)
+
+  ids <- vapply(s$steps, `[[`, character(1), i = 'id')
+
+  browser()
+
+  # for each object that doesn't match, remove it from steps and
+  # "merge" links by connecting its children to its parent
+  lapply(ids[!matching], function (id) {
+    target <- (vapply(s$links, `[[`, character(1), i = 'target') == id)
+    source <- (vapply(s$links, `[[`, character(1), i = 'source') == id)
+
+    browser()
+    stopifnot(sum(target) <= 1)
+
+    # move children
+    parent <- s$links[target][[1]]$source
+    s$links[source] <<- lapply(s$links[source], function (link) {
+      link$source <- parent
+      link
+    })
+
+    # remove "dangling" parent
+    if (sum(target))
+      s$links[target] <<- NULL
+  })
+
+  # once edges are updated, remove nodes
+  s$steps[!matching] <- NULL
+
+  s
+}
+
+
+verify_step <- function (step, dots, parent_env, store)
+{
+  # prepare the search verbs
+  search_env <- new.env(parent = parent_env)
   search_funs <- list(
     inherits = function(...) {
       classes <- as.character(list(...))
@@ -30,16 +70,20 @@ reduce_steps <- function (s, dots, store)
       any(name %in% names)
     }
   )
+  search_funs <- lapply(search_funs, `environment<-`, value = search_env)
 
-  lapply(s$steps, function (step) {
-    tags <- storage::os_read_tags(store, step$id)
-    data <- as.environment(c(search_funs, tags))
+  # prepare the hierarchy of environments in which lazy dots will be evaluated
+  tags <- storage::os_read_tags(store, step$id)
+  data <- as.environment(c(search_funs, tags))
+  parent.env(data) <- parent_env
+  parent.env(search_env) <- data
 
-    ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = data),
+  # evaluate all lazy dots in the bottom-most environment in that hierarchy
+  ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = data),
                                                  error = function(e) NA_character_))
-    all(unlist(ans))
-  })
 
+  # all must match
+  all(unlist(ans))
 }
 
 
