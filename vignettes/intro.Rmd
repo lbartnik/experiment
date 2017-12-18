@@ -1,0 +1,288 @@
+---
+title: "Interactive History Browser"
+author: "Lukasz A. Bartnik"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to Sub-Processes in R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(experiment)
+library(knitr)
+
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.align = 'center')
+knitr::opts_chunk$set(out.width='65%')
+```
+
+```{r output_hook,include=FALSE}
+(function() {
+  hook_output <- knit_hooks$get('output')
+  knit_hooks$set(output = function(x, options) {
+    if (!is.null(n <- options$out.lines)) {
+      if(length(n) == 1) n <- seq(n)
+      x  <- unlist(stringr::str_split(x, '\n'))
+      lx <- length(x)
+      
+      dots <- which(diff(n)>1) + 1
+      if (length(dots)) {
+        x <- x[sort(c(n, dots))]
+        x[dots] <- rep('...', length(dots))
+      }
+      else {
+        x <- x[n]
+      }
+      
+      if (min(n) > 1) x <- c('...', x)
+      if (max(n) < lx) x <- c(x, '...')
+      
+      x <- paste(c(x, ""), collapse = '\n')
+      options$out.lines <- NULL
+    }
+    hook_output(x, options)
+  })
+})()
+```
+
+```{r callback,include=FALSE}
+knit_hooks$set(evaluate = function(...) {
+  res  <- evaluate::evaluate(...)
+  plot <- Filter(evaluate::is.recordedplot, res)
+  plot <- if (length(plot)) plot[[1]]
+
+  args  <- list(...)
+  state <- experiment:::internal_state
+  env   <- args$envir
+  expr  <- parse(text = paste(args[[1]], collapse = '\n'))[[1]]
+  experiment:::update_current_commit(state, env, plot, expr)
+
+  res
+})
+```
+
+# Introduction
+
+The goal of this tutorial is to introduce the interactive history browser implemented
+in the `experiment` package. It follows one of the examples accessible via
+`experiment::simulate_london_meters` and is based on the
+[London meter data](https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households).
+
+History browser keeps track of all expressions evaluated in R session.
+It remembers all objects and plots, and allows the user to move back and
+forth in that recorded history.
+
+In this short introduction, we will perform a simplified data exploration
+exercise, similar to what a "real" data exploration might look like. In
+order to keep the big picture clean, we avoid poking around too much.
+
+We start by loading a number of packages we will need for our analysis.
+History tracker does not write down commands that do not produce new
+objects or plots, so it ignores this next block of code.
+
+
+```{r message=FALSE}
+library(dplyr)
+library(lubridate)
+library(magrittr)
+library(ggplot2)
+```
+
+# Preparing the data set
+
+Here is the first command that produces a (new) data object. It reads,
+transforms and filters a CSV file distributed with the `experiment`
+package.
+
+```{r message=FALSE}
+input <-
+  system.file("extdata/block_62.csv", package = "experiment") %>%
+  readr::read_csv(na = 'Null') %>%
+  rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+  filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
+         year(timestamp) == 2013)
+```
+
+
+Let's look at the data. It turns out that the observations are recorded
+every 30 minutes.
+
+```{r}
+head(input)
+```
+
+
+Let's agregate them and continue with hourly readings.
+
+```{r}
+input %<>%
+  mutate(timestamp = floor_date(timestamp, 'hours')) %>%
+  group_by(meter, timestamp) %>%
+  summarise(usage = sum(usage))
+```
+
+
+# The first meter
+
+We have three meters in the data set, `r unique(input$meter)`. We will
+look at them one by one, starting with this one.
+
+```{r}
+input %<>% filter(meter == "MAC004929")
+```
+
+
+Just a glimpse on the full data set, before we look aggregations.
+
+```{r}
+with(input, plot(timestamp, usage, type = 'p', pch = '.'))
+```
+
+
+All right! That doesn't reveal much, how about breaking the data set
+down by hour and day of week? Any patterns here? We start with aggregating
+the `input` set into a temporary variable `x`.
+
+```{r}
+x <-
+  input %>%
+  mutate(hour = hour(timestamp),
+         dow  = wday(timestamp, label = TRUE)) %>%
+  mutate_at(vars(hour, dow), funs(as.factor)) %>%
+  group_by(hour, dow) %>%
+  summarise(usage = mean(usage, na.rm = TRUE))
+```
+
+
+And now we can take a look at the by-hour plot:
+
+```{r}
+with(x, plot(hour, usage))
+```
+
+
+And the hour-by-day-of-the-week breakdown:
+
+```{r}
+ggplot(x) + geom_point(aes(x = hour, y = usage)) + facet_wrap(~dow)
+```
+
+
+So these are mean values. How about the distribution arund the mean?
+We can visualize that with a boxplot. Start with overwriting the `x`
+variable and then produce a new plot.
+
+```{r group}
+x <-
+  input %>%
+  mutate(hour = hour(timestamp),
+         dow  = wday(timestamp)) %>%
+  mutate_at(vars(hour, dow), funs(as.factor))
+```
+
+```{r boxplot}
+ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+```
+
+
+OK! Let's look at a linear model for this data.
+
+```{r}
+m <- lm(usage ~ hour:dow, x)
+```
+
+```{r summary,out.lines=c(1:14,178:186)}
+summary(m)
+```
+
+
+At this point we might decide we know enough. (We probably don't yet, but
+for the sake of the presentation, we let's assume we actually do. After
+all this is an introduction to the history browser, not to time series
+analysis.)
+
+
+# History recorded so far
+
+So what does the history look like so far? We can open an interactive
+viewer by plotting the history object as returned by `fullhistory()`.
+It is a `htmlwidget` so when you do it in actual R session in RStudio,
+it will open in the `viewer` pane.
+
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
+plot(fullhistory())
+```
+
+Each node represents either an object introduced at some point in time
+to R session, or a plot. Objects have their names displayed inside the
+node, plots are shown as thumbnails.
+
+You can hover your mouse cursor over each node in the history and see
+the expression that produced the given object along with its general
+characteristics, like dimensions of a `data.frame` or the `AIC` value
+for a linear model.
+
+
+# Second meter
+
+Let's go back to the last step before narrowing down to just one meter.
+Clicking on the second `input` node in the history window copies this
+object's identifier, which we can then use to bring back the state of
+R session just after it was created.
+
+
+```{r restore}
+restore('40692a8b662cc0327e12076193c13a8b730d2fc0')
+```
+
+
+Now we can try a different house.
+
+```{r}
+input %<>% filter(meter == "MAC000010")
+```
+
+We aggregate the data with the same query as before and look at the
+boxplot. Anything interesting here?
+
+```{r group}
+```
+
+```{r boxplot}
+```
+
+# History, again
+
+The history looks different now, as there is a second branch reflecting
+the last three commands we have just issued.
+
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
+```
+
+
+# Third house
+
+OK, so how about the third house in the data set? We restore the same
+point in time again, and repeat the same sequence of commands.
+
+```{r restore}
+```
+
+```{r}
+input %<>% filter(meter == "MAC004391")
+```
+
+```{r group}
+```
+
+```{r boxplot}
+```
+
+As we can see, the history gets updated again to reflect the third
+branching on the third house in the data set.
+
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
+```

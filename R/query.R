@@ -67,7 +67,7 @@ explain <- function (id)
 }
 
 
-#' @import defer
+#' @importFrom defer defer extract_variables
 explain_parents <- function (graph, id)
 {
   stopifnot(is_graph(graph))
@@ -89,3 +89,4 @@ explain_parents <- function (graph, id)
 
   invisible()
 }
+

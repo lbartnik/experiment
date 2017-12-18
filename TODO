@@ -3,6 +3,8 @@
   query_by(name("input"))
 
 * Widget:
+  - expression that produced a plot
+
   - maximize tooltip/plot towards the center of the canvas
     add onmouseout to tooltip/plot in case it covers the node/miniature
 

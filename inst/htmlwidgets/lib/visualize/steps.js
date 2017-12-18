@@ -35,7 +35,7 @@
     thumbnail = 25;
     zoomed = 250;
     data = null;
-    vis = d3.select(selection).style("overflow", "auto").style('overflow-y', 'auto').append("svg");
+    vis = d3.select(selection).attr("class", "widget").style("overflow", "auto").style('overflow-y', 'auto').append("svg");
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
@@ -237,7 +237,7 @@
       return vis.select("#plot" + step.id).attr("width", zoom).attr("height", zoom / step.width * step.height).attr("x", step.x - thumbnail / 2 - step.dx * alpha).attr("y", step.y - thumbnail / 2 - step.dy * alpha);
     };
     showVariable = function showVariable(step) {
-      var bcr, code, ref, rendered, tooltip;
+      var bcr, code, pos, ref, rendered, tooltip;
       Mustache.parse(template);
       code = step.expr.constructor === Array ? step.expr.join('\n') : step.expr;
       rendered = Mustache.render(template, {
@@ -246,10 +246,11 @@
         description: step.desc
       });
       tooltip = $(rendered);
+      pos = $(selection).parent().position();
       bcr = this.getBoundingClientRect();
       tooltip.attr("id", "tooltip_" + step.id).css({
-        left: bcr.right,
-        top: bcr.bottom
+        left: bcr.left + bcr.width,
+        top: bcr.top + bcr.height
       }).find("pre code").each(function (i, block) {
         return hljs.highlightBlock(block);
       });
