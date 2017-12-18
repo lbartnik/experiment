@@ -131,6 +131,8 @@ graph_to_steps <- function (graph)
 is_steps <- function (x) inherits(x, 'steps')
 
 
+#' Interactive history.
+#'
 #' @description `plot.steps` open an interactive history viewer.
 #' @param x The `steps` history object to be printed or viewed.
 #' @param ... Extra arguments for printing/plotting.
