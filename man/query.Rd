@@ -2,9 +2,12 @@
 % Please edit documentation in R/query.R
 \name{query_by}
 \alias{query_by}
+\alias{fullhistory}
 \title{Query the current history.}
 \usage{
 query_by(..., .related = "plots")
+
+fullhistory()
 }
 \arguments{
 \item{...}{Search conditions.}
@@ -12,15 +15,24 @@ query_by(..., .related = "plots")
 \item{.related}{Included related entities (objects or plots).}
 }
 \value{
-A reduced history graph.
+`query_by` return a history graph reduced according to
+conditions specified in the call.
+
+`fullhistory` returns the full history graph.
 }
 \description{
-The following helper functions can be use in expressions to define
-conditions:
-* `is_named(...)` name matches any from the list
-* `inherits` object inherits from any of the specified classes
+`query_by` accepts an arbitrary list of expressions and
+returns objects and plots for which all evaluate to `TRUE`.
+
+`fullhistory` is an equivalent to calling `query_by`
+without any conditions.
 }
 \details{
+The following helper functions can be use in expressions
+to define conditions:
+* `is_named(...)` name matches any from the list
+* `inherits` object inherits from any of the specified classes
+
 The following variables can be used in expressions when defining
 conditions:
 * `name` object name

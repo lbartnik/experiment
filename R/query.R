@@ -1,8 +1,11 @@
 
 #' Query the current history.
 #'
-#' The following helper functions can be use in expressions to define
-#' conditions:
+#' @description `query_by` accepts an arbitrary list of expressions and
+#' returns objects and plots for which all evaluate to `TRUE`.
+#'
+#' @details The following helper functions can be use in expressions
+#' to define conditions:
 #' * `is_named(...)` name matches any from the list
 #' * `inherits` object inherits from any of the specified classes
 #'
@@ -14,7 +17,9 @@
 #'
 #' @param ... Search conditions.
 #' @param .related Included related entities (objects or plots).
-#' @return A reduced history graph.
+#'
+#' @return `query_by` return a history graph reduced according to
+#' conditions specified in the call.
 #'
 #' @export
 #' @import lazyeval
@@ -40,8 +45,20 @@ query_by <- function (..., .related = "plots")
   s <- graph_to_steps(g)
 
   s <- reduce_steps(s, dots, internal_state$stash)
+
+  s
 }
 
+
+#' @description `fullhistory` is an equivalent to calling `query_by`
+#' without any conditions.
+#'
+#' @return `fullhistory` returns the full history graph.
+#'
+#' @export
+#' @rdname query
+#'
+fullhistory <- function() graph_to_steps(graph(internal_state$stash, TRUE))
 
 
 #' Operations on steps.

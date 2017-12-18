@@ -9,7 +9,6 @@
 #' @param .data Wether to read full object data.
 #' @return An object of S3 class `graph`.
 #'
-#' @export
 #' @import storage
 #' @rdname graph
 #'
@@ -20,6 +19,11 @@ graph <- function (store, .data = FALSE)
 
   commits <- lapply(ids, function (commit_id)
     commit_restore(commit_id, store, .data = .data))
+
+  if (!length(commits)) {
+    stop("history is empty", call. = FALSE)
+  }
+
   names(commits) <- ids
 
   commits <- structure(commits, class = 'graph')
@@ -55,11 +59,8 @@ is_graph <- function (x) inherits(x, 'graph')
 #'
 plot.graph <- function (x, ...)
 {
-  input <- list(data = graph_to_steps(x))
-  # create the widget
-  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
+  plot(graph_to_steps(x))
 }
-
 
 
 #' Transform a graph of commits into a graph of steps.
@@ -128,6 +129,37 @@ graph_to_steps <- function (graph)
 #' @rdname steps
 #'
 is_steps <- function (x) inherits(x, 'steps')
+
+
+#' @description `plot.steps` open an interactive history viewer.
+#' @param x The `steps` history object to be printed or viewed.
+#' @param ... Extra arguments for printing/plotting.
+#'
+#' @export
+#' @rdname steps
+#'
+plot.steps <- function (x, ...)
+{
+  input <- list(data = x)
+  # create the widget
+  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
+}
+
+
+#' @description `plot.steps` open an interactive history viewer.
+#'
+#' @export
+#' @rdname steps
+#'
+print.steps <- function(x, ...)
+{
+  cat("A `steps` history object, contains ", length(x$steps), " step(s).\n")
+
+  type <- vapply(x$steps, `[[`, character(1), i = 'type')
+  cat(sum(type == 'object'), " object(s) and ", sum(type == 'plot'), " plot(s)\n")
+
+  invisible(x)
+}
 
 
 #' @description `commit_to_steps` generates a `list` with two elements:
@@ -311,6 +343,3 @@ find_first_parent <- function (g, id)
   if (!length(i)) return(NULL)
   g[[i]]
 }
-
-#' @export
-fullhistory <- function() graph(internal_state$stash, TRUE)

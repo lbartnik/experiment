@@ -3,6 +3,8 @@
 \name{graph_to_steps}
 \alias{graph_to_steps}
 \alias{is_steps}
+\alias{plot.steps}
+\alias{print.steps}
 \alias{commit_to_steps}
 \alias{introduced_in}
 \alias{find_root_id}
@@ -13,6 +15,10 @@
 graph_to_steps(graph)
 
 is_steps(x)
+
+\method{plot}{steps}(x, ...)
+
+\method{print}{steps}(x, ...)
 
 commit_to_steps(commit, objects)
 
@@ -29,11 +35,15 @@ description(object)
 
 \item{x}{Object to be verified.}
 
+\item{...}{Extra arguments for printing/plotting.}
+
 \item{commit}{A [commit()] object.}
 
 \item{objects}{Filter for objects present in the commit.}
 
 \item{id}{Identifier of a commit in `graph`.}
+
+\item{x}{The `steps` history object to be printed or viewed.}
 }
 \value{
 Object of S3 class `steps`.
@@ -51,6 +61,10 @@ first step to visualize the history stored in commits.
 
 `is_steps` verifies if the given object is a valid
 `steps` structure.
+
+`plot.steps` open an interactive history viewer.
+
+`plot.steps` open an interactive history viewer.
 
 `commit_to_steps` generates a `list` with two elements:
 * `steps` with a separate entry for each variable/plot that matches
