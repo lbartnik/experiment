@@ -1,7 +1,30 @@
 context("query")
 
 test_that("one-step reduction", {
+  # graph structure
+  ss <- list(
+    steps = list(
+      list(id = 'a', name = 'a'),
+      list(id = 'b', name = 'b'),
+      list(id = 'c', name = 'c')
+    ),
+    links = list(
+      list(source = 'a', target = 'b'),
+      list(source = 'b', target = 'c')
+    )
+  )
 
+  # we need storage to read tags
+  m <- storage::memory()
+
+  # cut "b" out
+  s <- remove_step(ss, 'b')
+
+  expect_length(s$steps, 2)
+  expect_length(s$links, 1)
+  expect_equal(s$links[[1]], list(source = 'a', target = 'c'))
+  expect_equal(vapply(s$steps, `[[`, character(1), i = 'id'),
+               c('a', 'c'))
 })
 
 test_that("reducing by class", {

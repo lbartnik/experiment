@@ -26,31 +26,36 @@ reduce_steps <- function (s, dots, store)
 
   ids <- vapply(s$steps, `[[`, character(1), i = 'id')
 
-  browser()
+  for (id in ids[!matching]) {
+    s <- remove_step(s, id)
+  }
 
-  # for each object that doesn't match, remove it from steps and
+  s
+}
+
+
+remove_step <- function (s, id)
+{
+  # for an object that doesn't match, remove it from steps and
   # "merge" links by connecting its children to its parent
-  lapply(ids[!matching], function (id) {
-    target <- (vapply(s$links, `[[`, character(1), i = 'target') == id)
-    source <- (vapply(s$links, `[[`, character(1), i = 'source') == id)
+  target <- (vapply(s$links, `[[`, character(1), i = 'target') == id)
+  source <- (vapply(s$links, `[[`, character(1), i = 'source') == id)
 
-    browser()
-    stopifnot(sum(target) <= 1)
+  stopifnot(sum(target) <= 1)
 
-    # move children
-    parent <- s$links[target][[1]]$source
-    s$links[source] <<- lapply(s$links[source], function (link) {
-      link$source <- parent
-      link
-    })
-
-    # remove "dangling" parent
-    if (sum(target))
-      s$links[target] <<- NULL
+  # move children "up"
+  parent <- if (sum(target)) s$links[target][[1]]$source else NA_character_
+  s$links[source] <- lapply(s$links[source], function (link) {
+    link$source <- parent
+    link
   })
 
+  # remove "dangling" parent
+  if (sum(target))
+    s$links[target] <- NULL
+
   # once edges are updated, remove nodes
-  s$steps[!matching] <- NULL
+  s$steps[vapply(s$steps, `[[`, character(1), i = 'id') == id] <- NULL
 
   s
 }
