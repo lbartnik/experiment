@@ -2,7 +2,7 @@ context("query")
 
 test_that("one-step reduction", {
   # graph structure
-  ss <- list(
+  s <- list(
     steps = list(
       list(id = 'a', name = 'a'),
       list(id = 'b', name = 'b'),
@@ -18,7 +18,7 @@ test_that("one-step reduction", {
   m <- storage::memory()
 
   # cut "b" out
-  s <- remove_step(ss, 'b')
+  s <- remove_step(`class<-`(s, 'steps'), 'b')
 
   expect_length(s$steps, 2)
   expect_length(s$links, 1)
@@ -27,11 +27,16 @@ test_that("one-step reduction", {
                c('a', 'c'))
 })
 
+
 test_that("reducing by class", {
   m <- sample_memory_store()
   s <- graph_to_steps(graph(m, .data = FALSE))
-  d <- lazyeval::as.lazy_dots(list(lazyeval::lazy(inherits('numeric'))))
 
-  reduce_steps(s, d, m)
+  d <- to_lazy_dots(inherits('numeric'))
+  t <- reduce_steps(s, d, m)
+
+  expect_length(t$steps, 2)
+  expect_length(t$links, 1)
+  expect_equal(t$links[[1]], list(source = 'p', target = 's'))
 })
 

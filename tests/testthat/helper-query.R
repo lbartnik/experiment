@@ -1,4 +1,4 @@
 to_lazy_dots <- function (...)
 {
-  dots(...)
+  lazyeval::lazy_dots(...)
 }
