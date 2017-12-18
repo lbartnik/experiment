@@ -14,6 +14,18 @@ query_by <- function (..., .related = "plots")
 
 
 
+#' Operations on steps.
+#'
+#' @description `reduce_steps` reduces the graph of steps according to
+#' conditions specified in `dots`.
+#'
+#' @param s Graph of steps, see [experiment::graph_to_steps].
+#' @param dots Keep nodes that meet these conditions, see [lazyeval::dots].
+#' @param store Object store to read tags from [storage::os_read_tags].
+#' @return `reduce_steps` returns a reduced steps graph derived from `s`.
+#'
+#' @rdname steps_internal
+#'
 reduce_steps <- function (s, dots, store)
 {
   stopifnot(is_steps(s))
@@ -34,8 +46,18 @@ reduce_steps <- function (s, dots, store)
 }
 
 
+#' @description `remove_step` removes a single step from graph of steps
+#' `s` and updates links accordingly.
+#'
+#' @param id Identifier of object to be removed.
+#' @return `remove_step` returns a reduced steps graph derived from `s`.
+#'
+#' @rdname steps_internal
+#'
 remove_step <- function (s, id)
 {
+  stopifnot(is_steps(s))
+
   # for an object that doesn't match, remove it from steps and
   # "merge" links by connecting its children to its parent
   target <- (vapply(s$links, `[[`, character(1), i = 'target') == id)
@@ -61,8 +83,23 @@ remove_step <- function (s, id)
 }
 
 
+#' @description `verify_step` checks whether `step` meets the condition
+#' defined in `dots`. It evaluates `dots` in an environment that has
+#' `parent_env` as its parent. Object tags are read from `store`.
+#'
+#' @param step Step to be verified.
+#' @param parent_env Evaluate `dots` in environment descending from this one.
+#' @return `verify_step` returns `TRUE` if `step` meets the criteria and
+#'         `FALSE` otherwise.
+#'
+#' @rdname steps_internal
+#'
 verify_step <- function (step, dots, parent_env, store)
 {
+  stopifnot(is_lazy_dots(dots))
+  stopifnot(is.environment(parent_env))
+  stopifnot(storage::is_object_store(store))
+
   # prepare the search verbs
   search_env <- new.env(parent = parent_env)
   search_funs <- list(
