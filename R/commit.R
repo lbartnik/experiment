@@ -58,7 +58,8 @@ commit_store <- function (commit, store)
     storage::os_write(store, o, id = id, tags = tg)
   }
   commit$object_ids <- mapply(store_object, o = commit$objects,
-                              id = not_null(commit$object_ids, list(NULL)))
+                              id = not_null(commit$object_ids, list(NULL)),
+                              SIMPLIFY = FALSE)
 
   if (is.na(commit$id))
   {

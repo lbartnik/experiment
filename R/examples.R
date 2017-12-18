@@ -145,6 +145,8 @@ simulate_modelling <- function ()
 
 eval_space <- function ()
 {
+  try(dev.off(), silent = TRUE)
+
   e <- new.env()
   e$simulate <- simulate_user_command
   environment(e$simulate) <- e
@@ -187,6 +189,8 @@ clean_stash <- function (overwrite, state)
     storage::os_remove(state$stash)
     state$stash <- create_stash()
   }
+
+  state$last_commit <- commit(list(), bquote(), NA_character_)
 }
 
 

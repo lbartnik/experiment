@@ -88,6 +88,11 @@ update_current_commit <- function (state, env, plot, expr)
   env <- as.list(env)
   env$.plot <- plot_as_svg(plot)
 
+  # if the current plot look sthe same as the last one, do not update at all
+  if (svg_equal(env$.plot, state$last_commit$objects$.plot)) {
+    env$.plot <- state$last_commit$objects$.plot
+  }
+
   # TODO can both, env and plot, change as a result of a single command?
 
   # now create and process the commit

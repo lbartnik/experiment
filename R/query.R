@@ -46,7 +46,7 @@ query_by <- function (..., .related = "plots")
 
   s <- reduce_steps(s, dots, internal_state$stash)
 
-  s
+  read_objects(s, internal_state$stash)
 }
 
 

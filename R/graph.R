@@ -77,7 +77,7 @@ plot.graph <- function (x, ...)
 #' @param graph Object returned by [graph()].
 #' @return Object of S3 class `steps`.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 graph_to_steps <- function (graph)
 {
@@ -171,7 +171,7 @@ print.steps <- function(x, ...)
 #' @param objects Filter for objects present in the commit.
 #' @return `commit_to_steps` returns a `list` of `steps` and `links`.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 commit_to_steps <- function (commit, objects)
 {
@@ -223,7 +223,7 @@ commit_to_steps <- function (commit, objects)
 #' @param id Identifier of a commit in `graph`.
 #' @return `introduced_in` returns a `character` vector.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 introduced_in <- function (graph, id)
 {
@@ -235,8 +235,10 @@ introduced_in <- function (graph, id)
     is.na(match(n, names(p$objects))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
   }, setdiff(names(c$objects), '.plot'))
 
-  if (!is.null(c$objects$.plot) &&
-      !svg_equal(c$objects$.plot, p$objects$.plot))
+  # there is a plot (first condition) and it's different from
+  # what was there before (second condition)
+  if (!is.null(c$object_ids$.plot) &&
+      !identical(c$object_ids$.plot, p$object_ids$.plot))
   {
     return(c(new_objs, '.plot'))
   }
@@ -245,10 +247,37 @@ introduced_in <- function (graph, id)
 }
 
 
+#' @description `read_objects` reads every object/plot and fills in the
+#' `contents` or `desc`ription. It is particularly useful when initial
+#' `steps` graph has been read without objects' contents, e.g. in
+#' [query_by].
+#'
+#' @rdname steps_internal
+#'
+read_objects <- function (s, store)
+{
+  s$steps <- lapply(s$steps, function (step) {
+    if (!is_empty(step$contents) || !is_empty(step$desc)) return(step)
+    obj <- storage::os_read_object(store, step$id)
+
+    if (identical(s$type, 'object')) {
+      step$desc <- description(obj)
+    }
+    else {
+      step$contents <- as.character(obj)
+    }
+
+    step
+  })
+
+  s
+}
+
+
 #' @description `find_root_id` searches for the single commit
 #' in the graph without a parent.
 #'
-#' @rdname steps
+#' @rdname steps_internal
 #'
 find_root_id <- function (g)
 {
@@ -264,7 +293,7 @@ find_root_id <- function (g)
 #' in a HTML page.
 #'
 #' @import formatR
-#' @rdname steps
+#' @rdname steps_internal
 #'
 format_expression <- function (code)
 {
@@ -282,7 +311,7 @@ format_expression <- function (code)
 #' in a HTML page.
 #'
 #' @import broom
-#' @rdname steps
+#' @rdname steps_internal
 #'
 description <- function (object)
 {
@@ -317,11 +346,13 @@ description <- function (object)
 #'
 svg_equal <- function (a, b)
 {
-  if (is.null(a)) return(is.null(b))
-  if (is.null(b)) return(FALSE)
+  if (is_empty(a)) return(is_empty(b))
+  if (is_empty(b)) return(FALSE)
 
-  a <- rsvg(base64_dec(a), 100, 100)
-  b <- rsvg(base64_dec(b), 100, 100)
+  a <- try(rsvg(base64_dec(a), 100, 100), silent = TRUE)
+  b <- try(rsvg(base64_dec(b), 100, 100), silent = TRUE)
+  if (is_error(a) && is_error(b)) return(TRUE)
+
   isTRUE(all.equal(a, b))
 }
 
