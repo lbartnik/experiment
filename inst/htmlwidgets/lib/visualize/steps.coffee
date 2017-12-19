@@ -44,8 +44,8 @@ Widget = (selection) ->
   widget = () ->
 
   widget.setSize = (width, height) ->
-    vis.attr("width", width)
-       .attr("height", height)
+    vis.attr("width", width * .95)
+       .attr("height", height * .95)
        .attr("viewBox", "0 0 #{width} #{height}")
     if data
       refreshVisuals()
@@ -162,33 +162,37 @@ Widget = (selection) ->
       .parentId((d) -> parentsMap.get(d.id))
     root = stratify(data.steps)
 
+    width = vis.attr("width")
+    height = vis.attr("height")
+
+    # give the tree layout a somewhat smaller area (w/h-thumbnail*4)    
     root.sort()
     tree = d3.tree()
-      .size([vis.attr("width") - thumbnail * 1.5,
-             vis.attr("height") - thumbnail * 1.5])
+      .size([width - thumbnail * 4, height - thumbnail * 4])
     root = tree(root)
 
     min_x = root.descendants().map((n) -> n.x).reduce((a,b) -> Math.min(a,b))
     min_y = root.descendants().map((n) -> n.y).reduce((a,b) -> Math.min(a,b))
 
+    # mode all nodes, take the marings into account (+2*thumbnail)
     nodesMap = mapNodes(data.steps)
     root.each (n) ->
       s = nodesMap.get(n.id)
-      s.x = n.x + thumbnail - min_x
-      s.y = n.y + thumbnail/1.75 - min_y
+      s.x = n.x + thumbnail - min_x + thumbnail*2
+      s.y = n.y + thumbnail/1.75 - min_y + thumbnail*2
     
     updatePositions()
 
-    bb = vis.node().getBBox()
-    x      = bb.x - thumbnail
-    y      = bb.y - thumbnail
-    width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
-    height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
+    #bb = vis.node().getBBox()
+    #x      = bb.x - thumbnail
+    #y      = bb.y - thumbnail
+    #width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
+    #height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
 
     vis
       .attr("width", width)
       .attr("height", height)
-      .attr("viewBox", "#{x} #{y} #{width} #{height}")
+      .attr("viewBox", "0 0 #{width} #{height}")
 
   updatePositions = () ->
     nodesG.selectAll("svg.variable")

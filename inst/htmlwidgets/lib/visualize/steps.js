@@ -41,7 +41,7 @@
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     widget = function widget() {};
     widget.setSize = function (width, height) {
-      vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
+      vis.attr("width", width * .95).attr("height", height * .95).attr("viewBox", "0 0 " + width + " " + height);
       if (data) {
         return refreshVisuals();
       }
@@ -144,7 +144,7 @@
       return d3.select(plot).data([step]).attr("id", "plot" + step.id).attr("class", "plot").attr("viewBox", bb.x + " " + bb.y + " " + bb.width + " " + bb.height).attr("width", thumbnail).attr("height", thumbnail).append("rect").attr("class", "face").attr('width', '100%').attr('height', '100%');
     };
     placeVisuals = function placeVisuals(data) {
-      var bb, height, min_x, min_y, nodesMap, parentsMap, root, stratify, tree, width, x, y;
+      var height, min_x, min_y, nodesMap, parentsMap, root, stratify, tree, width;
       parentsMap = d3.map();
       data.links.forEach(function (l) {
         return parentsMap.set(l.target.id, l.source.id);
@@ -155,8 +155,11 @@
         return parentsMap.get(d.id);
       });
       root = stratify(data.steps);
+      width = vis.attr("width");
+      height = vis.attr("height");
+      // give the tree layout a somewhat smaller area (w/h-thumbnail*4)    
       root.sort();
-      tree = d3.tree().size([vis.attr("width") - thumbnail * 1.5, vis.attr("height") - thumbnail * 1.5]);
+      tree = d3.tree().size([width - thumbnail * 4, height - thumbnail * 4]);
       root = tree(root);
       min_x = root.descendants().map(function (n) {
         return n.x;
@@ -168,20 +171,21 @@
       }).reduce(function (a, b) {
         return Math.min(a, b);
       });
+      // mode all nodes, take the marings into account (+2*thumbnail)
       nodesMap = mapNodes(data.steps);
       root.each(function (n) {
         var s;
         s = nodesMap.get(n.id);
-        s.x = n.x + thumbnail - min_x;
-        return s.y = n.y + thumbnail / 1.75 - min_y;
+        s.x = n.x + thumbnail - min_x + thumbnail * 2;
+        return s.y = n.y + thumbnail / 1.75 - min_y + thumbnail * 2;
       });
       updatePositions();
-      bb = vis.node().getBBox();
-      x = bb.x - thumbnail;
-      y = bb.y - thumbnail;
-      width = Math.max(bb.width + 2 * thumbnail, vis.attr("width"));
-      height = Math.max(bb.height + 2 * thumbnail, vis.attr("height"));
-      return vis.attr("width", width).attr("height", height).attr("viewBox", x + " " + y + " " + width + " " + height);
+      //bb = vis.node().getBBox()
+      //x      = bb.x - thumbnail
+      //y      = bb.y - thumbnail
+      //width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
+      //height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
+      return vis.attr("width", width).attr("height", height).attr("viewBox", "0 0 " + width + " " + height);
     };
     updatePositions = function updatePositions() {
       var link;
