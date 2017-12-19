@@ -122,7 +122,8 @@ remove_step <- function (s, id)
       name = 'virtual root',
       type = 'object',
       expr = '',
-      id   = id
+      id   = id,
+      desc = 'original root has been removed'
     )
     return(s)
   }

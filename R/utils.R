@@ -21,7 +21,7 @@ is_nonempty_character <- function (x) {
 
 is_lazy_dots <- function (x) inherits(x, 'lazy_dots')
 
-is_empty <- function (x) is.null(x) || is.na(x) || !length(x) || !nchar(x)
+is_empty <- function (x) is.null(x) || is.na(x) || !length(x) || (is.character(x) && !nchar(x))
 
 is_error <- function (x) inherits(x, 'try-error')
 
