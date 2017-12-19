@@ -35,6 +35,27 @@ sample_graph <- function ()
 }
 
 
+empty_steps <- function ()
+{
+  structure(list(steps = list(), links = list()), class = 'steps')
+}
+
+
+add_step <- function (steps, id, parent, type = 'object', ...)
+{
+  step <- c(list(id = id, parent = parent, type = type), list(...))
+  stopifnot(all(c('id', 'parent') %in% names(step)))
+
+  steps$steps <- c(steps$steps, list(step))
+  if (!is.na(parent)) {
+    steps$links <- c(steps$links, list(list(source = step$parent, target = step$id)))
+  }
+
+  steps
+}
+
+
+
 expect_exists <- function (what, where, info = NULL)
 {
   what_label  <- quasi_label(rlang::enquo(what))
