@@ -76,3 +76,27 @@ test_that("convert graph", {
   expect_exists(list(source = 'p', target = 'q'), s$links)
   expect_exists(list(source = 'q', target = 'r'), s$links)
 })
+
+
+test_that("objects have descriptions", {
+  m <- sample_memory_store()
+  s <- graph_to_steps(graph(m, .data = TRUE))
+
+  expect_length(s$steps, 4)
+  expect_equal(vapply(s$steps, `[[`, character(1), i = 'desc'),
+               c('numeric', 'integer', 'character', 'numeric'))
+})
+
+
+test_that("descriptions can be added later", {
+  m <- sample_memory_store()
+  s <- graph_to_steps(graph(m, .data = FALSE))
+
+  expect_length(s$steps, 4)
+  expect_equal(vapply(s$steps, `[[`, character(1), i = 'desc'),
+               rep(NA_character_, 4))
+
+  r <- read_objects(s, m)
+  expect_equal(vapply(r$steps, `[[`, character(1), i = 'desc'),
+               c('numeric', 'integer', 'character', 'numeric'))
+})
