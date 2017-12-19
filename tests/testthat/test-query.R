@@ -58,3 +58,47 @@ test_that("reducing by name", {
   expect_length(t$links, 1)
   expect_equal(first(t$links), list(source = 'p', target = 'r'))
 })
+
+
+test_that("removing shared parent", {
+  s <-
+    empty_steps() %>%
+    add_step('a', NA_character_) %>%
+    add_step('b', 'a') %>%
+    add_step('c', 'b') %>%
+    add_step('d', 'b')
+
+  expect_length(s$steps, 4)
+  expect_length(s$links, 3)
+
+  # after removal
+  r <- remove_step(s, 'b')
+
+  expect_length(r$steps, 3)
+  expect_length(r$links, 2)
+  expect_equal(first(r$steps)$id, 'a')
+  expect_equal(first(r$links), list(source = 'a', target = 'c'))
+  expect_equal(last(r$links), list(source = 'a', target = 'd'))
+})
+
+
+test_that("replace with virtual root", {
+  # this is necessary when we are supposed to remove a node that
+  # has no parent and more than one child
+
+  steps <-
+    empty_steps() %>%
+    add_step('a', NA_character_) %>%
+    add_step('b', 'a') %>%
+    add_step('c', 'a')
+
+  removed <- remove_step(steps, 'a')
+
+  expect_length(removed$steps, 3)
+  expect_length(removed$links, 2)
+  expect_equal(first(removed$steps)$name, 'virtual root')
+  expect_equal(first(removed$steps)$id, 'a')
+
+  expect_identical(removed$links, steps$links)
+})
+

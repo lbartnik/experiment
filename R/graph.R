@@ -262,7 +262,7 @@ read_objects <- function (s, store)
     if (!is_empty(step$contents) || !is_empty(step$desc)) return(step)
     obj <- storage::os_read_object(store, step$id)
 
-    if (identical(s$type, 'object')) {
+    if (identical(step$type, 'object')) {
       step$desc <- description(obj)
     }
     else {
@@ -317,6 +317,8 @@ format_expression <- function (code)
 #'
 description <- function (object)
 {
+  if (is_empty(object)) return(NA_character_)
+
   if (is.data.frame(object)) return(paste0('data.frame [', nrow(object), ', ', ncol(object), ']'))
 
   if (inherits(object, 'lm')) {
@@ -326,7 +328,7 @@ description <- function (object)
                  'df: ', g$df))
   }
 
-  toString(object)
+  paste(class(object), collapse = '.')
 }
 
 

@@ -110,27 +110,45 @@ remove_step <- function (s, id)
   # "merge" links by connecting its children to its parent
   target <- (vapply(s$links, `[[`, character(1), i = 'target') == id)
   source <- (vapply(s$links, `[[`, character(1), i = 'source') == id)
+  node_i <- which(vapply(s$steps, `[[`, character(1), i = 'id') == id)
 
   stopifnot(sum(target) <= 1)
 
-  # if thsi node has a parent, move its children "up"
+  # if we're about to remove the current root and if it has more
+  # than one child, rename it to 'virtual root' and keep it in the
+  # tree
+  if (!sum(target) && sum(source) > 1) {
+    s$steps[[node_i]] <- list(
+      name = 'virtual root',
+      type = 'object',
+      expr = '',
+      id   = id,
+      desc = 'original root has been removed'
+    )
+    return(s)
+  }
+
+  # if there is at least one child, move this children "up" by replacing
+  # its "source" with this node's parent id
   if (sum(target)) {
     parent <- s$links[target][[1]]$source
+
     s$links[source] <- lapply(s$links[source], function (link) {
       link$source <- parent
       link
     })
 
     # remove "dangling" parent
-    s$links[target] <- NULL
+    s$links <- s$links[!target]
   }
-  # otherwise, remove its links altogether
   else {
-    s$links[source] <- NULL
+    # we know that there is at most one child, so it's safe to remove
+    # the link altogether
+    s$links <- s$links[!source]
   }
 
   # once edges are updated, remove nodes
-  s$steps[vapply(s$steps, `[[`, character(1), i = 'id') == id] <- NULL
+  s$steps[[node_i]] <- NULL
 
   s
 }
@@ -161,14 +179,25 @@ verify_step <- function (step, dots, parent_env, store)
   data_env <- as.environment(c(tags, step))
   parent.env(data_env) <- parent_env
 
+  # fill in missing elements
+  if (identical(step$type, 'plot')) {
+    data_env$name  <- '.plot'
+    data_env$class <- 'plot'
+  }
+
   # prepare the search verbs; functions' environment is data_env
   # and they belong to a search environment, which is also a child
   # of data_env
   dots_env <- search_funs(data_env)
 
   # evaluate all lazy dots in the bottom-most environment in that hierarchy
+  error_handler <- function (e) {
+    warning('could not evaluate the query ', toString(e$call), ': ', toString(e$message),
+            call. = FALSE)
+    FALSE
+  }
   ans <- lapply(dots, function (ldot) tryCatch(lazyeval::lazy_eval(ldot, data = dots_env),
-                                                 error = function(e) NA_character_))
+                                               error = error_handler))
 
   # all must match
   all(unlist(ans))

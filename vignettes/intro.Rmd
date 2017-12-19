@@ -286,3 +286,42 @@ branching on the third house in the data set.
 
 ```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
 ```
+
+
+# Searching the history
+
+Our last step will be reducing the size of the history graph presented
+in the widget. We do it with the `query_by()` function. Let's start with
+finding all variables named `input`.
+
+
+```{r}
+h <- query_by(is_named('input'))
+```
+
+
+Looking at the history graph reveals that it is now much smaller.
+
+```{r partial_history,fig.width=7,fig.height=5,out.width='100%'}
+plot(h)
+```
+
+
+How about finding only data frames?
+
+```{r}
+h <- query_by(inherits('data.frame'))
+```
+
+```{r partial_history,fig.width=7,fig.height=5,out.width='100%'}
+```
+
+
+And finally we ask to see only the plots.
+
+```{r}
+h <- query_by(inherits('plot'))
+```
+
+```{r partial_history,fig.width=7,fig.height=5,out.width='100%'}
+```
