@@ -2,12 +2,32 @@
 % Please edit documentation in R/commit.R
 \name{commit}
 \alias{commit}
+\alias{is_commit}
 \alias{print.commit}
 \title{Creates a new commit object.}
 \usage{
 commit(contents, expression, parent, id, object_ids)
 
+is_commit(x)
+
 \method{print}{commit}(x, simple = FALSE, ...)
+}
+\arguments{
+\item{contents}{An environment or a list of objects.}
+
+\item{expression}{Expression associated with this commit.}
+
+\item{parent}{Identifier of the parent commit.}
+
+\item{id}{Identifier of this commit.}
+
+\item{object_ids}{Identifiers of objects passed in `contents`.}
+
+\item{x}{Object to be tested or printed.}
+
+\item{simple}{Show simplified printout.}
+
+\item{...}{Additional parameters to control printout.}
 }
 \description{
 Creates a new commit object.

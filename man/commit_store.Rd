@@ -6,6 +6,11 @@
 \usage{
 commit_store(commit, store)
 }
+\arguments{
+\item{commit}{A [commit] object.}
+
+\item{store}{An object store, e.g. [storage::filesystem].}
+}
 \description{
 Write commit to an object store.
 }

@@ -1,6 +1,13 @@
 
 #' Creates a new commit object.
 #'
+#' @param contents An environment or a list of objects.
+#' @param expression Expression associated with this commit.
+#' @param parent Identifier of the parent commit.
+#' @param id Identifier of this commit.
+#' @param object_ids Identifiers of objects passed in `contents`.
+#'
+#' @rdname commit
 #'
 commit <- function (contents, expression, parent, id, object_ids)
 {
@@ -17,6 +24,8 @@ commit <- function (contents, expression, parent, id, object_ids)
 }
 
 
+#' @rdname commit
+#' @param x Object to be tested or printed.
 is_commit <- function (x) inherits(x, 'commit')
 
 
@@ -42,6 +51,9 @@ commit_equal <- function (a, b)
 
 
 #' Write commit to an object store.
+#'
+#' @param commit A [commit] object.
+#' @param store An object store, e.g. [storage::filesystem].
 #'
 commit_store <- function (commit, store)
 {
@@ -143,8 +155,12 @@ cleanup_object <- function (obj)
 
 
 
-#' @export
 #' @rdname commit
+#' @export
+#'
+#' @param simple Show simplified printout.
+#' @param ... Additional parameters to control printout.
+#'
 print.commit <- function (x, simple = FALSE, ...)
 {
   if (isTRUE(simple))
@@ -196,10 +212,10 @@ print.commit <- function (x, simple = FALSE, ...)
 
 
 #' @export
-print.restorer <- function (x)
+print.restorer <- function (x, ...)
 {
   co <- commit_restore_data(x$commit, internal_state$stash)
-  restore_historical_commit(co)
+  restore_commit(co)
   message(crayon::green('Commit restored'))
   print(co)
 }

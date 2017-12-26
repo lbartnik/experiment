@@ -13,11 +13,9 @@ is_steps(x)
 \method{print}{steps}(x, ...)
 }
 \arguments{
-\item{x}{Object to be verified.}
+\item{x}{The `steps` history object to be printed or viewed in `plot`; the object to be tested in `is_steps`.}
 
 \item{...}{Extra arguments for printing/plotting.}
-
-\item{x}{The `steps` history object to be printed or viewed.}
 }
 \description{
 `is_steps` verifies if the given object is a valid

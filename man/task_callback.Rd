@@ -27,8 +27,6 @@ for testing purposes.}
 \item{env}{Environment this commits represents.}
 
 \item{plot}{The last plot (see [recordPlot()]).}
-
-\item{expr}{Expression that created this environment.}
 }
 \value{
 A logical value indicating whether to keep this function in

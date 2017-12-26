@@ -71,7 +71,7 @@ fullhistory <- function() graph_to_steps(graph(internal_state$stash, TRUE))
 #' @param store Object store to read tags from [storage::os_read_tags].
 #' @return `reduce_steps` returns a reduced steps graph derived from `s`.
 #'
-#' @rdname steps_internal
+#' @rdname query_internal
 #'
 reduce_steps <- function (s, dots, store)
 {
@@ -100,7 +100,7 @@ reduce_steps <- function (s, dots, store)
 #' @param id Identifier of object to be removed.
 #' @return `remove_step` returns a reduced steps graph derived from `s`.
 #'
-#' @rdname steps_internal
+#' @rdname query_internal
 #'
 remove_step <- function (s, id)
 {
@@ -163,7 +163,7 @@ remove_step <- function (s, id)
 #' @return `verify_step` returns `TRUE` if `step` meets the criteria and
 #'         `FALSE` otherwise.
 #'
-#' @rdname steps_internal
+#' @rdname query_internal
 #'
 #' @import storage
 #' @import lazyeval
@@ -206,6 +206,9 @@ verify_step <- function (step, dots, parent_env, store)
 
 search_funs <- function (data_env)
 {
+  # silence R CMD check
+  name <- NULL
+
   search_funs <- list(
     inherits = function(...) {
       classes <- as.character(list(...))
@@ -229,7 +232,6 @@ search_funs <- function (data_env)
 
 # --- querying ---
 
-#' @export
 stashed <- function (..., ids)
 {
   if (missing(ids)) {
@@ -245,13 +247,9 @@ stashed <- function (..., ids)
 
 
 
-#' @export
-
-#' @export
 query_by_class <- function (value) results(stashed(class == value))
 
 
-#' @export
 query_by_name <- function (value)
 {
   cmts <- stashed(class == 'commit')
@@ -265,7 +263,6 @@ query_by_name <- function (value)
 }
 
 
-#' @export
 #' @import storage
 #' @import crayon
 explain <- function (id)

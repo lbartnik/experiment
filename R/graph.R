@@ -47,15 +47,20 @@ assign_children <- function (commits, id, level)
 
 
 #' @rdname graph
+#' @param x Object to be tested.
 is_graph <- function (x) inherits(x, 'graph')
 
 
 #' @rdname graph
 #' @export
-#' @import htmlwidgets
+#' @importFrom graphics plot
+#'
+#' @param ... Extra parameters to control plotting.
 #'
 #' @examples
-#' plot(graph(modelling()))
+#' \dontrun{
+#' plot(graph(fullhistory()))
+#' }
 #'
 plot.graph <- function (x, ...)
 {
@@ -78,6 +83,9 @@ plot.graph <- function (x, ...)
 #' @return Object of S3 class `steps`.
 #'
 #' @rdname steps_internal
+#'
+#' @importFrom utils head tail
+#' @importFrom defer defer_
 #'
 graph_to_steps <- function (graph)
 {
@@ -124,8 +132,6 @@ graph_to_steps <- function (graph)
 #' @description `is_steps` verifies if the given object is a valid
 #' `steps` structure.
 #'
-#' @param x Object to be verified.
-#'
 #' @rdname steps
 #'
 is_steps <- function (x) inherits(x, 'steps')
@@ -134,7 +140,7 @@ is_steps <- function (x) inherits(x, 'steps')
 #' Interactive history.
 #'
 #' @description `plot.steps` open an interactive history viewer.
-#' @param x The `steps` history object to be printed or viewed.
+#' @param x The `steps` history object to be printed or viewed in `plot`; the object to be tested in `is_steps`.
 #' @param ... Extra arguments for printing/plotting.
 #'
 #' @export
@@ -254,6 +260,9 @@ introduced_in <- function (graph, id)
 #' `steps` graph has been read without objects' contents, e.g. in
 #' [query_by].
 #'
+#' @param s `steps` object.
+#' @param store An object store object, e.g. [storage::filesystem].
+#'
 #' @rdname steps_internal
 #'
 read_objects <- function (s, store)
@@ -279,6 +288,8 @@ read_objects <- function (s, store)
 #' @description `find_root_id` searches for the single commit
 #' in the graph without a parent.
 #'
+#' @param g A [graph] object.
+#'
 #' @rdname steps_internal
 #'
 find_root_id <- function (g)
@@ -294,7 +305,9 @@ find_root_id <- function (g)
 #' @description `format` prepares the expression for display
 #' in a HTML page.
 #'
-#' @import formatR
+#' @param code R `expression`.
+#'
+#' @importFrom formatR tidy_source
 #' @rdname steps_internal
 #'
 format_expression <- function (code)
@@ -311,6 +324,8 @@ format_expression <- function (code)
 
 #' @description `description` format the expression for display
 #' in a HTML page.
+#'
+#' @param object Object to be described.
 #'
 #' @import broom
 #' @rdname steps_internal

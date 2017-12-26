@@ -1,6 +1,10 @@
 
 
 #' A single result.
+#'
+#' @param object Wrap object into a `result` class.
+#' @param id Object identifier in [storage].
+#'
 result <- function (object, id)
 {
   structure(list(object = object, id = id), class = 'result')
@@ -8,6 +12,9 @@ result <- function (object, id)
 
 
 #' A set (list) of results.
+#'
+#' @param res A `list` of objects to wrap in a `results` class.
+#'
 results <- function (res)
 {
   stopifnot(is.list(res), all_named(res))
@@ -88,20 +95,17 @@ print.results <- function (x, ...)
 }
 
 
-#' @export
 print.result <- function (x, ...) print_result(x[['object']], ...)
 
-
-#' @export
 print_result <- function (x, ...) UseMethod("print_result")
 
-#' @export
 print_result.default <- function (x, ...)
 {
   print(x)
 }
 
-#' @export
+
+#' @importFrom stringi stri_sub
 print_result.lm <- function (x, digits = 2, indent = 0, ...)
 {
   glance <- broom::glance(x)
@@ -129,22 +133,22 @@ print_result.lm <- function (x, digits = 2, indent = 0, ...)
 # --- plotting ---
 
 #' @export
-`plot.results` <- function (res, x = 'adj.r.squared', y = 'AIC', ...)
+`plot.results` <- function (x, xlab = 'adj.r.squared', ylab = 'AIC', ...)
 {
-  stopifnot(is_results(res))
+  stopifnot(is_results(x))
   
-  glance <- lapply(res, function (r) broom::glance(r$object))
+  glance <- lapply(x, function (r) broom::glance(r$object))
   shared <- Reduce(intersect, lapply(glance, names))
   
   present <- function (v)
     if (!isTRUE(v %in% shared)) stop(v, ' is not available for all objects', call. = FALSE)
   
-  present(x)
-  present(y)
+  present(xlab)
+  present(ylab)
   
-  X <- vapply(glance, `[[`, numeric(1), i = x)
-  Y <- vapply(glance, `[[`, numeric(1), i = y)
+  X <- vapply(glance, `[[`, numeric(1), i = xlab)
+  Y <- vapply(glance, `[[`, numeric(1), i = ylab)
   
-  plot(X, Y, xlab = x, ylab = y)
+  plot(X, Y, xlab = xlab, ylab = ylab)
 }
 
