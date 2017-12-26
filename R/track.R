@@ -14,7 +14,6 @@ internal_state <- new.env()
 
 initiate_state <- function ()
 {
-  internal_state$tracking         <- FALSE
   internal_state$stash            <- create_stash()
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
@@ -50,7 +49,7 @@ create_stash <- function ()
 #'
 task_callback <- function (expr, result, successful, printed)
 {
-  if (!isTRUE(internal_state$tracking) || !isTRUE(successful))
+  if (!isTRUE(successful))
     return(TRUE)
 
   tryCatch(
@@ -203,19 +202,43 @@ restore_commit <- function (state, id, env)
 
 
 
-#' Toggle tracking mode.
+#' @rdname tracking
+#' @title Turn tracking on or off
+#'
+#' @description `tracking_on` turns the tracking mode on. This is
+#' signaled by a new prompt, `[tracked] > `. When tracking is enabled,
+#' a special callback installed via [addTaskCallback], is used to examine
+#' the contents of the *global environment* each time an R command is
+#' successfully executed.
 #'
 #' @export
 #'
 tracking_on <- function () {
-  internal_state$tracking <- TRUE
+  # make sure the callback is removed
+  if (!is.na(internal_state$task_callback_id)) {
+    removeTaskCallback(internal_state$task_callback_id)
+  }
+
+  internal_state$task_callback_id <- addTaskCallback(task_callback)
   options(prompt = "[tracked] > ")
 }
 
 
-#' @name tracking_on
+#' @rdname tracking
+#' @description `tracking_off` reverses the effect of `tracking_on`. It
+#' removes the callback and brings back the original value of that R
+#' session's prompt.
+#'
 #' @export
+#'
 tracking_off <- function () {
-  internal_state$tracking <- FALSE
-  options(prompt = internal_state$old_prompt)
+  if (!is.na(internal_state$task_callback_id)) {
+    removeTaskCallback(internal_state$task_callback_id)
+    internal_state$task_callback_id <- NA
+  }
+
+  if (!is.na(internal_state$old_prompt)) {
+    options(prompt = internal_state$old_prompt)
+    internal_state$old_prompt <- NA_character_
+  }
 }

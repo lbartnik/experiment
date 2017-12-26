@@ -1,6 +1,3 @@
-* search:
-  query_by(inherits("lm"))
-  query_by(name("input"))
 
 * Widget:
   - expression that produced a plot
@@ -15,9 +12,11 @@
   - export plots as PNG miniatures rather than SVG; for big/complex plots
     that might be much more efficient
 
-* tracking
-  wait for failed commands and if one arrives, check if the user entered
-  a valid commit/object id, and if so, restore it
+* tracking:
+  - examine the .Last.value - in case there was no object
+  - ignore plots present on the device upon turning tracking on
+  - wait for failed commands and if one arrives, check if the user entered
+    a valid commit/object id, and if so, restore it
 
 * explain: find a full sequence of calls leading to a given object
   - option to plot explanation as a graph with vis.js
