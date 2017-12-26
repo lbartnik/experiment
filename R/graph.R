@@ -55,7 +55,9 @@ is_graph <- function (x) inherits(x, 'graph')
 #' @import htmlwidgets
 #'
 #' @examples
-#' plot(graph(modelling()))
+#' \dontrun{
+#' plot(graph(fullhistory()))
+#' }
 #'
 plot.graph <- function (x, ...)
 {
@@ -294,7 +296,7 @@ find_root_id <- function (g)
 #' @description `format` prepares the expression for display
 #' in a HTML page.
 #'
-#' @import formatR
+#' @importFrom formatR tidy_source
 #' @rdname steps_internal
 #'
 format_expression <- function (code)

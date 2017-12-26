@@ -101,6 +101,8 @@ print_result.default <- function (x, ...)
   print(x)
 }
 
+
+#' @importFrom stringi stri_sub
 #' @export
 print_result.lm <- function (x, digits = 2, indent = 0, ...)
 {
@@ -129,22 +131,22 @@ print_result.lm <- function (x, digits = 2, indent = 0, ...)
 # --- plotting ---
 
 #' @export
-`plot.results` <- function (res, x = 'adj.r.squared', y = 'AIC', ...)
+`plot.results` <- function (x, xlab = 'adj.r.squared', ylab = 'AIC', ...)
 {
-  stopifnot(is_results(res))
+  stopifnot(is_results(x))
   
-  glance <- lapply(res, function (r) broom::glance(r$object))
+  glance <- lapply(x, function (r) broom::glance(r$object))
   shared <- Reduce(intersect, lapply(glance, names))
   
   present <- function (v)
     if (!isTRUE(v %in% shared)) stop(v, ' is not available for all objects', call. = FALSE)
   
-  present(x)
-  present(y)
+  present(xlab)
+  present(ylab)
   
   X <- vapply(glance, `[[`, numeric(1), i = x)
   Y <- vapply(glance, `[[`, numeric(1), i = y)
   
-  plot(X, Y, xlab = x, ylab = y)
+  plot(X, Y, xlab = xlab, ylab = ylab)
 }
 

@@ -27,6 +27,8 @@ identifiers of children commit, `level` is the distance from the
 root of the tree.
 }
 \examples{
-plot(graph(modelling()))
+\dontrun{
+plot(graph(fullhistory()))
+}
 
 }

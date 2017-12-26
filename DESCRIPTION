@@ -1,22 +1,31 @@
 Package: experiment
 Type: Package
-Title: Utilities
+Title: Interactive History in R
 Version: 0.1
 Date: 2016-12-06
-Author: Lukasz A. Bartnik <l.bartnik@gmail.com>
-Maintainer: Lukasz A. Bartnik <l.bartnik@gmail.com>
+Authors@R: person("Lukasz", "Bartnik", email = "l.bartnik@gmail.com", role = c("aut", "cre"))
 Description: Utilities to ease interactive work.
-License: GPL3
+License: MIT + file LICENSE
+URL: https://github.com/lbartnik/experiment
+BugReports: https://github.com/lbartnik/experiment/issues
+Depends:
+  R (>= 3.2.0)
 Imports:
     broom,
     crayon,
     defer,
     dplyr,
+    formatR,
+    ggplot2,
     htmlwidgets,
     jsonlite,
+    lazyeval,
+    lubridate,
     magrittr,
+    readr,
     rsvg,
-    storage
+    storage,
+    stringi
 Suggests:
     testthat,
     knitr

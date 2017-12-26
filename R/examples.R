@@ -9,15 +9,15 @@
 #' @param overwrite If current stash contains objects, setting `overwrite`
 #'        to `TRUE` will remove them prior to running simulation.
 #'
+#' @importFrom readr read_csv
+#' @importFrom dplyr filter rename mutate group_by summarise
+#' @importFrom lubridate floor_date hour wday
+#' @importFrom ggplot2 ggplot facet_wrap geom_point geom_boxplot
+#' @importFrom magrittr %<>%
 #' @export
 #'
 simulate_london_meters <- function (overwrite = TRUE)
 {
-  stopifnot(require(dplyr, quietly = TRUE, warn.conflicts = FALSE))
-  stopifnot(require(lubridate, quietly = TRUE, warn.conflicts = FALSE))
-  stopifnot(require(magrittr, quietly = TRUE, warn.conflicts = FALSE))
-  stopifnot(require(ggplot2, quietly = TRUE, warn.conflicts = FALSE))
-
   clean_stash(overwrite, internal_state)
   user_space <- eval_space()
 

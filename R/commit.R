@@ -196,7 +196,7 @@ print.commit <- function (x, simple = FALSE, ...)
 
 
 #' @export
-print.restorer <- function (x)
+print.restorer <- function (x, ...)
 {
   co <- commit_restore_data(x$commit, internal_state$stash)
   restore_historical_commit(co)

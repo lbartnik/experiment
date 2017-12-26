@@ -21,3 +21,9 @@
     internal_state$old_prompt <- NA
   }
 }
+
+# Forward imports.
+
+#' @importFrom utils .DollarNames
+NULL
+
