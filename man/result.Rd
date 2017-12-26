@@ -6,6 +6,11 @@
 \usage{
 result(object, id)
 }
+\arguments{
+\item{object}{Wrap object into a `result` class.}
+
+\item{id}{Object identifier in [storage].}
+}
 \description{
 A single result.
 }

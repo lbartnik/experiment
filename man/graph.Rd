@@ -16,6 +16,10 @@ is_graph(x)
 \item{store}{A data store, e.g. `storage::filesystem`.}
 
 \item{.data}{Wether to read full object data.}
+
+\item{x}{Object to be tested.}
+
+\item{...}{Extra parameters to control plotting.}
 }
 \value{
 An object of S3 class `graph`.

@@ -15,6 +15,11 @@ compare_models(x, ...)
 
 \method{compare_models}{list}(x, ...)
 }
+\arguments{
+\item{x}{List of models.}
+
+\item{...}{Additinal parameters.}
+}
 \description{
 Compare models.
 }

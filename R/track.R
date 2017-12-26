@@ -77,7 +77,6 @@ task_callback <- function (expr, result, successful, printed)
 #'        for testing purposes.
 #' @param env Environment this commits represents.
 #' @param plot The last plot (see [recordPlot()]).
-#' @param expr Expression that created this environment.
 #'
 #' @name task_callback
 #' @export

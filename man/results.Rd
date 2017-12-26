@@ -6,6 +6,9 @@
 \usage{
 results(res)
 }
+\arguments{
+\item{res}{A `list` of objects to wrap in a `results` class.}
+}
 \description{
 A set (list) of results.
 }

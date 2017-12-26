@@ -132,9 +132,10 @@ simulate_london_meters <- function (overwrite = TRUE)
 }
 
 
-#' @importFrom datasets iris
 simulate_modelling <- function ()
 {
+  data(iris)
+
   user_space <- eval_space()
 
   user_space$simulate(x <- lm(Sepal.Width ~ Sepal.Length, iris))
@@ -197,7 +198,6 @@ clean_stash <- function (overwrite, state)
 }
 
 
-#' @export
 #' @import storage
 modelling <- function (overwrite = FALSE, state)
 {
@@ -215,3 +215,4 @@ modelling <- function (overwrite = FALSE, state)
 
   invisible()
 }
+
