@@ -1,5 +1,5 @@
 # Suppress checks in `simulate_london_meters`.
-utils::globalVariables(c('LCLid', 'tstp', 'energy(kWh/hh)', 'meter', 'timestamp', 'usage', 'dow', 'hour'))
+utils::globalVariables(c('LCLid', 'tstp', 'energy_kWh', 'meter', 'timestamp', 'usage', 'dow', 'hour'))
 
 #' Simulations and examples.
 #'
@@ -33,7 +33,7 @@ simulate_london_meters <- function (overwrite = TRUE)
     input <-
       system.file("extdata/block_62.csv", package = "experiment") %>%
       readr::read_csv(na = 'Null') %>%
-      dplyr::rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+      dplyr::rename(meter = LCLid, timestamp = tstp, usage = `energy_kWh`) %>%
       dplyr::filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
                     lubridate::year(timestamp) == 2013)
   )
