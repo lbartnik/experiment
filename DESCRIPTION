@@ -14,29 +14,31 @@ Imports:
     broom,
     crayon,
     defer,
-    dplyr,
     formatR,
     ggplot2,
     htmlwidgets,
     jsonlite,
     lazyeval,
-    lubridate,
-    magrittr,
-    readr,
     rsvg,
     storage,
     stringi
 Suggests:
-    testthat,
-    knitr
+    dplyr,
+    evaluate,
+    knitr,
+    lubridate,
+    magrittr,
+    readr,
+    stringr,
+    testthat
 Collate:
-  'package.R'
   'commit.R'
   'compare.R'
   'data.R'
   'debug.R'
   'examples.R'
   'graph.R'
+  'package.R'
   'query.R'
   'result.R'
   'track.R'

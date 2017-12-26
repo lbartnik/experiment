@@ -1,3 +1,6 @@
+# Suppress checks in `simulate_london_meters`.
+utils::globalVariables(c('LCLid', 'tstp', 'energy(kWh/hh)', 'meter', 'timestamp', 'usage', 'dow', 'hour'))
+
 #' Simulations and examples.
 #'
 #' These functions populate sessions' history cache with a complete
@@ -9,17 +12,20 @@
 #' @param overwrite If current stash contains objects, setting `overwrite`
 #'        to `TRUE` will remove them prior to running simulation.
 #'
-#' @importFrom readr read_csv
-#' @importFrom dplyr filter rename mutate group_by summarise mutate_at vars funs
-#' @importFrom lubridate floor_date hour wday year
-#' @importFrom ggplot2 ggplot facet_wrap geom_point geom_boxplot aes
-#' @importFrom magrittr %<>% %>%
-#' @importFrom stats lm
-#'
 #' @export
 #'
 simulate_london_meters <- function (overwrite = TRUE)
 {
+  requireNamespace('dplyr', quietly = TRUE)
+  requireNamespace('lubridate', quietly = TRUE)
+  requireNamespace('magrittr', quietly = TRUE)
+  requireNamespace('ggplot2', quietly = TRUE)
+  requireNamespace('stats', quietly = TRUE)
+  requireNamespace('readr', quietly = TRUE)
+
+  `%<>%` <- magrittr::`%<>%`
+  `%>%` <- magrittr::`%>%`
+
   clean_stash(overwrite, internal_state)
   user_space <- eval_space()
 
@@ -27,17 +33,17 @@ simulate_london_meters <- function (overwrite = TRUE)
     input <-
       system.file("extdata/block_62.csv", package = "experiment") %>%
       readr::read_csv(na = 'Null') %>%
-      rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
-      filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
-             year(timestamp) == 2013)
+      dplyr::rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+      dplyr::filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
+                    lubridate::year(timestamp) == 2013)
   )
 
   # remember the commit id so that later we can come back to this point in history
   go_back <- user_space$simulate(
     input %<>%
-      mutate(timestamp = floor_date(timestamp, 'hours')) %>%
-      group_by(meter, timestamp) %>%
-      summarise(usage = sum(usage))
+      dplyr::mutate(timestamp = lubridate::floor_date(timestamp, 'hours')) %>%
+      dplyr::group_by(meter, timestamp) %>%
+      dplyr::summarise(usage = sum(usage))
   )
 
   # dplyr adds attributes to objects when filter is called
@@ -47,7 +53,7 @@ simulate_london_meters <- function (overwrite = TRUE)
   # if filter is not a separate step, use subset() instead of
   # filter() to maintain the same object id between commits
   user_space$simulate(
-    input %<>% filter(meter == "MAC004929")
+    input %<>% dplyr::filter(meter == "MAC004929")
   )
 
   user_space$simulate(
@@ -57,11 +63,11 @@ simulate_london_meters <- function (overwrite = TRUE)
   user_space$simulate(
     x <-
       input %>%
-      mutate(hour = hour(timestamp),
-             dow  = wday(timestamp, label = TRUE)) %>%
-      mutate_at(vars(hour, dow), funs(as.factor)) %>%
-      group_by(hour, dow) %>%
-      summarise(usage = mean(usage, na.rm = TRUE))
+      dplyr::mutate(hour = lubridate::hour(timestamp),
+                    dow  = lubridate::wday(timestamp, label = TRUE)) %>%
+      dplyr::mutate_at(dplyr::vars(hour, dow), dplyr::funs(as.factor)) %>%
+      dplyr::group_by(hour, dow) %>%
+      dplyr::summarise(usage = mean(usage, na.rm = TRUE))
   )
 
   user_space$simulate(
@@ -69,23 +75,27 @@ simulate_london_meters <- function (overwrite = TRUE)
   )
 
   user_space$simulate(
-    ggplot(x) + geom_point(aes(x = hour, y = usage)) + facet_wrap(~dow)
+    ggplot2::ggplot(x) +
+      ggplot2::geom_point(ggplot2::aes(x = hour, y = usage)) +
+      ggplot2::facet_wrap(~dow)
   )
 
   user_space$simulate(
     x <-
       input %>%
-      mutate(hour = hour(timestamp),
-             dow  = wday(timestamp)) %>%
-      mutate_at(vars(hour, dow), funs(as.factor))
+      dplyr::mutate(hour = lubridate::hour(timestamp),
+                    dow  = lubridate::wday(timestamp)) %>%
+      dplyr::mutate_at(dplyr::vars(hour, dow), dplyr::funs(as.factor))
   )
 
   user_space$simulate(
-    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+    ggplot2::ggplot(x) +
+      ggplot2::geom_boxplot(ggplot2::aes(x = hour, y = usage)) +
+      ggplot2::facet_wrap(~dow)
   )
 
   user_space$simulate(
-    m <- lm(usage ~ hour:dow, x)
+    m <- stats::lm(usage ~ hour:dow, x)
   )
 
   message('Restoring commit ', go_back)
@@ -93,19 +103,21 @@ simulate_london_meters <- function (overwrite = TRUE)
 
   # now try a different house
   user_space$simulate(
-    input %<>% filter(meter == "MAC000010")
+    input %<>% dplyr::filter(meter == "MAC000010")
   )
 
   user_space$simulate(
     x <-
       input %>%
-      mutate(hour = hour(timestamp),
-             dow  = wday(timestamp)) %>%
-      mutate_at(vars(hour, dow), funs(as.factor))
+      dplyr::mutate(hour = lubridate::hour(timestamp),
+                    dow  = lubridate::wday(timestamp)) %>%
+      dplyr::mutate_at(dplyr::vars(hour, dow), dplyr::funs(as.factor))
   )
 
   user_space$simulate(
-    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+    ggplot2::ggplot(x) +
+      ggplot2::geom_boxplot(ggplot2::aes(x = hour, y = usage)) +
+      ggplot2::facet_wrap(~dow)
   )
 
   # go back again, and try the third house
@@ -113,35 +125,39 @@ simulate_london_meters <- function (overwrite = TRUE)
   restore_commit(internal_state, go_back, user_space$session)
 
   user_space$simulate(
-    input %<>% filter(meter == "MAC004391")
+    input %<>% dplyr::filter(meter == "MAC004391")
   )
 
   user_space$simulate(
     x <-
       input %>%
-      mutate(hour = hour(timestamp),
-             dow  = wday(timestamp)) %>%
-      mutate_at(vars(hour, dow), funs(as.factor))
+      dplyr::mutate(hour = lubridate::hour(timestamp),
+                    dow  = lubridate::wday(timestamp)) %>%
+      dplyr::mutate_at(dplyr::vars(hour, dow), dplyr::funs(as.factor))
   )
 
   user_space$simulate(
-    ggplot(x) + geom_boxplot(aes(x = hour, y = usage)) + facet_wrap(~dow)
+    ggplot2::ggplot(x) +
+      ggplot2::geom_boxplot(ggplot2::aes(x = hour, y = usage)) +
+      ggplot2::facet_wrap(~dow)
   )
 
   invisible(user_space)
 }
 
 
+# Suppress checks in `simulate_modelling`.
+utils::globalVariables(c('iris'))
+
 simulate_modelling <- function ()
 {
-  data(iris)
 
   user_space <- eval_space()
 
-  user_space$simulate(x <- lm(Sepal.Width ~ Sepal.Length, iris))
+  user_space$simulate(x <- stats::lm(Sepal.Width ~ Sepal.Length, iris))
   user_space$simulate(iris2 <- iris)
   user_space$simulate(iris2$Sepal.Length <- iris2$Sepal.Length ** 2)
-  user_space$simulate(y <- lm(Sepal.Width ~ Sepal.Length, iris2))
+  user_space$simulate(y <- stats::lm(Sepal.Width ~ Sepal.Length, iris2))
 }
 
 
