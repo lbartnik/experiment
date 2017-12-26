@@ -12,8 +12,10 @@ vignette: >
 ```{r setup, include=FALSE}
 library(experiment)
 library(knitr)
+library(evaluate)
+library(stringr)
 
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", prompt = FALSE)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.align = 'center')
 knitr::opts_chunk$set(out.width='65%')
@@ -90,6 +92,30 @@ library(lubridate)
 library(magrittr)
 library(ggplot2)
 ```
+
+
+# Turn tracing on
+
+Now it is time to load the `experiment` package and turn on its tracing
+capability. `experiment` will register a callback using `addTaskCallback`
+and using that callback it will keep record of changes in the global
+environment of our R session[^1].
+
+```{r tracking,eval=FALSE}
+library(experiment)
+tracking_on()
+```
+
+Calling `tracking_on()` in a live R session will change the R prompt
+to `[tracked] > `. In this vignette, in order to make it easier to
+copy the R code, the promp remains hidden.
+
+
+[^1]: Actually, in order to prepare this vignette, a number of hacks
+needed to be implemented. Thus, as long as you can simply copy and run
+the code line by line in your R session, the actual source code of the
+*vignette* will reveal much more than that.
+
 
 # Preparing the data set
 
