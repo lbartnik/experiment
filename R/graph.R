@@ -52,7 +52,7 @@ is_graph <- function (x) inherits(x, 'graph')
 
 #' @rdname graph
 #' @export
-#' @import htmlwidgets
+#' @importFrom graphics plot
 #'
 #' @examples
 #' \dontrun{
@@ -80,6 +80,9 @@ plot.graph <- function (x, ...)
 #' @return Object of S3 class `steps`.
 #'
 #' @rdname steps_internal
+#'
+#' @importFrom utils head tail
+#' @importFrom defer defer_
 #'
 graph_to_steps <- function (graph)
 {

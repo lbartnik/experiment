@@ -144,8 +144,8 @@ print_result.lm <- function (x, digits = 2, indent = 0, ...)
   present(xlab)
   present(ylab)
   
-  X <- vapply(glance, `[[`, numeric(1), i = x)
-  Y <- vapply(glance, `[[`, numeric(1), i = y)
+  X <- vapply(glance, `[[`, numeric(1), i = xlab)
+  Y <- vapply(glance, `[[`, numeric(1), i = ylab)
   
   plot(X, Y, xlab = xlab, ylab = ylab)
 }

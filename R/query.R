@@ -206,6 +206,9 @@ verify_step <- function (step, dots, parent_env, store)
 
 search_funs <- function (data_env)
 {
+  # silence R CMD check
+  name <- NULL
+
   search_funs <- list(
     inherits = function(...) {
       classes <- as.character(list(...))

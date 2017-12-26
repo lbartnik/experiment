@@ -199,7 +199,7 @@ print.commit <- function (x, simple = FALSE, ...)
 print.restorer <- function (x, ...)
 {
   co <- commit_restore_data(x$commit, internal_state$stash)
-  restore_historical_commit(co)
+  restore_commit(co)
   message(crayon::green('Commit restored'))
   print(co)
 }

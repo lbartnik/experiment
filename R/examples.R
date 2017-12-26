@@ -10,10 +10,12 @@
 #'        to `TRUE` will remove them prior to running simulation.
 #'
 #' @importFrom readr read_csv
-#' @importFrom dplyr filter rename mutate group_by summarise
-#' @importFrom lubridate floor_date hour wday
-#' @importFrom ggplot2 ggplot facet_wrap geom_point geom_boxplot
-#' @importFrom magrittr %<>%
+#' @importFrom dplyr filter rename mutate group_by summarise mutate_at vars funs
+#' @importFrom lubridate floor_date hour wday year
+#' @importFrom ggplot2 ggplot facet_wrap geom_point geom_boxplot aes
+#' @importFrom magrittr %<>% %>%
+#' @importFrom stats lm
+#'
 #' @export
 #'
 simulate_london_meters <- function (overwrite = TRUE)
@@ -130,7 +132,7 @@ simulate_london_meters <- function (overwrite = TRUE)
 }
 
 
-
+#' @importFrom datasets iris
 simulate_modelling <- function ()
 {
   user_space <- eval_space()
@@ -157,6 +159,7 @@ eval_space <- function ()
 }
 
 
+#' @importFrom utils capture.output
 simulate_user_command <- function (expr)
 {
   env <- parent.env(environment())
