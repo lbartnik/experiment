@@ -43,5 +43,8 @@ Collate:
   'result.R'
   'track.R'
   'utils.R'
+Remotes:
+  lbartnik/defer,
+  lbartnik/storage
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
