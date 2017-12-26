@@ -23,6 +23,7 @@ simulate_london_meters <- function (overwrite = TRUE)
   requireNamespace('stats', quietly = TRUE)
   requireNamespace('readr', quietly = TRUE)
 
+  # silence R CMD check
   `%<>%` <- magrittr::`%<>%`
   `%>%` <- magrittr::`%>%`
 
@@ -166,11 +167,13 @@ eval_space <- function ()
 {
   try(dev.off(), silent = TRUE)
 
-  e <- new.env()
+  parent_env <- parent.frame(1)
+
+  e <- new.env(parent = parent_env)
   e$simulate <- simulate_user_command
   environment(e$simulate) <- e
 
-  e$session <- new.env(parent = globalenv())
+  e$session <- new.env(parent = parent_env)
 
   structure(e, class = 'eval_space')
 }
