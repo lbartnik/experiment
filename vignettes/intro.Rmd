@@ -101,7 +101,7 @@ package.
 input <-
   system.file("extdata/block_62.csv", package = "experiment") %>%
   readr::read_csv(na = 'Null') %>%
-  rename(meter = LCLid, timestamp = tstp, usage = `energy(kWh/hh)`) %>%
+  rename(meter = LCLid, timestamp = tstp, usage = `energy_kWh`) %>%
   filter(meter %in% c("MAC004929", "MAC000010", "MAC004391"),
          year(timestamp) == 2013)
 ```
@@ -324,4 +324,15 @@ h <- query_by(inherits('plot'))
 ```
 
 ```{r partial_history,fig.width=7,fig.height=5,out.width='100%'}
+```
+
+
+# Re-building the vignette
+
+In case you have problems when rebuilding this vignette, here is what my
+current R session is like:
+
+```{r devtools,message=FALSE}
+library(devtools)
+devtools::session_info()
 ```
