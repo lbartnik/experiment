@@ -4,7 +4,7 @@ sudo: false
 compiler:
   - g++
 r_build_args: --no-build-vignettes
-r_check_args: --no-manual --timings
+r_check_args: --no-manual --timings --no-build-vignettes
 matrix:
   include:
     - os: linux
