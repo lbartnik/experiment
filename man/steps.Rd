@@ -13,15 +13,15 @@ is_steps(x)
 \method{print}{steps}(x, ...)
 }
 \arguments{
-\item{x}{The `steps` history object to be printed or viewed in `plot`; the object to be tested in `is_steps`.}
+\item{x}{The \code{steps} history object to be printed or viewed in \code{plot}; the object to be tested in \code{is_steps}.}
 
 \item{...}{Extra arguments for printing/plotting.}
 }
 \description{
-`is_steps` verifies if the given object is a valid
-`steps` structure.
+\code{is_steps} verifies if the given object is a valid
+\code{steps} structure.
 
-`plot.steps` open an interactive history viewer.
+\code{plot.steps} open an interactive history viewer.
 
-`plot.steps` open an interactive history viewer.
+\code{plot.steps} open an interactive history viewer.
 }

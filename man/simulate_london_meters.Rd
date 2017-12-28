@@ -7,12 +7,12 @@
 simulate_london_meters(overwrite = TRUE)
 }
 \arguments{
-\item{overwrite}{If current stash contains objects, setting `overwrite`
-to `TRUE` will remove them prior to running simulation.}
+\item{overwrite}{If current stash contains objects, setting \code{overwrite}
+to \code{TRUE} will remove them prior to running simulation.}
 }
 \description{
-`simulate_london_meters` loads and examines a subset
-of __London meters__ data; see [energy] and the introductory vignette.
+\code{simulate_london_meters} loads and examines a subset
+of \strong{London meters} data; see \link{energy} and the introductory vignette.
 }
 \details{
 These functions populate sessions' history cache with a complete

@@ -7,13 +7,15 @@
 restore(id)
 }
 \arguments{
-\item{id}{`commit` or object identifier, a SHA1 string (__long id__)
-or its first 8 characters (__short id__).}
+\item{id}{\code{commit} or object identifier, a SHA1 string (\strong{long id})
+or its first 8 characters (\strong{short id}).}
 }
 \description{
-Restores a historical [commit] from commit or object `id`:
-* commit `id` brings back that specific commit
-* object `id` brings back the earlies commit where that
-  object can be found, which should be the commit where that
-  object has been created
+Restores a historical \link{commit} from commit or object \code{id}:
+\itemize{
+\item commit \code{id} brings back that specific commit
+\item object \code{id} brings back the earlies commit where that
+object can be found, which should be the commit where that
+object has been created
+}
 }

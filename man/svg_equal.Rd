@@ -12,7 +12,7 @@ svg_equal(a, b)
 \item{b}{Second SVG image.}
 }
 \value{
-`TRUE` if SVGs are the same plot-wise.
+\code{TRUE} if SVGs are the same plot-wise.
 }
 \description{
 SVG images are processed in this package as base64-encoded, XML text

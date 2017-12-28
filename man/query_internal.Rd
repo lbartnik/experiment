@@ -13,34 +13,34 @@ remove_step(s, id)
 verify_step(step, dots, parent_env, store)
 }
 \arguments{
-\item{s}{Graph of steps, see [experiment::graph_to_steps].}
+\item{s}{Graph of steps, see \link[experiment:graph_to_steps]{experiment::graph_to_steps}.}
 
-\item{dots}{Keep nodes that meet these conditions, see [lazyeval::dots].}
+\item{dots}{Keep nodes that meet these conditions, see \link[lazyeval:dots]{lazyeval::dots}.}
 
-\item{store}{Object store to read tags from [storage::os_read_tags].}
+\item{store}{Object store to read tags from \link[storage:os_read_tags]{storage::os_read_tags}.}
 
 \item{id}{Identifier of object to be removed.}
 
 \item{step}{Step to be verified.}
 
-\item{parent_env}{Evaluate `dots` in environment descending from this one.}
+\item{parent_env}{Evaluate \code{dots} in environment descending from this one.}
 }
 \value{
-`reduce_steps` returns a reduced steps graph derived from `s`.
+\code{reduce_steps} returns a reduced steps graph derived from \code{s}.
 
-`remove_step` returns a reduced steps graph derived from `s`.
+\code{remove_step} returns a reduced steps graph derived from \code{s}.
 
-`verify_step` returns `TRUE` if `step` meets the criteria and
-        `FALSE` otherwise.
+\code{verify_step} returns \code{TRUE} if \code{step} meets the criteria and
+\code{FALSE} otherwise.
 }
 \description{
-`reduce_steps` reduces the graph of steps according to
-conditions specified in `dots`.
+\code{reduce_steps} reduces the graph of steps according to
+conditions specified in \code{dots}.
 
-`remove_step` removes a single step from graph of steps
-`s` and updates links accordingly.
+\code{remove_step} removes a single step from graph of steps
+\code{s} and updates links accordingly.
 
-`verify_step` checks whether `step` meets the condition
-defined in `dots`. It evaluates `dots` in an environment that has
-`parent_env` as its parent. Object tags are read from `store`.
+\code{verify_step} checks whether \code{step} meets the condition
+defined in \code{dots}. It evaluates \code{dots} in an environment that has
+\code{parent_env} as its parent. Object tags are read from \code{store}.
 }

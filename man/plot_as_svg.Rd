@@ -7,10 +7,10 @@
 plot_as_svg(pl)
 }
 \arguments{
-\item{pl}{Plot recorded by [recordPlot()].}
+\item{pl}{Plot recorded by \code{\link[=recordPlot]{recordPlot()}}.}
 }
 \value{
-`character` string, base64-encoded SVG plot.
+\code{character} string, base64-encoded SVG plot.
 }
 \description{
 Returns a base64-encoded, SVG plot.

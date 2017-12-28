@@ -7,9 +7,9 @@
 result(object, id)
 }
 \arguments{
-\item{object}{Wrap object into a `result` class.}
+\item{object}{Wrap object into a \code{result} class.}
 
-\item{id}{Object identifier in [storage].}
+\item{id}{Object identifier in \link{storage}.}
 }
 \description{
 A single result.

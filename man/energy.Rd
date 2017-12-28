@@ -6,9 +6,9 @@
 \title{Electric energy usage for 3 smart meters.}
 \format{A data frame with 26820 rows and 3 variables:
 \describe{
-  \item{meter}{meter identifier}
-  \item{timestamp}{the hour of reading}
-  \item{usage}{the reading, in kWh}
+\item{meter}{meter identifier}
+\item{timestamp}{the hour of reading}
+\item{usage}{the reading, in kWh}
 }}
 \source{
 \url{https://www.kaggle.com/jeanmidev/smart-meters-in-london}
