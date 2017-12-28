@@ -7,9 +7,9 @@
 commit_store(commit, store)
 }
 \arguments{
-\item{commit}{A [commit] object.}
+\item{commit}{A \link{commit} object.}
 
-\item{store}{An object store, e.g. [storage::filesystem].}
+\item{store}{An object store, e.g. \link[storage:filesystem]{storage::filesystem}.}
 }
 \description{
 Write commit to an object store.

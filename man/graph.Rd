@@ -4,7 +4,7 @@
 \alias{graph}
 \alias{is_graph}
 \alias{plot.graph}
-\title{Graph of all commits in `store`.}
+\title{Graph of all commits in \code{store}.}
 \usage{
 graph(store, .data = FALSE)
 
@@ -13,7 +13,7 @@ is_graph(x)
 \method{plot}{graph}(x, ...)
 }
 \arguments{
-\item{store}{A data store, e.g. `storage::filesystem`.}
+\item{store}{A data store, e.g. \code{storage::filesystem}.}
 
 \item{.data}{Wether to read full object data.}
 
@@ -22,12 +22,12 @@ is_graph(x)
 \item{...}{Extra parameters to control plotting.}
 }
 \value{
-An object of S3 class `graph`.
+An object of S3 class \code{graph}.
 }
 \description{
-Reads all commits from `store` and assigns the `children` and
-`level` attributes. `children` is a `character` vector containing
-identifiers of children commit, `level` is the distance from the
+Reads all commits from \code{store} and assigns the \code{children} and
+\code{level} attributes. \code{children} is a \code{character} vector containing
+identifiers of children commit, \code{level} is the distance from the
 root of the tree.
 }
 \examples{

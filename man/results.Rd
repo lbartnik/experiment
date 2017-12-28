@@ -7,7 +7,7 @@
 results(res)
 }
 \arguments{
-\item{res}{A `list` of objects to wrap in a `results` class.}
+\item{res}{A \code{list} of objects to wrap in a \code{results} class.}
 }
 \description{
 A set (list) of results.

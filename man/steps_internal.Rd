@@ -25,30 +25,30 @@ format_expression(code)
 description(object)
 }
 \arguments{
-\item{graph}{Object returned by [graph()].}
+\item{graph}{Object returned by \code{\link[=graph]{graph()}}.}
 
-\item{commit}{A [commit()] object.}
+\item{commit}{A \code{\link[=commit]{commit()}} object.}
 
 \item{objects}{Filter for objects present in the commit.}
 
-\item{id}{Identifier of a commit in `graph`.}
+\item{id}{Identifier of a commit in \code{graph}.}
 
-\item{s}{`steps` object.}
+\item{s}{\code{steps} object.}
 
-\item{store}{An object store object, e.g. [storage::filesystem].}
+\item{store}{An object store object, e.g. \link[storage:filesystem]{storage::filesystem}.}
 
-\item{g}{A [graph] object.}
+\item{g}{A \link{graph} object.}
 
-\item{code}{R `expression`.}
+\item{code}{R \code{expression}.}
 
 \item{object}{Object to be described.}
 }
 \value{
-Object of S3 class `steps`.
+Object of S3 class \code{steps}.
 
-`commit_to_steps` returns a `list` of `steps` and `links`.
+\code{commit_to_steps} returns a \code{list} of \code{steps} and \code{links}.
 
-`introduced_in` returns a `character` vector.
+\code{introduced_in} returns a \code{character} vector.
 }
 \description{
 A step is an introduction of a new object or a new plot to the
@@ -57,30 +57,32 @@ commits becase only the relevant (new) information is shown in each
 node of the graph. Thus, translating from commits to steps is the
 first step to visualize the history stored in commits.
 
-`commit_to_steps` generates a `list` with two elements:
-* `steps` with a separate entry for each variable/plot that matches
-  the `objects` filter
-* `links` which defines links (graph edges) between `steps`
+\code{commit_to_steps} generates a \code{list} with two elements:
+\itemize{
+\item \code{steps} with a separate entry for each variable/plot that matches
+the \code{objects} filter
+\item \code{links} which defines links (graph edges) between \code{steps}
+}
 
-`introduced_in` generates the filter for
-`commit_to_steps`'s `objects` parameter. It does it by comparing the
-contents of the commit `id` against the contents of its parent.
+\code{introduced_in} generates the filter for
+\code{commit_to_steps}'s \code{objects} parameter. It does it by comparing the
+contents of the commit \code{id} against the contents of its parent.
 
-`read_objects` reads every object/plot and fills in the
-`contents` or `desc`ription. It is particularly useful when initial
-`steps` graph has been read without objects' contents, e.g. in
-[query_by].
+\code{read_objects} reads every object/plot and fills in the
+\code{contents} or \code{desc}ription. It is particularly useful when initial
+\code{steps} graph has been read without objects' contents, e.g. in
+\link{query_by}.
 
-`find_root_id` searches for the single commit
+\code{find_root_id} searches for the single commit
 in the graph without a parent.
 
-`format` prepares the expression for display
+\code{format} prepares the expression for display
 in a HTML page.
 
-`description` format the expression for display
+\code{description} format the expression for display
 in a HTML page.
 }
 \details{
-`graph_to_steps` is the main function that orchestrates the
+\code{graph_to_steps} is the main function that orchestrates the
 transformation.
 }

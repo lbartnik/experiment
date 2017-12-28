@@ -10,10 +10,10 @@ cleanup_object(obj)
 \item{obj}{Object to be processed.}
 }
 \value{
-`obj` with environment references replaced by `emptyenv()`
+\code{obj} with environment references replaced by \code{emptyenv()}
 }
 \description{
 Some objects (e.g. formula, lm) store references to environments
 in which they were created. This function replaces each such reference
-with a reference to `emptyenv()`.
+with a reference to \code{emptyenv()}.
 }

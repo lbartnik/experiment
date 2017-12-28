@@ -10,9 +10,9 @@ internal_state
 }
 \description{
 \describe{
-  \item{tracking}{whether we are in the tracking state}
-  \item{old_prompt}{prompt as set when loading the package}
-  \item{stash}{local, file-system-based, object cache}
+\item{tracking}{whether we are in the tracking state}
+\item{old_prompt}{prompt as set when loading the package}
+\item{stash}{local, file-system-based, object cache}
 }
 }
 \keyword{datasets}

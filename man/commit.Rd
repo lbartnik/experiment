@@ -21,7 +21,7 @@ is_commit(x)
 
 \item{id}{Identifier of this commit.}
 
-\item{object_ids}{Identifiers of objects passed in `contents`.}
+\item{object_ids}{Identifiers of objects passed in \code{contents}.}
 
 \item{x}{Object to be tested or printed.}
 

@@ -10,13 +10,13 @@ tracking_on()
 tracking_off()
 }
 \description{
-`tracking_on` turns the tracking mode on. This is
-signaled by a new prompt, `[tracked] > `. When tracking is enabled,
-a special callback installed via [addTaskCallback], is used to examine
-the contents of the *global environment* each time an R command is
+\code{tracking_on} turns the tracking mode on. This is
+signaled by a new prompt, \code{[tracked] >}. When tracking is enabled,
+a special callback installed via \link{addTaskCallback}, is used to examine
+the contents of the \emph{global environment} each time an R command is
 successfully executed.
 
-`tracking_off` reverses the effect of `tracking_on`. It
+\code{tracking_off} reverses the effect of \code{tracking_on}. It
 removes the callback and brings back the original value of that R
 session's prompt.
 }
