@@ -1,31 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
- 
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <vector> 
 
 #include <R.h>
-#include <Rinternals.h>
 
+#define R_INTERFACE_PTRS
+#include <Rinterface.h>
+
+#include "api.hh"
 
 SEXP C_try_readline ()
 {
-    char *buf;
- 
-    rl_bind_key('\t',rl_abort); // disable auto-complete
- 
-    while((buf = readline("\n >> "))!=NULL)
-    {
-        if (strcmp(buf,"quit")==0)
-            break;
- 
-        printf("[%s]\n",buf);
- 
-        if (buf[0]!=0)
-            add_history(buf);
-    }
- 
-    free(buf);
- 
+    std::vector<char> buf(1024), tmp(1024);
+
+    int ret = ptr_R_ReadConsole(">> ", reinterpret_cast<unsigned char*>(buf.data()), buf.size(), 0);
+
+    int len = snprintf(tmp.data(), tmp.size(), "ret = %d\n", ret);
+//    ptr_R_WriteConsole(tmp.data(), len);
+    printf("%s\n", tmp.data());
+
+    len = snprintf(tmp.data(), tmp.size(), "buf = [%s]\n", buf.data());
+    printf("%s\n", tmp.data());
+//    ptr_R_WriteConsole(tmp.data(), len);
+
     return R_NilValue;
 }
