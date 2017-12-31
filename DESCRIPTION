@@ -40,6 +40,7 @@ Collate:
   'graph.R'
   'package.R'
   'query.R'
+  'readline.R'
   'result.R'
   'track.R'
   'utils.R'

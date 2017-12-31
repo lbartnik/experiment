@@ -19,3 +19,10 @@
 
 # vim
 *.swp
+
+# VS Code
+**/.vscode
+
+# C/C++ compilation artifacts
+*.o
+*.so

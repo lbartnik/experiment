@@ -1,6 +1,8 @@
 #' @importFrom utils .DollarNames
 NULL
 
+#' @useDynLib subprocess, .registration = TRUE
+NULL
 
 .onLoad <- function (libname, pkgname)
 {
