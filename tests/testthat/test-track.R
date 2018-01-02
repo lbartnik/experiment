@@ -1,6 +1,64 @@
 context("track")
 
 
+test_that("recognize stores", {
+  st1 <- temp_filled(tempdir())
+  on.exit(remove_stash(st1), add = TRUE)
+
+  ret <- discover_object_store(tempdir())
+
+  expect_length(ret, 1)
+  expect_true(dir.exists(as.character(ret)))
+  expect_true(storage::is_filesystem_dir(ret))
+
+  # add another store
+  st2 <- temp_filled(tempdir())
+  on.exit(remove_stash(st2), add = TRUE)
+
+  ret <- discover_object_store(tempdir())
+  expect_length(ret, 2)
+  expect_true(all(dir.exists(as.character(ret))))
+  expect_true(all(vapply(ret, storage::is_filesystem_dir, logical(1))))
+
+  # empty directory does not change the result
+  dir <- file.path(tempdir(), 'xyz')
+  dir.create(dir)
+  on.exit(unlink(dir), add = TRUE)
+
+  ret <- discover_object_store(tempdir())
+  expect_length(ret, 2)
+})
+
+
+test_that("choose store if exists", {
+  st1 <- temp_filled(tempdir())
+  on.exit(remove_stash(st1), add = TRUE)
+
+  ret <- prepare_object_store(tempdir())
+  expect_s3_class(ret, 'object_store')
+  expect_s3_class(ret, 'filesystem')
+  expect_equal(as.character(ret), as.character(st1))
+})
+
+
+test_that("do not choose if more than one", {
+  st1 <- temp_filled(tempdir())
+  on.exit(remove_stash(st1), add = TRUE)
+
+  st2 <- temp_filled(tempdir())
+  on.exit(remove_stash(st2), add = TRUE)
+
+  # returns a filesystem store...
+  expect_warning(ret <- prepare_object_store(tempdir(), FALSE))
+  expect_true(storage::is_filesystem(ret))
+  expect_true(dir.exists(as.character(ret)))
+
+  # ...but it's a new, temporary one
+  expect_false(identical(as.character(ret), as.character(st1)))
+  expect_false(identical(as.character(ret), as.character(st2)))
+})
+
+
 test_that("commit is updated", {
   state <- empty_state()
   env <- as.environment(list(x = 1))

@@ -8,7 +8,7 @@
 \usage{
 discover_object_store(path = getwd())
 
-prepare_object_store(path)
+prepare_object_store(path, silent = !interactive())
 }
 \arguments{
 \item{path}{Path to be examined.}

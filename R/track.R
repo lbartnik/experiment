@@ -280,31 +280,38 @@ discover_object_store <- function (path = getwd())
 #'
 #' @return `prepare_object_store` returns an [storage::object_store] object.
 #'
-prepare_object_store <- function (path)
+prepare_object_store <- function (path, silent = !interactive())
 {
   temp_path <- file.path(tempdir(), 'experiment-stash')
 
-  if (interactive())
-  {
-    x <- discover_object_store(path)
-    if (length(x) == 1) {
-      message('using an existing object store: "', x, '"')
-      return(storage::filesystem(x, create = FALSE))
-    }
+  x <- discover_object_store(path)
+  if (length(x) == 1) {
+    if (!isTRUE(silent)) message('using an existing object store: "', x, '"')
+    return(storage::filesystem(x, create = FALSE))
+  }
 
-    # if none or more than one found
-    msg <- if (length(x) > 1) {
-      paste0('found more than one object store: ', paste(x, collapse = ', '))
-    }
-    else {
-      paste0('no object stores found')
-    }
+  # if none or more than one found
+  msg <- if (length(x) > 1) {
+    paste0('found more than one object store: ', paste(x, collapse = ', '))
+  }
+  else {
+    paste0('no object stores found')
+  }
 
+  if (!isTRUE(silent)) {
     warning(msg, '; creating a temporary object store under "',
             temp_path, '"; objects will be lost when R session exits',
             call. = FALSE)
   }
 
+  create_stash(temp_path)
+}
+
+
+create_stash <- function (path = file.path(tempdir(), 'experiment-stash'))
+{
   # force creation in case the path does not exist yet
-  storage::filesystem(temp_path, create = TRUE)
+  st <- storage::filesystem(path, create = TRUE)
+  stopifnot(storage::is_filesystem(st))
+  st
 }
