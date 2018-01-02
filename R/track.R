@@ -14,19 +14,13 @@ internal_state <- new.env()
 
 initiate_state <- function ()
 {
-  internal_state$stash            <- create_stash()
+  internal_state$stash            <- prepare_object_store(getwd())
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
   internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
 #  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
 }
 
-
-create_stash <- function ()
-{
-  storage::filesystem(file.path(tempdir(), 'experiment-stash'),
-                      create = TRUE)
-}
 
 
 #' A callback run after each top-level expression is evaluated.
@@ -241,4 +235,76 @@ tracking_off <- function () {
     options(prompt = internal_state$old_prompt)
     internal_state$old_prompt <- NA_character_
   }
+}
+
+
+# --- object store -----------------------------------------------------
+
+#' Manage object stores.
+#'
+#' @name internal_object_store
+#' @rdname internal_object_store
+NULL
+
+
+#' @rdname internal_object_store
+#'
+#' @description `discover_object_store` starts with with given `path`
+#' and searches for a configuration file (*not implemented yet*) or an
+#' existing object store that `experiment` can use for the current R
+#' session. If a store can be found, an [storage::object_store] object
+#' is returned; otherwise, a `NULL` value is returned.
+#'
+#' @param path Path to be examined.
+#' @return `discover_object_store` returns a `character` vector whose
+#' elemnets are paths to existing object stores.
+#'
+discover_object_store <- function (path = getwd())
+{
+  stopifnot(dir.exists(path))
+
+  # TODO support for configuration files
+
+  dirs <- Filter(function (x) isTRUE(file.info(x)$isdir),
+                 list.files(path, include.dirs = TRUE, full.names = TRUE, recursive = FALSE))
+  isos <- vapply(dirs, storage::is_filesystem_dir, logical(1))
+
+  dirs[isos]
+}
+
+
+#' @rdname internal_object_store
+#'
+#' @description `prepare_object_store` opens an existing object store
+#' (via `discover_object_store`) or creates a new, temporary one.
+#'
+#' @return `prepare_object_store` returns an [storage::object_store] object.
+#'
+prepare_object_store <- function (path)
+{
+  temp_path <- file.path(tempdir(), 'experiment-stash')
+
+  if (interactive())
+  {
+    x <- discover_object_store(path)
+    if (length(x) == 1) {
+      message('using an existing object store: "', x, '"')
+      return(storage::filesystem(x, create = FALSE))
+    }
+
+    # if none or more than one found
+    msg <- if (length(x) > 1) {
+      paste0('found more than one object store: ', paste(x, collapse = ', '))
+    }
+    else {
+      paste0('no object stores found')
+    }
+
+    warning(msg, '; creating a temporary object store under "',
+            temp_path, '"; objects will be lost when R session exits',
+            call. = FALSE)
+  }
+
+  # force creation in case the path does not exist yet
+  storage::filesystem(temp_path, create = TRUE)
 }

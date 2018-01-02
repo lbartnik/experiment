@@ -307,7 +307,6 @@ find_root_id <- function (g)
 #'
 #' @param code R `expression`.
 #'
-#' @importFrom formatR tidy_source
 #' @rdname steps_internal
 #'
 format_expression <- function (code)

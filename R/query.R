@@ -22,7 +22,6 @@
 #' conditions specified in the call.
 #'
 #' @export
-#' @import lazyeval
 #'
 #' @rdname query
 #'
@@ -166,7 +165,6 @@ remove_step <- function (s, id)
 #' @rdname query_internal
 #'
 #' @import storage
-#' @import lazyeval
 #'
 verify_step <- function (step, dots, parent_env, store)
 {
