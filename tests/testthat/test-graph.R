@@ -79,7 +79,7 @@ test_that("convert graph", {
 
 
 test_that("objects have descriptions", {
-  m <- sample_memory_store()
+  m <- commit_memory_store()
   s <- graph_to_steps(graph(m, .data = TRUE))
 
   expect_length(s$steps, 4)
@@ -89,7 +89,7 @@ test_that("objects have descriptions", {
 
 
 test_that("descriptions can be added later", {
-  m <- sample_memory_store()
+  m <- commit_memory_store()
   s <- graph_to_steps(graph(m, .data = FALSE))
 
   expect_length(s$steps, 4)
