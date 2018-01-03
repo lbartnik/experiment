@@ -20,13 +20,11 @@ graph <- function (store, .data = FALSE)
   commits <- lapply(ids, function (commit_id)
     commit_restore(commit_id, store, .data = .data))
 
-  if (!length(commits)) {
-    stop("history is empty", call. = FALSE)
-  }
-
   names(commits) <- ids
-
   commits <- structure(commits, class = 'graph')
+
+  if (!length(commits)) return(commits)
+
   assign_children(commits, find_root_id(commits), 1)
 }
 

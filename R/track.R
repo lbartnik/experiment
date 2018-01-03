@@ -241,11 +241,25 @@ restore_commit <- function (state, id, env)
 #'
 tracking_on <- function (path = getwd(), .global = "abort")
 {
-  stopifnot(.global %in% c("abort", "overwrite", "merge"))
-
   # first check if there is already an object store under the given path,
   # and either choose the existing one or prepare a temporary stash
   store <- prepare_object_store(path)
+
+  reattach_to_store(path, .global, globalenv())
+
+  # make sure the callback is removed
+  if (!is.na(internal_state$task_callback_id)) {
+    removeTaskCallback(internal_state$task_callback_id)
+  }
+
+  internal_state$task_callback_id <- addTaskCallback(task_callback)
+  options(prompt = "[tracked] > ")
+}
+
+
+reattach_to_store <- function (store, env, .global)
+{
+  stopifnot(.global %in% c("abort", "overwrite", "merge"))
 
   # check whether there is a historical commit to continue from
   g <- graph(store)
@@ -254,7 +268,7 @@ tracking_on <- function (path = getwd(), .global = "abort")
     # TODO if not interactive, abort
 
     ct <- NULL
-    if (length(globalenv())) {
+    if (length(env)) {
       if (identical(.global, "abort")) {
         stop("global environment is not empty, cannot restore commit, aborting",
              call. = FALSE)
@@ -264,8 +278,8 @@ tracking_on <- function (path = getwd(), .global = "abort")
         warning('global environment is not empty, "overwrite" chosen, replacing ',
                 "globalenv with the historical commit", call. = FALSE)
 
-        rm(ls(envir = globalenv(), all.names = TRUE), envir = globalenv())
-        restore_commit(internal_state, ct$id, globalenv())
+        rm(ls(envir = env, all.names = TRUE), envir = env)
+        restore_commit(internal_state, ct$id, env)
       }
 
       if (identical(.global, "merge")) {
@@ -274,14 +288,6 @@ tracking_on <- function (path = getwd(), .global = "abort")
       }
     }
   }
-
-  # make sure the callback is removed
-  if (!is.na(internal_state$task_callback_id)) {
-    removeTaskCallback(internal_state$task_callback_id)
-  }
-
-  internal_state$task_callback_id <- addTaskCallback(task_callback)
-  options(prompt = "[tracked] > ")
 }
 
 
@@ -302,6 +308,8 @@ tracking_off <- function () {
     options(prompt = internal_state$old_prompt)
     internal_state$old_prompt <- NA_character_
   }
+
+  internal_state$stash <- create_stash()
 }
 
 

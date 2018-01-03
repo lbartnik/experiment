@@ -68,6 +68,14 @@ test_that("do not choose if more than one", {
 })
 
 
+test_that("reattach", {
+  st <- temp_filled(tempdir())
+  en <- new.env()
+
+  reattach_to_store(st, en, "abort")
+})
+
+
 test_that("commit is updated", {
   state <- empty_state()
   env <- as.environment(list(x = 1))
