@@ -3,16 +3,29 @@
 \docType{data}
 \name{internal_state}
 \alias{internal_state}
+\alias{initiate_state}
 \title{Global state of the tracker.}
 \format{An object of class \code{environment} of length 4.}
 \usage{
 internal_state
+
+initiate_state()
 }
 \description{
 \describe{
 \item{tracking}{whether we are in the tracking state}
 \item{old_prompt}{prompt as set when loading the package}
 \item{stash}{local, file-system-based, object cache}
+}
+
+\code{initiate_state} assigns the default values to all
+parameters of the global \code{internal_state} object. By default it:
+\itemize{
+\item creates an anonymous \link[storage:object_store]{storage::object_store} which is removed
+when R session exits
+\item does not turn tracking on (see \link{tracking_in})
+\item creates a "fake" parent commit which can become the root of a
+new history graph
 }
 }
 \keyword{datasets}

@@ -31,13 +31,22 @@ test_that("recognize stores", {
 
 
 test_that("choose store if exists", {
-  st1 <- temp_filled(tempdir())
-  on.exit(remove_stash(st1), add = TRUE)
+  st <- temp_filled(tempdir())
+  on.exit(remove_stash(st), add = TRUE)
 
   ret <- prepare_object_store(tempdir())
   expect_s3_class(ret, 'object_store')
   expect_s3_class(ret, 'filesystem')
-  expect_equal(as.character(ret), as.character(st1))
+  expect_equal(as.character(ret), as.character(st))
+})
+
+
+test_that("recognize store in path", {
+  st <- temp_filled(tempdir())
+  on.exit(remove_stash(st), add = TRUE)
+
+  ret <- prepare_object_store(as.character(st))
+  expect_equal(as.character(ret), as.character(st))
 })
 
 

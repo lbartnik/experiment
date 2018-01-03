@@ -8,17 +8,26 @@
 #'   \item{stash}{local, file-system-based, object cache}
 #' }
 #'
+#' @rdname internal_state
 internal_state <- new.env()
 
 
-
+#' @description `initiate_state` assigns the default values to all
+#' parameters of the global `internal_state` object. By default it:
+#' * creates an anonymous [storage::object_store] which is removed
+#'   when R session exits
+#' * does not turn tracking on (see [tracking_in])
+#' * creates a "fake" parent commit which can become the root of a
+#'   new history graph
+#'
+#' @rdname internal_state
+#'
 initiate_state <- function ()
 {
-  internal_state$stash            <- prepare_object_store(getwd())
+  internal_state$stash            <- create_stash()
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
   internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
-#  internal_state$last_commit_id   <- store_commit(emptyenv(), NA_character_, bquote(), state$stash)
 }
 
 
@@ -199,15 +208,73 @@ restore_commit <- function (state, id, env)
 #' @rdname tracking
 #' @title Turn tracking on or off
 #'
-#' @description `tracking_on` turns the tracking mode on. This is
-#' signaled by a new prompt, `[tracked] > `. When tracking is enabled,
-#' a special callback installed via [addTaskCallback], is used to examine
-#' the contents of the *global environment* each time an R command is
-#' successfully executed.
+#' @description `tracking_on` turns the tracking mode on, which is
+#' signaled by a new prompt, `[tracked] > `. It also attaches to an
+#' object store (see [storage::object_store]), if it exists under `path`.
+#' If no object store can be found, a temporary one is created in the
+#' current [tempdir].
+#'
+#' @details When an existing object store is found, and it is not empty,
+#' that is, it contains artifacts and [commit]s from previous R sessions,
+#' the current R session is set as a continuation of one of those
+#' `commit`s. However, if the current *global environment* (see
+#' [globalenv]) is not empty, it needs to be replaced or merged with the
+#' chosen `commit`. To that extent, the `.global` argument is consulted.
+#' It can take one of the following values:
+#' * `"abort"` - the default, aborts the tracking of `globalenv` is not
+#'   empty
+#' * `"replace"` - replace the contents of `globalenv` with the chosen
+#'   commit
+#' * `"merge"` - merge the contents of `globalenv` with the chosen commit;
+#'   this creates a new commit in the process, which is immediately written
+#'   back to the object store
+#'
+#' When tracking is enabled a task callback installed via
+#' [addTaskCallback]. It is used to examine the contents of the
+#' *global environment*  each time an R command is successfully executed.
+#'
+#'
+#' @param path Where to locate the object store (see [storage::object_store]).
+#' @param .global How to handle [globalenv] when it is not empty.
 #'
 #' @export
 #'
-tracking_on <- function () {
+tracking_on <- function (path = getwd(), .global = "abort")
+{
+  stopifnot(.global %in% c("abort", "overwrite", "merge"))
+
+  # first check if there is already an object store under the given path,
+  # and either choose the existing one or prepare a temporary stash
+  store <- prepare_object_store(path)
+
+  # check whether there is a historical commit to continue from
+  g <- graph(store)
+  if (length(graph)) {
+    # TODO if there is more than one leaf, ask user for clarifications
+    # TODO if not interactive, abort
+
+    ct <- NULL
+    if (length(globalenv())) {
+      if (identical(.global, "abort")) {
+        stop("global environment is not empty, cannot restore commit, aborting",
+             call. = FALSE)
+      }
+
+      if (identical(.global, "overwrite")) {
+        warning('global environment is not empty, "overwrite" chosen, replacing ',
+                "globalenv with the historical commit", call. = FALSE)
+
+        rm(ls(envir = globalenv(), all.names = TRUE), envir = globalenv())
+        restore_commit(internal_state, ct$id, globalenv())
+      }
+
+      if (identical(.global, "merge")) {
+        stop('.global = "merege" not implemented yet', call. = FALSE)
+        # TODO implement merge
+      }
+    }
+  }
+
   # make sure the callback is removed
   if (!is.na(internal_state$task_callback_id)) {
     removeTaskCallback(internal_state$task_callback_id)
@@ -265,6 +332,8 @@ discover_object_store <- function (path = getwd())
 
   # TODO support for configuration files
 
+  if (storage::is_filesystem_dir(path)) return(path)
+
   dirs <- Filter(function (x) isTRUE(file.info(x)$isdir),
                  list.files(path, include.dirs = TRUE, full.names = TRUE, recursive = FALSE))
   isos <- vapply(dirs, storage::is_filesystem_dir, logical(1))
@@ -308,6 +377,11 @@ prepare_object_store <- function (path, silent = !interactive())
 }
 
 
+#' @rdname internal_object_store
+#'
+#' @description `create_stash` creates an empty object store under the
+#' given `path`.
+#'
 create_stash <- function (path = file.path(tempdir(), 'experiment-stash'))
 {
   # force creation in case the path does not exist yet
@@ -315,3 +389,10 @@ create_stash <- function (path = file.path(tempdir(), 'experiment-stash'))
   stopifnot(storage::is_filesystem(st))
   st
 }
+
+
+choose_store <- function (path, .create = FALSE)
+{
+
+}
+

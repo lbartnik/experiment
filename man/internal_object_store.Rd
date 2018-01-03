@@ -4,11 +4,14 @@
 \alias{internal_object_store}
 \alias{discover_object_store}
 \alias{prepare_object_store}
+\alias{create_stash}
 \title{Manage object stores.}
 \usage{
 discover_object_store(path = getwd())
 
 prepare_object_store(path, silent = !interactive())
+
+create_stash(path = file.path(tempdir(), "experiment-stash"))
 }
 \arguments{
 \item{path}{Path to be examined.}
@@ -30,4 +33,7 @@ is returned; otherwise, a \code{NULL} value is returned.
 
 \code{prepare_object_store} opens an existing object store
 (via \code{discover_object_store}) or creates a new, temporary one.
+
+\code{create_stash} creates an empty object store under the
+given \code{path}.
 }
