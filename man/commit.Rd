@@ -10,7 +10,7 @@ commit(contents, expression, parent, id, object_ids)
 
 is_commit(x)
 
-\method{print}{commit}(x, simple = FALSE, ...)
+\method{print}{commit}(x, simple = FALSE, ..., store)
 }
 \arguments{
 \item{contents}{An environment or a list of objects.}
@@ -28,6 +28,9 @@ is_commit(x)
 \item{simple}{Show simplified printout.}
 
 \item{...}{Additional parameters to control printout.}
+
+\item{store}{Optionally, the \link[storage:object_store]{storage::object_store} that holds the
+commit; defaults in the internal store of the R session.}
 }
 \description{
 Creates a new commit object.

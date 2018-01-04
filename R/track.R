@@ -245,7 +245,7 @@ tracking_on <- function (path = getwd(), .global = "abort")
   # and either choose the existing one or prepare a temporary stash
   store <- prepare_object_store(path)
 
-  reattach_to_store(path, .global, globalenv())
+  reattach_to_store(state, store, .global, globalenv())
 
   # make sure the callback is removed
   if (!is.na(internal_state$task_callback_id)) {
@@ -257,36 +257,66 @@ tracking_on <- function (path = getwd(), .global = "abort")
 }
 
 
-reattach_to_store <- function (store, env, .global)
+reattach_to_store <- function (state, store, env, .global, .silent = !interactive())
 {
   stopifnot(.global %in% c("abort", "overwrite", "merge"))
 
-  # check whether there is a historical commit to continue from
+  # check whether there is a historical commit to continue from; if not,
+  # attach are immediately return
   g <- graph(store)
-  if (length(graph)) {
+  if (!length(graph)) {
+    if (isFALSE(.silent)) message("Attached to an empty store.")
+    return(invisible())
+  }
+
+  # if there is something in the store
+  lv <- graph_leaves(g)
+  if (length(lv) > 1) {
     # TODO if there is more than one leaf, ask user for clarifications
     # TODO if not interactive, abort
+    stop("multiple branches not implemented yet")
+  }
+  else {
+    ct <- first(lv)
+  }
 
-    ct <- NULL
-    if (length(env)) {
-      if (identical(.global, "abort")) {
-        stop("global environment is not empty, cannot restore commit, aborting",
-             call. = FALSE)
-      }
+  # if there is nothing in the current R session, simply reattach
+  # in the chosen point in history
+  if (!length(env)) {
+    state$stash <- store
+    restore_commit(state, ct$id, env)
 
-      if (identical(.global, "overwrite")) {
-        warning('global environment is not empty, "overwrite" chosen, replacing ',
-                "globalenv with the historical commit", call. = FALSE)
-
-        rm(ls(envir = env, all.names = TRUE), envir = env)
-        restore_commit(internal_state, ct$id, env)
-      }
-
-      if (identical(.global, "merge")) {
-        stop('.global = "merege" not implemented yet', call. = FALSE)
-        # TODO implement merge
-      }
+    if (isFALSE(.silent)) {
+      message('Attached to a new object store. R session reset to commit "', ct$id, '"')
+      print(ct, store = store)
     }
+
+    return(invisible())
+  }
+
+  # if there is something in the current R session (env == globalenv()),
+  # see what to do: abort, overwrite, merge?
+  if (identical(.global, "abort")) {
+    stop("global environment is not empty, cannot restore commit, aborting",
+         call. = FALSE)
+  }
+
+  # overwrite - clean globalenv and load commit instead
+  if (identical(.global, "overwrite")) {
+    warning('global environment is not empty, "overwrite" chosen, replacing ',
+            "globalenv with the historical commit", call. = FALSE)
+
+    rm(ls(envir = env, all.names = TRUE), envir = env)
+    state$stash <- store
+    restore_commit(state, ct$id, env)
+    return(invisible())
+  }
+
+  # merge the commit with the current globalenv; create a new commit
+  # and write it back to the store
+  if (identical(.global, "merge")) {
+    stop('.global = "merege" not implemented yet', call. = FALSE)
+    # TODO implement merge
   }
 }
 

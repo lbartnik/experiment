@@ -66,6 +66,13 @@ plot.graph <- function (x, ...)
 }
 
 
+graph_leaves <- function (g)
+{
+  stopifnot(is_graph(g))
+  Filter(function(node) isTRUE(length(node$children) == 0), g)
+}
+
+
 #' Transform a graph of commits into a graph of steps.
 #'
 #' A step is an introduction of a new object or a new plot to the

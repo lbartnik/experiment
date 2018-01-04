@@ -25,6 +25,8 @@ is_empty <- function (x) is.null(x) || is.na(x) || !length(x) || (is.character(x
 
 is_error <- function (x) inherits(x, 'try-error')
 
+isFALSE <- function (x) !isTRUE(x)
+
 
 not_null <- function (...)
 {

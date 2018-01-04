@@ -69,10 +69,13 @@ test_that("do not choose if more than one", {
 
 
 test_that("reattach", {
-  st <- commit_filesystem_store()
-  en <- new.env()
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  env   <- new.env()
 
-  reattach_to_store(st, en, "abort")
+  reattach_to_store(state, store, env, "abort", TRUE)
+  expect_length(env, 3)
+  expect_named(env, c("x", "y", "z"))
 })
 
 
