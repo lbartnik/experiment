@@ -306,7 +306,7 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
     warning('global environment is not empty, "overwrite" chosen, replacing ',
             "globalenv with the historical commit", call. = FALSE)
 
-    rm(ls(envir = env, all.names = TRUE), envir = env)
+    rm(list = ls(envir = env, all.names = TRUE), envir = env)
     state$stash <- store
     restore_commit(state, ct$id, env)
     return(invisible())

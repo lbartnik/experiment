@@ -1,3 +1,5 @@
+* General:
+  - store env in the state object
 
 * Widget:
   - expression that produced a plot

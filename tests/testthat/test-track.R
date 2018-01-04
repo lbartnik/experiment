@@ -75,7 +75,20 @@ test_that("reattach", {
 
   reattach_to_store(state, store, env, "abort", TRUE)
   expect_length(env, 3)
-  expect_named(env, c("x", "y", "z"))
+  expect_named(env, c("x", "y", "z"), ignore.order = TRUE)
+})
+
+
+test_that("reattach to non-empty", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  env   <- as.environment(list(a = 1))
+
+  expect_error(reattach_to_store(state, store, env, "abort", TRUE))
+
+  expect_warning(reattach_to_store(state, store, env, "overwrite", TRUE))
+  expect_length(env, 3)
+  expect_named(env, c("x", "y", "z"), ignore.order = TRUE)
 })
 
 
