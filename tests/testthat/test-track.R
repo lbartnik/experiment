@@ -79,7 +79,7 @@ test_that("reattach", {
 })
 
 
-test_that("reattach to non-empty", {
+test_that("reattach to non-empty, overwrite", {
   state <- empty_state()
   store <- commit_filesystem_store()
   env   <- as.environment(list(a = 1))
@@ -89,6 +89,20 @@ test_that("reattach to non-empty", {
   expect_warning(reattach_to_store(state, store, env, "overwrite", TRUE))
   expect_length(env, 3)
   expect_named(env, c("x", "y", "z"), ignore.order = TRUE)
+  expect_equal(state$last_commit$id, 'd')
+})
+
+
+test_that("reattach with merge", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  env   <- as.environment(list(a = 1))
+
+  expect_warning(reattach_to_store(state, store, env, "merge", TRUE))
+  expect_length(env, 4)
+  expect_named(env, c("a", "x", "y", "z"), ignore.order = TRUE)
+  expect_false(identical(state$last_commit$id, 'd'))
+  expect_equal(state$last_commit$parent, 'd')
 })
 
 

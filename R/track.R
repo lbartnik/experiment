@@ -259,6 +259,7 @@ tracking_on <- function (path = getwd(), .global = "abort")
 
 reattach_to_store <- function (state, store, env, .global, .silent = !interactive())
 {
+  # TODO add "ask" in interactive mode
   stopifnot(.global %in% c("abort", "overwrite", "merge"))
 
   # check whether there is a historical commit to continue from; if not,
@@ -309,15 +310,29 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
     rm(list = ls(envir = env, all.names = TRUE), envir = env)
     state$stash <- store
     restore_commit(state, ct$id, env)
-    return(invisible())
   }
 
   # merge the commit with the current globalenv; create a new commit
   # and write it back to the store
   if (identical(.global, "merge")) {
-    stop('.global = "merege" not implemented yet', call. = FALSE)
-    # TODO implement merge
+    warning('global environment is not empty, "merge" chosen, merging ',
+            'globalenv with the historical commit', call. = FALSE)
+
+    ct <- commit_restore_data(ct, store)
+    merged_contents <- as.environment(c(ct$objects, as.list(env, all.names = TRUE)))
+
+    state$last_commit <- ct
+    state$stash <- store
+    ct <- update_current_commit(state, merged_contents, NULL, bquote())
+
+    if (isFALSE(.silent)) print(ct, store = store)
+
+    rm(list = ls(envir = env, all.names = TRUE), envir = env)
+    mapply(function (name, value) assign(name, value, envir = env),
+           name = names(merged_contents), value = as.list(merged_contents))
   }
+
+  return(invisible())
 }
 
 
