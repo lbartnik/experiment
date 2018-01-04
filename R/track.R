@@ -325,8 +325,6 @@ discover_object_store <- function (path = getwd())
 #'
 prepare_object_store <- function (path, silent = !interactive())
 {
-  temp_path <- file.path(tempdir(), 'experiment-stash')
-
   x <- discover_object_store(path)
   if (length(x) == 1) {
     if (!isTRUE(silent)) message('using an existing object store: "', x, '"')
@@ -341,11 +339,18 @@ prepare_object_store <- function (path, silent = !interactive())
     paste0('no object stores found')
   }
 
+  # TODO if path points to a non-existing directory, that is
+  #      under an existing one, assume this is a request to
+  #      create a new store
+  # TODO alternatively, use a .create argument
+
   if (!isTRUE(silent)) {
+    temp_path <- file.path(tempdir(), 'experiment-stash')
     warning(msg, '; creating a temporary object store under "',
             temp_path, '"; objects will be lost when R session exits',
             call. = FALSE)
   }
+
 
   create_stash(temp_path)
 }
