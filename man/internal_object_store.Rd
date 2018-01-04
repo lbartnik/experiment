@@ -5,6 +5,7 @@
 \alias{discover_object_store}
 \alias{prepare_object_store}
 \alias{create_stash}
+\alias{reattach_to_store}
 \title{Manage object stores.}
 \usage{
 discover_object_store(path = getwd())
@@ -12,6 +13,8 @@ discover_object_store(path = getwd())
 prepare_object_store(path, silent = !interactive())
 
 create_stash(path = file.path(tempdir(), "experiment-stash"))
+
+reattach_to_store(state, store, env, .global, .silent = !interactive())
 }
 \arguments{
 \item{path}{Path to be examined.}
@@ -36,4 +39,10 @@ is returned; otherwise, a \code{NULL} value is returned.
 
 \code{create_stash} creates an empty object store under the
 given \code{path}.
+
+\code{reattach_to_store} makes \code{store} the current object
+store and determines which \code{commit} present in that store should
+become the current \emph{parent commit} (in \emph{git} known as \code{HEAD}). It
+is used only in \link{tracking_on} but it is separate from it for
+testing purposes.
 }

@@ -106,6 +106,32 @@ test_that("reattach with merge", {
 })
 
 
+test_that("reattach with choice", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  commit_store(commit(list(x = 2), bquote(), 'a', 'e', list(x = 't')), store)
+  env   <- new.env()
+
+  # number-based choice
+  mockery::stub(reattach_to_store, 'interactive', TRUE)
+  mockery::stub(reattach_to_store, 'readline', 2)
+  reattach_to_store(state, store, env, "abort", TRUE)
+
+  expect_length(env, 1)
+  expect_named(env, "x")
+  expect_equal(state$last_commit$id, 'e')
+
+  # commit id; reset env and try again
+  env   <- new.env()
+  mockery::stub(reattach_to_store, 'readline', 'e')
+  reattach_to_store(state, store, env, "abort", TRUE)
+
+  expect_length(env, 1)
+  expect_named(env, "x")
+  expect_equal(state$last_commit$id, 'e')
+})
+
+
 test_that("commit is updated", {
   state <- empty_state()
   env <- as.environment(list(x = 1))

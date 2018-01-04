@@ -4,6 +4,10 @@ first <- function(x) x[[1]]
 
 nth <- function(x, n) x[[n]]
 
+
+between <- function (x, a, b) all(a <= x) && all(x <= b)
+
+
 all_named <- function (x)
 {
   all(names(x) != "")

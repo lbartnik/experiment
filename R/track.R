@@ -257,85 +257,6 @@ tracking_on <- function (path = getwd(), .global = "abort")
 }
 
 
-reattach_to_store <- function (state, store, env, .global, .silent = !interactive())
-{
-  # TODO add "ask" in interactive mode
-  stopifnot(.global %in% c("abort", "overwrite", "merge"))
-
-  # check whether there is a historical commit to continue from; if not,
-  # attach are immediately return
-  g <- graph(store)
-  if (!length(graph)) {
-    if (isFALSE(.silent)) message("Attached to an empty store.")
-    return(invisible())
-  }
-
-  # if there is something in the store
-  lv <- graph_leaves(g)
-  if (length(lv) > 1) {
-    # TODO if there is more than one leaf, ask user for clarifications
-    # TODO if not interactive, abort
-    stop("multiple branches not implemented yet")
-  }
-  else {
-    ct <- first(lv)
-  }
-
-  # if there is nothing in the current R session, simply reattach
-  # in the chosen point in history
-  if (!length(env)) {
-    state$stash <- store
-    restore_commit(state, ct$id, env)
-
-    if (isFALSE(.silent)) {
-      message('Attached to a new object store. R session reset to commit "', ct$id, '"')
-      print(ct, store = store)
-    }
-
-    return(invisible())
-  }
-
-  # if there is something in the current R session (env == globalenv()),
-  # see what to do: abort, overwrite, merge?
-  if (identical(.global, "abort")) {
-    stop("global environment is not empty, cannot restore commit, aborting",
-         call. = FALSE)
-  }
-
-  # overwrite - clean globalenv and load commit instead
-  if (identical(.global, "overwrite")) {
-    warning('global environment is not empty, "overwrite" chosen, replacing ',
-            "globalenv with the historical commit", call. = FALSE)
-
-    rm(list = ls(envir = env, all.names = TRUE), envir = env)
-    state$stash <- store
-    restore_commit(state, ct$id, env)
-  }
-
-  # merge the commit with the current globalenv; create a new commit
-  # and write it back to the store
-  if (identical(.global, "merge")) {
-    warning('global environment is not empty, "merge" chosen, merging ',
-            'globalenv with the historical commit', call. = FALSE)
-
-    ct <- commit_restore_data(ct, store)
-    merged_contents <- as.environment(c(ct$objects, as.list(env, all.names = TRUE)))
-
-    state$last_commit <- ct
-    state$stash <- store
-    ct <- update_current_commit(state, merged_contents, NULL, bquote())
-
-    if (isFALSE(.silent)) print(ct, store = store)
-
-    rm(list = ls(envir = env, all.names = TRUE), envir = env)
-    mapply(function (name, value) assign(name, value, envir = env),
-           name = names(merged_contents), value = as.list(merged_contents))
-  }
-
-  return(invisible())
-}
-
-
 #' @rdname tracking
 #' @description `tracking_off` reverses the effect of `tracking_on`. It
 #' removes the callback and brings back the original value of that R
@@ -449,3 +370,106 @@ choose_store <- function (path, .create = FALSE)
 
 }
 
+
+#' @rdname internal_object_store
+#'
+#' @description `reattach_to_store` makes `store` the current object
+#' store and determines which `commit` present in that store should
+#' become the current *parent commit* (in *git* known as `HEAD`). It
+#' is used only in [tracking_on] but it is separate from it for
+#' testing purposes.
+#'
+reattach_to_store <- function (state, store, env, .global, .silent = !interactive())
+{
+  # TODO add "ask" in interactive mode
+  stopifnot(.global %in% c("abort", "overwrite", "merge"))
+
+  # check whether there is a historical commit to continue from; if not,
+  # attach are immediately return
+  g <- graph(store)
+  if (!length(graph)) {
+    if (isFALSE(.silent)) message("Attached to an empty store.")
+    return(invisible())
+  }
+
+  # if there is something in the store
+  lv <- graph_leaves(g)
+  if (length(lv) > 1) {
+    if (!interactive()) {
+      stop("more than one commit could be restored but running in ",
+           "non-interactive mode; aborting", call. = FALSE)
+    }
+
+    if (isFALSE(.silent)) {
+      message("there are ", length(lv), " commit(s) that can become the ",
+              "HEAD: ", paste(names(lv), collapse = ", "))
+      lapply(lv, function (lf) print(lf, simple = TRUE, store = store))
+    }
+
+    repeat {
+      ans <- readline("1-based index or id: ")
+      if (!is.na(i <- match(ans, names(lv)))) ans <- i
+      ans <- tryCatch(as.integer(ans), warning = function (e) NULL)
+      if (!is.null(ans) && between(ans, 1, length(lv))) break
+      message("could not recognize that choice...")
+    }
+
+    ct <- nth(lv, ans)
+  }
+  else {
+    ct <- first(lv)
+  }
+
+  # if there is nothing in the current R session, simply reattach
+  # in the chosen point in history
+  if (!length(env)) {
+    state$stash <- store
+    restore_commit(state, ct$id, env)
+
+    if (isFALSE(.silent)) {
+      message('Attached to a new object store. R session reset to commit "', ct$id, '"')
+      print(ct, store = store)
+    }
+
+    return(invisible())
+  }
+
+  # if there is something in the current R session (env == globalenv()),
+  # see what to do: abort, overwrite, merge?
+  if (identical(.global, "abort")) {
+    stop("global environment is not empty, cannot restore commit, aborting",
+         call. = FALSE)
+  }
+
+  # overwrite - clean globalenv and load commit instead
+  if (identical(.global, "overwrite")) {
+    warning('global environment is not empty, "overwrite" chosen, replacing ',
+            "globalenv with the historical commit", call. = FALSE)
+
+    rm(list = ls(envir = env, all.names = TRUE), envir = env)
+    state$stash <- store
+    restore_commit(state, ct$id, env)
+  }
+
+  # merge the commit with the current globalenv; create a new commit
+  # and write it back to the store
+  if (identical(.global, "merge")) {
+    warning('global environment is not empty, "merge" chosen, merging ',
+            'globalenv with the historical commit', call. = FALSE)
+
+    ct <- commit_restore_data(ct, store)
+    merged_contents <- as.environment(c(ct$objects, as.list(env, all.names = TRUE)))
+
+    state$last_commit <- ct
+    state$stash <- store
+    ct <- update_current_commit(state, merged_contents, NULL, bquote())
+
+    if (isFALSE(.silent)) print(ct, store = store)
+
+    rm(list = ls(envir = env, all.names = TRUE), envir = env)
+    mapply(function (name, value) assign(name, value, envir = env),
+           name = names(merged_contents), value = as.list(merged_contents))
+  }
+
+  return(invisible())
+}
