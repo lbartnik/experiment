@@ -257,7 +257,7 @@ tracking_on <- function (path = file.path(getwd(), "project-store"), .global = "
   # and either choose the existing one or prepare a temporary stash
   store <- prepare_object_store(path)
 
-  reattach_to_store(state, store, globalenv(), .global)
+  reattach_to_store(internal_state, store, globalenv(), .global)
 
   # make sure the callback is removed
   if (!is.na(internal_state$task_callback_id)) {
@@ -466,6 +466,8 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
   if (identical(.global, "overwrite")) {
     warning('global environment is not empty, "overwrite" chosen, replacing ',
             "globalenv with the historical commit", call. = FALSE)
+
+    if (isFALSE(.silent)) print(ct, store = store)
 
     rm(list = ls(envir = env, all.names = TRUE), envir = env)
     state$stash <- store

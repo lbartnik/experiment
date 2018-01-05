@@ -26,3 +26,6 @@
 # C/C++ compilation artifacts
 *.o
 *.so
+
+# project-store - default object store
+project-store
