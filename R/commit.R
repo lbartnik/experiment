@@ -139,6 +139,9 @@ auto_tags <- function (obj)
 #'
 cleanup_object <- function (obj)
 {
+  if (is.symbol(obj)) return(obj)
+
+  # TODO should we disregard any environment?
   if (is.environment(obj)) return(emptyenv())
 
   attrs <- lapply(attributes(obj), cleanup_object)
