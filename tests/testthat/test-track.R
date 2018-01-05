@@ -57,14 +57,22 @@ test_that("do not choose if more than one", {
   st2 <- filled_store(tempdir())
   on.exit(remove_store(st2), add = TRUE)
 
-  # returns a filesystem store...
-  expect_warning(ret <- prepare_object_store(tempdir(), FALSE))
-  expect_true(storage::is_filesystem(ret))
-  expect_true(dir.exists(as.character(ret)))
+  # errors out and asks user to make the choice
+  expect_error(ret <- prepare_object_store(tempdir(), FALSE))
+})
 
-  # ...but it's a new, temporary one
-  expect_false(identical(as.character(ret), as.character(st1)))
-  expect_false(identical(as.character(ret), as.character(st2)))
+test_that("create if top dir does not exist", {
+  parent_path <- file.path(tempdir(), 'test-parent')
+  on.exit(unlink(parent_path, recursive = TRUE, force = TRUE), add = TRUE)
+
+  expect_true(dir.create(parent_path))
+  store_path <- file.path(parent_path, 'top-level-store-dir')
+  expect_false(dir.exists(store_path))
+
+  expect_warning(ret <- prepare_object_store(store_path, FALSE))
+  expect_s3_class(ret, 'filesystem')
+  expect_equal(as.character(ret), store_path)
+  expect_true(dir.exists(store_path))
 })
 
 

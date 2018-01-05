@@ -5,7 +5,7 @@
 \alias{tracking_off}
 \title{Turn tracking on or off}
 \usage{
-tracking_on(path = getwd(), .global = "abort")
+tracking_on(path = file.path(getwd(), "project-store"), .global = "abort")
 
 tracking_off()
 }
@@ -17,9 +17,11 @@ tracking_off()
 \description{
 \code{tracking_on} turns the tracking mode on, which is
 signaled by a new prompt, \code{[tracked] >}. It also attaches to an
-object store (see \link[storage:object_store]{storage::object_store}), if it exists under \code{path}.
-If no object store can be found, a temporary one is created in the
-current \link{tempdir}.
+object store (see \link[storage:object_store]{storage::object_store}), if one can be found under
+\code{path}. If no object store can be found, and \code{path} points to a
+non-existing directory whose parent directory does exist, then that
+top-level directory is created and a new object store is created in
+it.
 
 \code{tracking_off} reverses the effect of \code{tracking_on}. It
 removes the callback and brings back the original value of that R
@@ -46,4 +48,16 @@ back to the object store
 When tracking is enabled a task callback installed via
 \link{addTaskCallback}. It is used to examine the contents of the
 \emph{global environment}  each time an R command is successfully executed.
+}
+\examples{
+\dontrun{
+# if no object store exists, a new one is created under the
+# default "project-store" directory located in the current
+# working directory
+tracking_on()
+
+# as above, but the new directory is "my-store"
+tracking_on("my-store")
+}
+
 }

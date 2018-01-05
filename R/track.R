@@ -210,9 +210,11 @@ restore_commit <- function (state, id, env)
 #'
 #' @description `tracking_on` turns the tracking mode on, which is
 #' signaled by a new prompt, `[tracked] > `. It also attaches to an
-#' object store (see [storage::object_store]), if it exists under `path`.
-#' If no object store can be found, a temporary one is created in the
-#' current [tempdir].
+#' object store (see [storage::object_store]), if one can be found under
+#' `path`. If no object store can be found, and `path` points to a
+#' non-existing directory whose parent directory does exist, then that
+#' top-level directory is created and a new object store is created in
+#' it.
 #'
 #' @details When an existing object store is found, and it is not empty,
 #' that is, it contains artifacts and [commit]s from previous R sessions,
@@ -238,8 +240,18 @@ restore_commit <- function (state, id, env)
 #' @param .global How to handle [globalenv] when it is not empty.
 #'
 #' @export
+#' @examples
+#' \dontrun{
+#' # if no object store exists, a new one is created under the
+#' # default "project-store" directory located in the current
+#' # working directory
+#' tracking_on()
 #'
-tracking_on <- function (path = getwd(), .global = "abort")
+#' # as above, but the new directory is "my-store"
+#' tracking_on("my-store")
+#' }
+#'
+tracking_on <- function (path = file.path(getwd(), "project-store"), .global = "abort")
 {
   # first check if there is already an object store under the given path,
   # and either choose the existing one or prepare a temporary stash
@@ -325,32 +337,31 @@ discover_object_store <- function (path = getwd())
 #'
 prepare_object_store <- function (path, silent = !interactive())
 {
+  # if the condition is true, user requested to create a store
+  if (!dir.exists(path) && dir.exists(dirname(path))) {
+    warning('creating a store named "', basename(path), '" under "', dirname(path), '"',
+            call. = FALSE)
+    return(storage::filesystem(path, create = TRUE))
+  }
+
+  # if the path exists, look for an object store under it
   x <- discover_object_store(path)
   if (length(x) == 1) {
-    if (!isTRUE(silent)) message('using an existing object store: "', x, '"')
+    if (isFALSE(silent)) message('using an existing object store: "', x, '"')
     return(storage::filesystem(x, create = FALSE))
   }
 
   # if none or more than one found
-  msg <- if (length(x) > 1) {
-    paste0('found more than one object store: ', paste(x, collapse = ', '))
-  }
-  else {
-    paste0('no object stores found')
-  }
-
-  # TODO if path points to a non-existing directory, that is
-  #      under an existing one, assume this is a request to
-  #      create a new store
-  # TODO alternatively, use a .create argument
-
-  if (!isTRUE(silent)) {
-    temp_path <- file.path(tempdir(), 'experiment-stash')
-    warning(msg, '; creating a temporary object store under "',
-            temp_path, '"; objects will be lost when R session exits',
-            call. = FALSE)
+  if (length(x) > 1) {
+    stop('found more than one object store under "', path, '": "',
+         paste(x, collapse = '", "'), '", choose the one you wish to use',
+         call. = FALSE)
   }
 
+  temp_path <- file.path(tempdir(), 'experiment-stash')
+  warning(' no object stores found, creating a temporary one under "',
+          temp_path, '"; objects will be lost when R session exits',
+          call. = FALSE)
 
   create_stash(temp_path)
 }
