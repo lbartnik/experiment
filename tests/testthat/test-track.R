@@ -87,6 +87,15 @@ test_that("reattach", {
 })
 
 
+test_that("reattach to empty store", {
+  state <- empty_state()
+  store <- empty_store()
+  env   <- new.env()
+
+  reattach_to_store(state, store, env, "abort", TRUE)
+  expect_length(env, 0)
+})
+
 test_that("reattach to non-empty, overwrite", {
   state <- empty_state()
   store <- commit_filesystem_store()

@@ -257,7 +257,7 @@ tracking_on <- function (path = file.path(getwd(), "project-store"), .global = "
   # and either choose the existing one or prepare a temporary stash
   store <- prepare_object_store(path)
 
-  reattach_to_store(state, store, .global, globalenv())
+  reattach_to_store(state, store, globalenv(), .global)
 
   # make sure the callback is removed
   if (!is.na(internal_state$task_callback_id)) {
@@ -410,6 +410,10 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
 
   # if there is something in the store
   lv <- graph_leaves(g)
+  if (!length(lv)) {
+    return(invisible())
+  }
+
   if (length(lv) > 1) {
     if (!interactive()) {
       stop("more than one commit could be restored but running in ",

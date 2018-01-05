@@ -1,8 +1,11 @@
-last <- function (x) x[[length(x)]]
+nth <- function(x, n) {
+  if (!length(x)) return(vector(mode = typeof(x)))
+  x[[n]]
+}
 
-first <- function(x) x[[1]]
+last <- function (x) nth(x, length(x))
 
-nth <- function(x, n) x[[n]]
+first <- function(x) nth(x, 1)
 
 
 between <- function (x, a, b) all(a <= x) && all(x <= b)
