@@ -50,6 +50,16 @@ test_that("recognize store in path", {
 })
 
 
+test_that("recognize an empty dir as a store", {
+  st <- empty_store()
+  on.exit(remove_store(st))
+
+  ret <- discover_object_store(as.character(st))
+  expect_length(ret, 1)
+  expect_equal(ret, as.character(st))
+})
+
+
 test_that("do not choose if more than one", {
   st1 <- filled_store(tempdir())
   on.exit(remove_store(st1), add = TRUE)
@@ -60,6 +70,7 @@ test_that("do not choose if more than one", {
   # errors out and asks user to make the choice
   expect_error(ret <- prepare_object_store(tempdir(), FALSE))
 })
+
 
 test_that("create if top dir does not exist", {
   parent_path <- file.path(tempdir(), 'test-parent')
@@ -94,7 +105,9 @@ test_that("reattach to empty store", {
 
   reattach_to_store(state, store, env, "abort", TRUE)
   expect_length(env, 0)
+  expect_identical(state$stash, store)
 })
+
 
 test_that("reattach to non-empty, overwrite", {
   state <- empty_state()

@@ -318,7 +318,7 @@ discover_object_store <- function (path = getwd())
 
   # TODO support for configuration files
 
-  if (storage::is_filesystem_dir(path)) return(path)
+  if (storage::is_filesystem_dir(path, empty_ok = TRUE)) return(path)
 
   dirs <- Filter(function (x) isTRUE(file.info(x)$isdir),
                  list.files(path, include.dirs = TRUE, full.names = TRUE, recursive = FALSE))
@@ -403,8 +403,9 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
   # check whether there is a historical commit to continue from; if not,
   # attach are immediately return
   g <- graph(store)
-  if (!length(graph)) {
+  if (!length(g)) {
     if (isFALSE(.silent)) message("Attached to an empty store.")
+    state$stash <- store
     return(invisible())
   }
 
