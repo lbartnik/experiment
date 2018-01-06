@@ -1,6 +1,11 @@
 .widget {
 }
 
+.lenses {
+    fill: black;
+    opacity: 0.15;
+}
+
 .commit {
     fill: white;
     stroke: black;

@@ -4,6 +4,20 @@
 (function () {
   var DiagonalPosition, RoundPosition, Widget;
 
+  Array.prototype.unique = function () {
+    var j, key, output, ref, results, value;
+    output = {};
+    for (key = j = 0, ref = this.length; 0 <= ref ? j < ref : j > ref; key = 0 <= ref ? ++j : --j) {
+      output[this[key]] = this[key];
+    }
+    results = [];
+    for (key in output) {
+      value = output[key];
+      results.push(value);
+    }
+    return results;
+  };
+
   RoundPosition = function RoundPosition(center, radius, n) {
     var increment;
     increment = n < 12 ? 30 : 360 / n;
@@ -30,12 +44,13 @@
   };
 
   Widget = function Widget(selection) {
-    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, linksG, mapNodes, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, toClipboard, updatePositions, vis, widget, zoomFrame, zoomed;
+    var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, lenses, linksG, mapNodes, moveLenses, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, toClipboard, updatePositions, vis, widget, zoomFrame, zoomed;
     timeout = 150;
     thumbnail = 25;
     zoomed = 250;
     data = null;
     vis = d3.select(selection).attr("class", "widget").style("overflow", "auto").style('overflow-y', 'auto').append("svg");
+    lenses = null;
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
@@ -102,7 +117,9 @@
       node = nodesG.selectAll("g.variable").data(steps, function (d) {
         return d.id;
       });
-      enter = node.enter().append("svg").attr("class", "variable").attr("viewBox", "-1 -2 52 29").attr("width", "50").attr("height", "25");
+      enter = node.enter().append("svg").attr("class", "variable").attr("viewBox", "-1 -2 52 29").attr("width", "50").attr("height", "25").attr("id", function (d) {
+        return d.id;
+      });
       nodeSize(enter.append("rect"));
       enter.append("text").attr("class", "label").attr("text-anchor", "middle").attr("alignment-baseline", "middle").attr("y", '50%').attr("x", '50%').text(function (d) {
         return d.name;
@@ -122,7 +139,41 @@
         return d.source.id + "_" + d.target.id;
       });
       link.enter().append("line").attr("class", "link").attr("stroke", "#ddd");
-      return link.exit().remove();
+      link.exit().remove();
+      lenses = vis.append("circle").attr("class", "lenses").attr("r", 50);
+      return d3.select(window).on("mousemove", moveLenses);
+    };
+    moveLenses = function moveLenses(e) {
+      var bb, il, m, ps, x;
+      m = d3.mouse(vis.node());
+      lenses.attr("cx", m[0]).attr("cy", m[1]);
+      data.steps.forEach(function (s) {
+        return s.scale = 1;
+      });
+      bb = lenses.node().getBBox();
+      il = vis.node().getIntersectionList(bb, nodesG.node());
+      ps = function () {
+        var j, len, results;
+        results = [];
+        for (j = 0, len = il.length; j < len; j++) {
+          x = il[j];
+          results.push(x.parentNode);
+        }
+        return results;
+      }().unique();
+      ps.forEach(function (p) {
+        var datum, px, py, scale;
+        datum = d3.select(p).datum();
+        px = datum.x;
+        py = datum.y;
+        scale = Math.min(50, Math.sqrt(Math.pow(px - m[0], 2) + Math.pow(py - m[1], 2)));
+        return datum.scale = 2 - scale / 50;
+      });
+      return nodesG.selectAll("svg").attr("width", function (d) {
+        return d.scale * 2 * thumbnail;
+      }).attr("height", function (d) {
+        return d.scale * thumbnail;
+      });
     };
     addPlot = function addPlot(step) {
       var bb, doc, fromBase64, parser, plot;

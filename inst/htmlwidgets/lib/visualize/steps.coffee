@@ -1,3 +1,9 @@
+Array::unique = () ->
+      output = {}
+      (output[@[key]] = @[key]) for key in [0...@length]
+      value for key, value of output
+
+
 RoundPosition = (center, radius, n) ->
   increment = if n < 12 then 30 else 360 / n
 
@@ -26,6 +32,7 @@ Widget = (selection) ->
     .style("overflow", "auto")
     .style('overflow-y', 'auto')
     .append("svg")
+  lenses = null
   
   linksG = vis.append("g").attr("id", "links")
   nodesG = vis.append("g").attr("id", "nodes")
@@ -97,6 +104,7 @@ Widget = (selection) ->
       .attr("viewBox", "-1 -2 52 29")
       .attr("width", "50")
       .attr("height", "25")
+      .attr("id", (d) -> d.id)
     nodeSize enter.append("rect")
     enter.append("text")
       .attr("class", "label")
@@ -118,6 +126,35 @@ Widget = (selection) ->
       .attr("class", "link")
       .attr("stroke", "#ddd")
     link.exit().remove()
+
+    lenses = vis.append("circle")
+      .attr("class", "lenses")
+      .attr("r", 50)
+    
+    d3.select(window)
+      .on("mousemove", moveLenses)
+
+  moveLenses = (e) ->
+    m = d3.mouse(vis.node())
+    lenses.attr("cx", m[0])
+      .attr("cy", m[1])
+
+    data.steps.forEach (s) ->
+      s.scale = 1
+
+    bb = lenses.node().getBBox()
+    il = vis.node().getIntersectionList(bb, nodesG.node())
+    ps = (x.parentNode for x in il).unique()
+    ps.forEach (p) ->
+      datum = d3.select(p).datum()
+      px = datum.x
+      py = datum.y
+      scale = Math.min(50, Math.sqrt((px - m[0])**2 + (py-m[1])**2))
+      datum.scale = 2 - scale/50
+    
+    nodesG.selectAll("svg")
+      .attr("width", (d) -> d.scale * 2*thumbnail)
+      .attr("height", (d) -> d.scale * thumbnail)
 
   addPlot = (step) ->
     if step.contents
