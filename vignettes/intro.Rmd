@@ -101,20 +101,33 @@ capability. `experiment` will register a callback using `addTaskCallback`
 and using that callback it will keep record of changes in the global
 environment of our R session[^1].
 
+[^1]: Actually, in order to prepare this vignette, a number of hacks
+needed to be implemented. Thus, as long as you can simply copy and run
+the code line by line in your R session, the actual source code of the
+*vignette* will reveal much more than that.
+
+
 ```{r tracking,eval=FALSE}
 library(experiment)
 tracking_on()
+#> Warning: creating a store named "project-store" under
+#> "/home/user/my-data-project"
 ```
 
 Calling `tracking_on()` in a live R session will change the R prompt
 to `[tracked] > `. In this vignette, in order to make it easier to
 copy the R code, the promp remains hidden.
 
+Another important thing to notice is the warning *"creating a store
+named..."* which informs the user that all objects created in the current
+session will be stored in a newly created *object store*[^2]. Thus, it is
+perfectly possible to peform the exercise described in this vignette over
+a period of multiple days, while closing and reopening R session to pick
+up the work where it was previously left off.
 
-[^1]: Actually, in order to prepare this vignette, a number of hacks
-needed to be implemented. Thus, as long as you can simply copy and run
-the code line by line in your R session, the actual source code of the
-*vignette* will reveal much more than that.
+[^2]:  Object store is a persistent, filesystem-based repository of R
+artifacts (data sets, functions, plots, etc.) produced while working
+with R.
 
 
 # Preparing the data set
