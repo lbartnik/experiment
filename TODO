@@ -15,6 +15,7 @@
 
   - export plots as PNG miniatures rather than SVG; for big/complex plots
     that might be much more efficient
+    https://stackoverflow.com/questions/6249664/does-svg-support-embedding-of-bitmap-images
 
 * tracking:
   - examine the .Last.value - in case there was no object
