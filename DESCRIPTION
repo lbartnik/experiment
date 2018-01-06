@@ -28,6 +28,7 @@ Suggests:
     knitr,
     lubridate,
     magrittr,
+    mockery,
     readr,
     stringr,
     testthat
