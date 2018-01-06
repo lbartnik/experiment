@@ -23,6 +23,7 @@ Imports:
     storage,
     stringi
 Suggests:
+    devtools,
     dplyr,
     evaluate,
     knitr,
