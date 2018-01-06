@@ -10,7 +10,7 @@
 \usage{
 discover_object_store(path = getwd())
 
-prepare_object_store(path, silent = !interactive())
+prepare_object_store(path, .silent = !interactive())
 
 create_stash(path = file.path(tempdir(), "experiment-stash"))
 
@@ -18,6 +18,16 @@ reattach_to_store(state, store, env, .global, .silent = !interactive())
 }
 \arguments{
 \item{path}{Path to be examined.}
+
+\item{.silent}{Reduce the verbosity to warnings and errors.}
+
+\item{state}{The \link{internal_state} object or a testing mock object.}
+
+\item{store}{A \link[storage:object_store]{storage::object_store} object.}
+
+\item{env}{The \link{globalenv} or testing mock environment.}
+
+\item{.global}{Action to take when reading the \link{commit} into \code{env}.}
 }
 \value{
 \code{discover_object_store} returns a \code{character} vector whose

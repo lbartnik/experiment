@@ -3,7 +3,7 @@
 #' A single result.
 #'
 #' @param object Wrap object into a `result` class.
-#' @param id Object identifier in [storage].
+#' @param id Object identifier in [storage::object_store].
 #'
 result <- function (object, id)
 {

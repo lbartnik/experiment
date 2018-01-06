@@ -15,7 +15,7 @@ verify_step(step, dots, parent_env, store)
 \arguments{
 \item{s}{Graph of steps, see \link[experiment:graph_to_steps]{experiment::graph_to_steps}.}
 
-\item{dots}{Keep nodes that meet these conditions, see \link[lazyeval:dots]{lazyeval::dots}.}
+\item{dots}{Keep nodes that meet these conditions, see \link[lazyeval:lazy_dots]{lazyeval::lazy_dots}.}
 
 \item{store}{Object store to read tags from \link[storage:os_read_tags]{storage::os_read_tags}.}
 

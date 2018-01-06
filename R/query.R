@@ -66,7 +66,7 @@ fullhistory <- function() graph_to_steps(graph(internal_state$stash, TRUE))
 #' conditions specified in `dots`.
 #'
 #' @param s Graph of steps, see [experiment::graph_to_steps].
-#' @param dots Keep nodes that meet these conditions, see [lazyeval::dots].
+#' @param dots Keep nodes that meet these conditions, see [lazyeval::lazy_dots].
 #' @param store Object store to read tags from [storage::os_read_tags].
 #' @return `reduce_steps` returns a reduced steps graph derived from `s`.
 #'

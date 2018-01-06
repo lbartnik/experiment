@@ -16,7 +16,7 @@ internal_state <- new.env()
 #' parameters of the global `internal_state` object. By default it:
 #' * creates an anonymous [storage::object_store] which is removed
 #'   when R session exits
-#' * does not turn tracking on (see [tracking_in])
+#' * does not turn tracking on (see [tracking_on])
 #' * creates a "fake" parent commit which can become the root of a
 #'   new history graph
 #'
@@ -333,9 +333,11 @@ discover_object_store <- function (path = getwd())
 #' @description `prepare_object_store` opens an existing object store
 #' (via `discover_object_store`) or creates a new, temporary one.
 #'
+#' @param .silent Reduce the verbosity to warnings and errors.
+#'
 #' @return `prepare_object_store` returns an [storage::object_store] object.
 #'
-prepare_object_store <- function (path, silent = !interactive())
+prepare_object_store <- function (path, .silent = !interactive())
 {
   # if the condition is true, user requested to create a store
   if (!dir.exists(path) && dir.exists(dirname(path))) {
@@ -347,7 +349,7 @@ prepare_object_store <- function (path, silent = !interactive())
   # if the path exists, look for an object store under it
   x <- discover_object_store(path)
   if (length(x) == 1) {
-    if (isFALSE(silent)) message('using an existing object store: "', x, '"')
+    if (isFALSE(.silent)) message('using an existing object store: "', x, '"')
     return(storage::filesystem(x, create = FALSE))
   }
 
@@ -394,6 +396,11 @@ choose_store <- function (path, .create = FALSE)
 #' become the current *parent commit* (in *git* known as `HEAD`). It
 #' is used only in [tracking_on] but it is separate from it for
 #' testing purposes.
+#'
+#' @param state The [internal_state] object or a testing mock object.
+#' @param store A [storage::object_store] object.
+#' @param env The [globalenv] or testing mock environment.
+#' @param .global Action to take when reading the [commit] into `env`.
 #'
 reattach_to_store <- function (state, store, env, .global, .silent = !interactive())
 {
