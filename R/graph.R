@@ -20,13 +20,11 @@ graph <- function (store, .data = FALSE)
   commits <- lapply(ids, function (commit_id)
     commit_restore(commit_id, store, .data = .data))
 
-  if (!length(commits)) {
-    stop("history is empty", call. = FALSE)
-  }
-
   names(commits) <- ids
-
   commits <- structure(commits, class = 'graph')
+
+  if (!length(commits)) return(commits)
+
   assign_children(commits, find_root_id(commits), 1)
 }
 
@@ -65,6 +63,13 @@ is_graph <- function (x) inherits(x, 'graph')
 plot.graph <- function (x, ...)
 {
   plot(graph_to_steps(x))
+}
+
+
+graph_leaves <- function (g)
+{
+  stopifnot(is_graph(g))
+  Filter(function(node) isTRUE(length(node$children) == 0), g)
 }
 
 
@@ -307,7 +312,6 @@ find_root_id <- function (g)
 #'
 #' @param code R `expression`.
 #'
-#' @importFrom formatR tidy_source
 #' @rdname steps_internal
 #'
 format_expression <- function (code)

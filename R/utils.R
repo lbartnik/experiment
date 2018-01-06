@@ -1,8 +1,15 @@
-last <- function (x) x[[length(x)]]
+nth <- function(x, n) {
+  if (!length(x)) return(vector(mode = typeof(x)))
+  x[[n]]
+}
 
-first <- function(x) x[[1]]
+last <- function (x) nth(x, length(x))
 
-nth <- function(x, n) x[[n]]
+first <- function(x) nth(x, 1)
+
+
+between <- function (x, a, b) all(a <= x) && all(x <= b)
+
 
 all_named <- function (x)
 {
@@ -24,6 +31,8 @@ is_lazy_dots <- function (x) inherits(x, 'lazy_dots')
 is_empty <- function (x) is.null(x) || is.na(x) || !length(x) || (is.character(x) && !nchar(x))
 
 is_error <- function (x) inherits(x, 'try-error')
+
+isFALSE <- function (x) !isTRUE(x)
 
 
 not_null <- function (...)

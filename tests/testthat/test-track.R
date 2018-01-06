@@ -1,6 +1,167 @@
 context("track")
 
 
+test_that("recognize stores", {
+  st1 <- filled_store(tempdir())
+  on.exit(remove_store(st1), add = TRUE)
+
+  ret <- discover_object_store(tempdir())
+
+  expect_length(ret, 1)
+  expect_true(dir.exists(as.character(ret)))
+  expect_true(storage::is_filesystem_dir(ret))
+
+  # add another store
+  st2 <- filled_store(tempdir())
+  on.exit(remove_store(st2), add = TRUE)
+
+  ret <- discover_object_store(tempdir())
+  expect_length(ret, 2)
+  expect_true(all(dir.exists(as.character(ret))))
+  expect_true(all(vapply(ret, storage::is_filesystem_dir, logical(1))))
+
+  # empty directory does not change the result
+  dir <- file.path(tempdir(), 'xyz')
+  dir.create(dir)
+  on.exit(unlink(dir), add = TRUE)
+
+  ret <- discover_object_store(tempdir())
+  expect_length(ret, 2)
+})
+
+
+test_that("choose store if exists", {
+  st <- filled_store(tempdir())
+  on.exit(remove_store(st), add = TRUE)
+
+  ret <- prepare_object_store(tempdir())
+  expect_s3_class(ret, 'object_store')
+  expect_s3_class(ret, 'filesystem')
+  expect_equal(as.character(ret), as.character(st))
+})
+
+
+test_that("recognize store in path", {
+  st <- filled_store(tempdir())
+  on.exit(remove_store(st), add = TRUE)
+
+  ret <- prepare_object_store(as.character(st))
+  expect_equal(as.character(ret), as.character(st))
+})
+
+
+test_that("recognize an empty dir as a store", {
+  st <- empty_store()
+  on.exit(remove_store(st))
+
+  ret <- discover_object_store(as.character(st))
+  expect_length(ret, 1)
+  expect_equal(ret, as.character(st))
+})
+
+
+test_that("do not choose if more than one", {
+  st1 <- filled_store(tempdir())
+  on.exit(remove_store(st1), add = TRUE)
+
+  st2 <- filled_store(tempdir())
+  on.exit(remove_store(st2), add = TRUE)
+
+  # errors out and asks user to make the choice
+  expect_error(ret <- prepare_object_store(tempdir(), FALSE))
+})
+
+
+test_that("create if top dir does not exist", {
+  parent_path <- file.path(tempdir(), 'test-parent')
+  on.exit(unlink(parent_path, recursive = TRUE, force = TRUE), add = TRUE)
+
+  expect_true(dir.create(parent_path))
+  store_path <- file.path(parent_path, 'top-level-store-dir')
+  expect_false(dir.exists(store_path))
+
+  expect_warning(ret <- prepare_object_store(store_path, FALSE))
+  expect_s3_class(ret, 'filesystem')
+  expect_equal(as.character(ret), store_path)
+  expect_true(dir.exists(store_path))
+})
+
+
+test_that("reattach", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  env   <- new.env()
+
+  reattach_to_store(state, store, env, "abort", TRUE)
+  expect_length(env, 3)
+  expect_named(env, c("x", "y", "z"), ignore.order = TRUE)
+})
+
+
+test_that("reattach to empty store", {
+  state <- empty_state()
+  store <- empty_store()
+  env   <- new.env()
+
+  reattach_to_store(state, store, env, "abort", TRUE)
+  expect_length(env, 0)
+  expect_identical(state$stash, store)
+})
+
+
+test_that("reattach to non-empty, overwrite", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  env   <- as.environment(list(a = 1))
+
+  expect_error(reattach_to_store(state, store, env, "abort", TRUE))
+
+  expect_warning(reattach_to_store(state, store, env, "overwrite", TRUE))
+  expect_length(env, 3)
+  expect_named(env, c("x", "y", "z"), ignore.order = TRUE)
+  expect_equal(state$last_commit$id, 'd')
+})
+
+
+test_that("reattach with merge", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  env   <- as.environment(list(a = 1))
+
+  expect_warning(reattach_to_store(state, store, env, "merge", TRUE))
+  expect_length(env, 4)
+  expect_named(env, c("a", "x", "y", "z"), ignore.order = TRUE)
+  expect_false(identical(state$last_commit$id, 'd'))
+  expect_equal(state$last_commit$parent, 'd')
+})
+
+
+test_that("reattach with choice", {
+  state <- empty_state()
+  store <- commit_filesystem_store()
+  commit_store(commit(list(x = 2), bquote(), 'a', 'e', list(x = 't')), store)
+  env   <- new.env()
+
+  # number-based choice
+  mockery::stub(reattach_to_store, 'interactive', TRUE)
+  mockery::stub(reattach_to_store, 'readline', 2)
+  reattach_to_store(state, store, env, "abort", TRUE)
+
+  expect_length(env, 1)
+  expect_named(env, "x")
+  expect_equal(state$last_commit$id, 'e')
+
+  # commit id; reset env and try again
+  env   <- new.env()
+  mockery::stub(reattach_to_store, 'readline', 'e')
+  reattach_to_store(state, store, env, "abort", TRUE)
+
+  expect_length(env, 1)
+  expect_named(env, "x")
+  expect_equal(state$last_commit$id, 'e')
+})
+
+
 test_that("commit is updated", {
   state <- empty_state()
   env <- as.environment(list(x = 1))

@@ -4,7 +4,7 @@
 \alias{simulate_london_meters}
 \title{Simulations and examples.}
 \usage{
-simulate_london_meters(overwrite = TRUE)
+simulate_london_meters(overwrite = FALSE)
 }
 \arguments{
 \item{overwrite}{If current stash contains objects, setting \code{overwrite}

@@ -1,3 +1,7 @@
+* General:
+  - make the session env a part of the state object
+  - add a `commit_id` argument to `tracking_on`; create a `tracking_on_`
+    programmatic (non-interactive) API
 
 * Widget:
   - expression that produced a plot

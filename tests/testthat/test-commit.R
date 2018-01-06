@@ -1,5 +1,6 @@
 context("commit")
 
+
 test_that("commit is stored", {
   m <- storage::memory()
   c <- commit(list(x = 1), bquote(), 'parent', 'this')
@@ -9,6 +10,7 @@ test_that("commit is stored", {
                   storage::os_list(m))
 })
 
+
 test_that("store with ids", {
   m <- storage::memory()
   c <- commit(list(x = 1), bquote(), 'parent', 'this',
@@ -17,4 +19,10 @@ test_that("store with ids", {
   commit_store(c, m)
 
   expect_setequal(c('this', 'id'), storage::os_list(m))
+})
+
+
+test_that("clean-up works for edge cases", {
+  # empty symbol
+  expect_equal(cleanup_object(bquote()), bquote())
 })

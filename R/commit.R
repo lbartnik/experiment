@@ -139,6 +139,9 @@ auto_tags <- function (obj)
 #'
 cleanup_object <- function (obj)
 {
+  if (is.symbol(obj)) return(obj)
+
+  # TODO should we disregard any environment?
   if (is.environment(obj)) return(emptyenv())
 
   attrs <- lapply(attributes(obj), cleanup_object)
@@ -160,9 +163,12 @@ cleanup_object <- function (obj)
 #'
 #' @param simple Show simplified printout.
 #' @param ... Additional parameters to control printout.
+#' @param store Optionally, the [storage::object_store] that holds the
+#'        commit; defaults in the internal store of the R session.
 #'
-print.commit <- function (x, simple = FALSE, ...)
+print.commit <- function (x, simple = FALSE, ..., store)
 {
+  if (missing(store)) store <- internal_state$stash
   if (isTRUE(simple))
   {
     cat(substr(x$id, 1, 8), ': ', names(x$objects), '\n')
@@ -178,7 +184,7 @@ print.commit <- function (x, simple = FALSE, ...)
     cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
     cat('objects :\n')
     mapply(function (name, id) {
-      tags <- storage::os_read_tags(internal_state$stash, id)
+      tags <- storage::os_read_tags(store, id)
       tags <- vapply(tags, tag_print, character(1))
       cat('  ', name, ': ', paste(names(tags), '=', tags, collapse = ', '), '\n')
     }, name = names(x$objects), id = as.character(x$object_ids))

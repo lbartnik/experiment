@@ -14,7 +14,7 @@ utils::globalVariables(c('LCLid', 'tstp', 'energy_kWh', 'meter', 'timestamp', 'u
 #'
 #' @export
 #'
-simulate_london_meters <- function (overwrite = TRUE)
+simulate_london_meters <- function (overwrite = FALSE)
 {
   requireNamespace('dplyr', quietly = TRUE)
   requireNamespace('lubridate', quietly = TRUE)
@@ -202,15 +202,15 @@ simulate_user_command <- function (expr)
 
 clean_stash <- function (overwrite, state)
 {
-  if (length(storage::os_list(state$stash))) {
+  ids <- storage::os_list(state$stash)
+  if (length(ids)) {
     if (!isTRUE(overwrite)) {
       stop("stash is not empty and `overwrite` is FALSE, aborting",
            call. = FALSE)
     }
 
     warning("stash is not empty and `overwrite` is TRUE, removing data", call. = FALSE)
-    storage::os_remove(state$stash)
-    state$stash <- create_stash()
+    storage::os_remove_objects(state$stash)
   }
 
   state$last_commit <- commit(list(), bquote(), NA_character_)

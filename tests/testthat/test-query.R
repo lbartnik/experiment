@@ -29,7 +29,7 @@ test_that("one-step reduction", {
 
 
 test_that("reducing by class", {
-  m <- sample_memory_store()
+  m <- commit_memory_store()
   s <- graph_to_steps(graph(m, .data = FALSE))
 
   d <- to_lazy_dots(inherits('numeric'))
@@ -42,7 +42,7 @@ test_that("reducing by class", {
 
 
 test_that("reducing by name", {
-  m <- sample_memory_store()
+  m <- commit_memory_store()
   s <- graph_to_steps(graph(m, .data = FALSE))
 
   d <- to_lazy_dots(is_named('z'))
