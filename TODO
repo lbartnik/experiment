@@ -17,6 +17,9 @@
     that might be much more efficient
     https://stackoverflow.com/questions/6249664/does-svg-support-embedding-of-bitmap-images
 
+  - use RStudio addins to browse history with keyboard (up/down),
+    similarly to Ctrl+R in regular R console
+
 * tracking:
   - examine the .Last.value - in case there was no object
   - ignore plots present on the device upon turning tracking on
