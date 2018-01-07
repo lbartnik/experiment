@@ -32,8 +32,8 @@ Widget = (selection) ->
     .style("overflow", "auto")
     .style('overflow-y', 'auto')
     .append("svg")
-  lenses = null
   
+  lenses = vis.append("circle")
   linksG = vis.append("g").attr("id", "links")
   nodesG = vis.append("g").attr("id", "nodes")
 
@@ -95,6 +95,13 @@ Widget = (selection) ->
         .attr("rx", thumbnail/3)
         .attr("ry", thumbnail/3)
 
+    # the lense circle goes to the bottom
+    lenses.attr("class", "lenses")
+      .attr("r", 50)
+    
+    d3.select(window)
+      .on("mousemove", moveLenses)
+
     # add regular steps
     steps = (step for step in data.steps when step.type is 'object')
     node = nodesG.selectAll("g.variable")
@@ -126,13 +133,6 @@ Widget = (selection) ->
       .attr("class", "link")
       .attr("stroke", "#ddd")
     link.exit().remove()
-
-    lenses = vis.append("circle")
-      .attr("class", "lenses")
-      .attr("r", 50)
-    
-    d3.select(window)
-      .on("mousemove", moveLenses)
 
   moveLenses = (e) ->
     m = d3.mouse(vis.node())

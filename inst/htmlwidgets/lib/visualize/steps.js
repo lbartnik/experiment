@@ -50,7 +50,7 @@
     zoomed = 250;
     data = null;
     vis = d3.select(selection).attr("class", "widget").style("overflow", "auto").style('overflow-y', 'auto').append("svg");
-    lenses = null;
+    lenses = vis.append("circle");
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
     template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
@@ -101,6 +101,9 @@
       nodeSize = function nodeSize(selection) {
         return selection.attr("width", 2 * thumbnail).attr("height", thumbnail).attr("rx", thumbnail / 3).attr("ry", thumbnail / 3);
       };
+      // the lense circle goes to the bottom
+      lenses.attr("class", "lenses").attr("r", 50);
+      d3.select(window).on("mousemove", moveLenses);
       // add regular steps
       steps = function () {
         var j, len, ref, results;
@@ -139,9 +142,7 @@
         return d.source.id + "_" + d.target.id;
       });
       link.enter().append("line").attr("class", "link").attr("stroke", "#ddd");
-      link.exit().remove();
-      lenses = vis.append("circle").attr("class", "lenses").attr("r", 50);
-      return d3.select(window).on("mousemove", moveLenses);
+      return link.exit().remove();
     };
     moveLenses = function moveLenses(e) {
       var bb, il, m, ps, x;
