@@ -4,25 +4,186 @@ Array::unique = () ->
       value for key, value of output
 
 
-RoundPosition = (center, radius, n) ->
-  increment = if n < 12 then 30 else 360 / n
+UI = (selection) ->
+  outer  = null
+  canvas = null
+  linksG = null
+  nodesG = null
+  nodeR  = 25
 
-  return (i) ->
-    angle = i * increment
-    x = (center.x + radius * Math.cos(angle * Math.PI / 180))
-    y = (center.y + radius * Math.sin(angle * Math.PI / 180))
-    {"x":x,"y":y}
+  ui = () ->
+
+  ui.initialize = () ->
+    outer = d3.select(selection)
+      .append("div")
+      .attr("class", "widget")
+      .style("overflow", "auto")
+      .style('overflow-y', 'auto')
+    canvas = outer.append("svg")
+    linksG = canvas.append("g").attr("id", "links")
+    nodesG = canvas.append("g").attr("id", "nodes")
+  
+  ui.setSize = (width, height) ->
+    # reduce the size to make sure scrolls don't show right away
+    canvas.attr("width", width - 10)
+      .attr("height", height - 10)
+      .attr("viewBox", "0 0 #{width} #{height}")
+
+  ui.setData = (data) ->
+    createGraphics(data)
+
+  # create all graphical elements on the canvas
+  createGraphics = (data) ->
+    node = nodesG.selectAll("svg.variable")
+      .data(data.steps, (d) -> d.id)
+    enter = node.enter().append("svg")
+      .attr("class", (d) -> "variable #{d.type}")
+      .attr("id", (d) -> d.id)
+      .attr("viewBox", "0 0 #{2*nodeR} #{2*nodeR}")
+      .attr("width", 2*nodeR)
+      .attr("height", 2*nodeR)
+    enter.each (d) ->
+      element = d3.select(this)
+      if d.type is 'object'
+        element.append("rect")
+          .attr("width", 2*nodeR)
+          .attr("height", 2*nodeR)
+          .attr("rx", nodeR/4)
+          .attr("ry", nodeR/4)
+        element.append("text")
+          .attr("class", "label")
+          .attr("text-anchor", "middle")
+          .attr("alignment-baseline", "middle")
+          .attr("y", '50%')
+          .attr("x", '50%')
+          .text((d) -> d.name)
+        element.append("rect")
+          .attr("class", "face")
+          .attr("width", 2*nodeR)
+          .attr("height", 2*nodeR)
+          .attr("rx", nodeR/4)
+          .attr("ry", nodeR/4)
+      else
+        if d.contents
+          element.append("image")
+            .attr("width", 2*nodeR)
+            .attr("height", 2*nodeR)
+            .attr("xlink:href", $("#plot#{d.id}").attr("href"))
+        else
+          element.append("rect")
+            .attr('width', 2*nodeR)
+            .attr('height', 2*nodeR)
+            .style("fill", "grey")
+    node.exit().remove()
+    
+    link = linksG.selectAll("line.link")
+      .data(data.links, (d) -> "#{d.source.id}_#{d.target.id}")
+    link.enter().append("line")
+      .attr("class", "link")
+      .attr("stroke", "#ddd")
+    link.exit().remove()
+  # --- createGraphics
+
+  ui.initialize()
+  return ui
+# --- UI ---------------------------------------------------------------
+
+Data = (data) ->
+
+  dta = () ->
+
+  dta.data = () -> data
+
+  # Helper function to map node id's to node objects.
+  # Returns d3.map of ids -> nodes
+  mapNodes = (nodes) ->
+    nodesMap = d3.map()
+    nodes.forEach (n) ->
+      nodesMap.set(n.id, n)
+    nodesMap
+
+  # pre-process the input data
+  setupData = () ->
+    # replace target/source references in links with actual objects
+    stepsMap = mapNodes(data.steps)
+    data.links.forEach (l) ->
+      l.source = stepsMap.get(l.source)
+      l.target = stepsMap.get(l.target)
+    return data
+
+  # initialize the object
+  setupData()
+  return dta
+# --- Data -------------------------------------------------------------
+
+Position = (width, height) ->
+
+  position = () ->
+
+  stratified = (data) ->
+    parentsMap = d3.map()
+    data.links.forEach (l) ->
+      parentsMap.set(l.target.id, l.source.id)
+    stratify = d3.stratify()
+      .id((d) -> d.id)
+      .parentId((d) -> parentsMap.get(d.id))
+    stratify(data.steps)
+
+  treed = (data) ->
+    root.sort()
+    tree = d3.tree()
+      .size([width, height])
+    tree(root)
+  
+  position.calculate = (data) ->
+    s = stratified(data)
+    t = treed(s)
+
+    min_x = t.descendants().map((n) -> n.x).reduce((a,b) -> Math.min(a,b))
+    min_y = t.descendants().map((n) -> n.y).reduce((a,b) -> Math.min(a,b))
+
+    # mode all nodes, take the marings into account (+2*thumbnail)
+    nodesMap = mapNodes(data.steps)
+    root.each (n) ->
+      s = nodesMap.get(n.id)
+      s.x = n.x + thumbnail - min_x + thumbnail*2
+      s.y = n.y + thumbnail/1.75 - min_y + thumbnail*2
+    
+    updatePositions()
+
+    #bb = vis.node().getBBox()
+    #x      = bb.x - thumbnail
+    #y      = bb.y - thumbnail
+    #width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
+    #height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
+
+    vis
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", "0 0 #{width} #{height}")
 
 
-DiagonalPosition = (width, height, n) ->
-  n = Math.max(n, width/50)
-  return (i) ->
-    { x: width * (i/n + .1), y: height * (i/n + .1) }
 
 
 
+# --- Widget -----------------------------------------------------------
 Widget = (selection) ->
+  ui = UI(selection)
+  data = null
 
+  widget = () ->
+
+  widget.setData = (input) ->
+    data = Data(input)
+    ui.setData(data.data())
+
+  widget.setSize = (width, height) ->
+
+  return widget
+
+Widget2 = (selection) ->
+
+  lenses_r = 50
   timeout = 150
   thumbnail = 25
   zoomed = 250
@@ -142,8 +303,12 @@ Widget = (selection) ->
     data.steps.forEach (s) ->
       s.scale = 1
 
-    bb = lenses.node().getBBox()
-    il = vis.node().getIntersectionList(bb, nodesG.node())
+    rc = vis.node().createSVGRect()
+    rc.x = m[0] - lenses_r
+    rc.y = m[1] - lenses_r
+    rc.width = m[0] + lenses_r
+    rc.height = m[1] + lenses_r
+    il = vis.node().getIntersectionList(rc, nodesG.node())
     ps = (x.parentNode for x in il).unique()
     ps.forEach (p) ->
       datum = d3.select(p).datum()
