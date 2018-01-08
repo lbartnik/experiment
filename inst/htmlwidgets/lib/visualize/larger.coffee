@@ -3,6 +3,16 @@ Array::unique = () ->
       (output[@[key]] = @[key]) for key in [0...@length]
       value for key, value of output
 
+# Helper function to map node id's to node objects.
+# Returns d3.map of ids -> nodes
+mapNodes = (nodes) ->
+  nodesMap = d3.map()
+  nodes.forEach (n) ->
+    nodesMap.set(n.id, n)
+  nodesMap
+
+
+# --- Utils ------------------------------------------------------------
 
 UI = (selection) ->
   outer  = null
@@ -12,6 +22,7 @@ UI = (selection) ->
   nodeR  = 25
 
   ui = () ->
+  ui.nodeR = nodeR
 
   ui.initialize = () ->
     outer = d3.select(selection)
@@ -84,6 +95,16 @@ UI = (selection) ->
     link.exit().remove()
   # --- createGraphics
 
+  ui.updatePositions = () ->
+    nodesG.selectAll("svg.variable")
+      .attr("x", (d) -> d.x - nodeR)
+      .attr("y", (d) -> d.y - nodeR)
+    link = linksG.selectAll("line.link")
+      .attr("x1", (d) -> d.source.x)
+      .attr("y1", (d) -> d.source.y)
+      .attr("x2", (d) -> d.target.x)
+      .attr("y2", (d) -> d.target.y)
+
   ui.initialize()
   return ui
 # --- UI ---------------------------------------------------------------
@@ -91,16 +112,7 @@ UI = (selection) ->
 Data = (data) ->
 
   dta = () ->
-
-  dta.data = () -> data
-
-  # Helper function to map node id's to node objects.
-  # Returns d3.map of ids -> nodes
-  mapNodes = (nodes) ->
-    nodesMap = d3.map()
-    nodes.forEach (n) ->
-      nodesMap.set(n.id, n)
-    nodesMap
+  dta.data = data
 
   # pre-process the input data
   setupData = () ->
@@ -109,14 +121,15 @@ Data = (data) ->
     data.links.forEach (l) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
-    return data
 
   # initialize the object
   setupData()
   return dta
 # --- Data -------------------------------------------------------------
 
-Position = (width, height) ->
+Position = (width, height, margin) ->
+  width  = width - margin * 2
+  height = height - margin * 2
 
   position = () ->
 
@@ -130,54 +143,57 @@ Position = (width, height) ->
     stratify(data.steps)
 
   treed = (data) ->
-    root.sort()
+    data.sort()
     tree = d3.tree()
       .size([width, height])
-    tree(root)
+    tree(data)
   
   position.calculate = (data) ->
+    # use d3 to calculate positions for a tree
     s = stratified(data)
     t = treed(s)
 
-    min_x = t.descendants().map((n) -> n.x).reduce((a,b) -> Math.min(a,b))
-    min_y = t.descendants().map((n) -> n.y).reduce((a,b) -> Math.min(a,b))
+    # centralize the tree
+    x = t.descendants().map((n) -> n.x)
+    y = t.descendants().map((n) -> n.y)
+    min_x = x.reduce((a,b) -> Math.min(a,b))
+    max_x = x.reduce((a,b) -> Math.max(a,b))
+    min_y = y.reduce((a,b) -> Math.min(a,b))
+    max_y = y.reduce((a,b) -> Math.max(a,b))
 
-    # mode all nodes, take the marings into account (+2*thumbnail)
+    dx = (width - max_x) - min_x + margin
+    dy = (height - max_y) - min_y + margin
+
+    # update original nodes' positions
     nodesMap = mapNodes(data.steps)
-    root.each (n) ->
+    t.each (n) ->
       s = nodesMap.get(n.id)
-      s.x = n.x + thumbnail - min_x + thumbnail*2
-      s.y = n.y + thumbnail/1.75 - min_y + thumbnail*2
-    
-    updatePositions()
-
-    #bb = vis.node().getBBox()
-    #x      = bb.x - thumbnail
-    #y      = bb.y - thumbnail
-    #width  = Math.max(bb.width + 2*thumbnail, vis.attr("width"))
-    #height = Math.max(bb.height  + 2*thumbnail, vis.attr("height"))
-
-    vis
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", "0 0 #{width} #{height}")
-
-
+      s.x = n.x + dx
+      s.y = n.y + dy
+  # --- calculate ---
+  
+  # return an instance of the Position object
+  position
 
 
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
   ui = UI(selection)
+  pos = Position(500, 500, ui.nodeR)
   data = null
 
   widget = () ->
 
   widget.setData = (input) ->
     data = Data(input)
-    ui.setData(data.data())
+    ui.setData(data.data)
+    pos.calculate(data.data)
+    ui.updatePositions()
 
   widget.setSize = (width, height) ->
+    ui.setSize(width,height)
+    pos = Position(width, height, ui.nodeR)
 
   return widget
 
