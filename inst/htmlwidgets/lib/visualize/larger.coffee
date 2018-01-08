@@ -157,19 +157,18 @@ Widget = (selection) ->
       .attr("height", (d) -> d.scale * thumbnail)
 
   addPlot = (step) ->
+    plot = vis.append("svg")
     if step.contents
-      fromBase64 = atob(step.contents.replace(/\s/g, ""))
-      parser = new DOMParser()
-      doc = parser.parseFromString(fromBase64, "application/xml")
-      plot = vis.node()
-        .appendChild(doc.documentElement)
+      plot.append("image")
+        .attr("width", 50)
+        .attr("height", 50)
+        .attr("xlink:href", $("#plot#{step.id}").attr("href"))
     else
-      plot = vis.append("svg")
       plot.append("rect")
         .attr('width', 150)
         .attr('height', 150)
         .style("fill", "grey")
-      plot = plot.node()
+    plot = plot.node()
 
     # extract and remember the original size
     bb = plot.getBBox()

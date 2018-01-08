@@ -45,6 +45,7 @@ Collate:
   'result.R'
   'track.R'
   'utils.R'
+  'widget.R'
 Remotes:
   lbartnik/defer,
   lbartnik/storage
