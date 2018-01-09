@@ -147,9 +147,9 @@ Data = (data) ->
   setupData = () ->
     data.resetScale()
     # pre-process nodes
-    data.steps.each (s) ->
+    data.steps.forEach (s) ->
       if s.expr.constructor is Array
-        s.expr = step.expr.join('\n')
+        s.expr = s.expr.join('\n')
     # replace target/source references in links with actual objects
     stepsMap = mapNodes(data.steps)
     data.links.forEach (l) ->
@@ -211,40 +211,47 @@ Position = (width, height, margin) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step) ->
+Description = (element, step, outer) ->
+
+  template =
+    """
+    <div class="tooltip">
+        <div class="inner">
+            <span class="name">{{name}}</span>
+            <span class="description">{{description}}</span>
+            <pre><code class="R">{{code}}</code></pre>
+        </div>
+    </div>
+    """
 
   description = () ->
   description.show = () ->
-    Mustache.parse(template)
+    tooltip = $("<div>").addClass("tooltip").attr("id", "tooltip_#{step.id}")
+    if step.type is "object"
+      inner   = $("<div>").addClass("inner").appendTo(tooltip)
+      $("<span>").addClass("name").appendTo(inner).text(step.name)
+      $("<span>").addClass("description").appendTo(inner).text(step.desc)
+      $("<pre>").appendTo(inner).append $("<code>").addClass("R").text(step.expr)
+      inner.find("pre code").each (i, block) -> hljs.highlightBlock(block)
+    else
+      $("<img>", {src: 'links/' + step.contents, width: 300}).appendTo(tooltip)
 
-    rendered = Mustache.render(template, {
-      name: step.name,
-      code: code,
-      description: step.desc
-    })
-    tooltip = $(rendered)
 
-    pos = $(selection).parent().position()
-    bcr = this.getBoundingClientRect()
+    pos = $(outer).parent().position()
+    bcr = element.getBoundingClientRect()
 
     tooltip
-      .attr("id", "tooltip_#{step.id}")
       .css({left: bcr.left + bcr.width, top: bcr.top + bcr.height})
-      .find("pre code").each (i, block) -> hljs.highlightBlock(block)
-    tooltip.find(".inner").css({zoom: .1})
     
-    this.tooltip?.remove()
-    this.tooltip = tooltip.appendTo(selection)
-
-    tooltip.css({visibility: 'visible'})
-      .find(".inner")
-      .animate({zoom: 1}, 'fast')
+    element.tooltip?.remove()
+    element.tooltip = tooltip.appendTo(outer)
+      .css({visibility: 'visible'})
+      .fadeTo('fast', 1)
 
   description.hide = () ->
-    thisNode = this
-    this.tooltip?.find('.inner').animate({zoom: 0}, 'fast', 'swing', () -> thisNode.tooltip?.remove())
+    element.tooltip?.fadeTo('fast', 0, () -> element.tooltip?.remove())
 
-
+  return description
 
 
 
@@ -273,6 +280,7 @@ Widget = (selection) ->
     ui.on('canvas:mousemove', moveLenses)
     ui.on('canvas:mouseout', resetScale)
     ui.on('node:mouseover', showDialog)
+    ui.on('node:mouseout', hideDialog)
 
   moveLenses = (d) ->
     data.resetScale()
@@ -289,7 +297,11 @@ Widget = (selection) ->
     ui.updatePositions()
   
   showDialog = (d) ->
-    console.log(d)
+    this.description = Description(this, d, selection)
+    this.description.show()
+  
+  hideDialog = (d) ->
+    this.description.hide()
 
   return widget
 

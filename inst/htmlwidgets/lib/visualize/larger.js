@@ -181,9 +181,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       var stepsMap;
       data.resetScale();
       // pre-process nodes
-      data.steps.each(function (s) {
+      data.steps.forEach(function (s) {
         if (s.expr.constructor === Array) {
-          return s.expr = step.expr.join('\n');
+          return s.expr = s.expr.join('\n');
         }
       });
       // replace target/source references in links with actual objects
@@ -264,54 +264,53 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   // --- Position ---------------------------------------------------------
-  Description = function Description(element, step) {
-    var description;
+  Description = function Description(element, step, outer) {
+    var description, template;
+    template = "<div class=\"tooltip\">\n    <div class=\"inner\">\n        <span class=\"name\">{{name}}</span>\n        <span class=\"description\">{{description}}</span>\n        <pre><code class=\"R\">{{code}}</code></pre>\n    </div>\n</div>";
     description = function description() {};
     description.show = function () {
-      var bcr, pos, ref, rendered, tooltip;
-      Mustache.parse(template);
-      rendered = Mustache.render(template, {
-        name: step.name,
-        code: code,
-        description: step.desc
-      });
-      tooltip = $(rendered);
-      pos = $(selection).parent().position();
-      bcr = this.getBoundingClientRect();
-      tooltip.attr("id", "tooltip_" + step.id).css({
+      var bcr, inner, pos, ref, tooltip;
+      tooltip = $("<div>").addClass("tooltip").attr("id", "tooltip_" + step.id);
+      if (step.type === "object") {
+        inner = $("<div>").addClass("inner").appendTo(tooltip);
+        $("<span>").addClass("name").appendTo(inner).text(step.name);
+        $("<span>").addClass("description").appendTo(inner).text(step.desc);
+        $("<pre>").appendTo(inner).append($("<code>").addClass("R").text(step.expr));
+        inner.find("pre code").each(function (i, block) {
+          return hljs.highlightBlock(block);
+        });
+      } else {
+        $("<img>", {
+          src: 'links/' + step.contents,
+          width: 300
+        }).appendTo(tooltip);
+      }
+      pos = $(outer).parent().position();
+      bcr = element.getBoundingClientRect();
+      tooltip.css({
         left: bcr.left + bcr.width,
         top: bcr.top + bcr.height
-      }).find("pre code").each(function (i, block) {
-        return hljs.highlightBlock(block);
       });
-      tooltip.find(".inner").css({
-        zoom: .1
-      });
-      if ((ref = this.tooltip) != null) {
+      if ((ref = element.tooltip) != null) {
         ref.remove();
       }
-      this.tooltip = tooltip.appendTo(selection);
-      return tooltip.css({
+      return element.tooltip = tooltip.appendTo(outer).css({
         visibility: 'visible'
-      }).find(".inner").animate({
-        zoom: 1
-      }, 'fast');
+      }).fadeTo('fast', 1);
     };
-    return description.hide = function () {
-      var ref, thisNode;
-      thisNode = this;
-      return (ref = this.tooltip) != null ? ref.find('.inner').animate({
-        zoom: 0
-      }, 'fast', 'swing', function () {
+    description.hide = function () {
+      var ref;
+      return (ref = element.tooltip) != null ? ref.fadeTo('fast', 0, function () {
         var ref1;
-        return (ref1 = thisNode.tooltip) != null ? ref1.remove() : void 0;
+        return (ref1 = element.tooltip) != null ? ref1.remove() : void 0;
       }) : void 0;
     };
+    return description;
   };
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var data, lenseR, moveLenses, nodeR, pos, resetScale, setEvents, showDialog, ui, widget;
+    var data, hideDialog, lenseR, moveLenses, nodeR, pos, resetScale, setEvents, showDialog, ui, widget;
     nodeR = 15;
     lenseR = 50;
     ui = UI(selection, nodeR);
@@ -332,7 +331,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     setEvents = function setEvents() {
       ui.on('canvas:mousemove', moveLenses);
       ui.on('canvas:mouseout', resetScale);
-      return ui.on('node:mouseover', showDialog);
+      ui.on('node:mouseover', showDialog);
+      return ui.on('node:mouseout', hideDialog);
     };
     moveLenses = function moveLenses(d) {
       var mouse, nodes;
@@ -352,7 +352,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return ui.updatePositions();
     };
     showDialog = function showDialog(d) {
-      return console.log(d);
+      this.description = Description(this, d, selection);
+      return this.description.show();
+    };
+    hideDialog = function hideDialog(d) {
+      return this.description.hide();
     };
     return widget;
   };

@@ -30,9 +30,10 @@
 }
 
 .tooltip {
+    visibility: hidden;
+    opacity: 0;
     position: fixed;
     display: block;
-    visibility: hidden;
     font-size: 9pt;
     padding: 1px;
     border: 1px solid black;
