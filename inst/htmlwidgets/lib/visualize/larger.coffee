@@ -125,12 +125,13 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
   # --- events ---
   ui.on = (event, callback) ->
-    if event is 'mousemove'
-      canvas.on("mousemove", callback)
-    if event is 'mouseout'
-      canvas.on("mouseout", callback)
-
-
+    # canvas-level events
+    if event in ['canvas:mousemove', 'canvas:mouseout'] 
+      canvas.on(event.substring(7), callback)
+    # node-level events
+    if event in ['node:mouseover', 'node:mouseout']
+      nodesG.selectAll(".face,image")
+        .on(event.substring(5), callback)
 
   ui.initialize()
   return ui
@@ -145,6 +146,10 @@ Data = (data) ->
   # pre-process the input data
   setupData = () ->
     data.resetScale()
+    # pre-process nodes
+    data.steps.each (s) ->
+      if s.expr.constructor is Array
+        s.expr = step.expr.join('\n')
     # replace target/source references in links with actual objects
     stepsMap = mapNodes(data.steps)
     data.links.forEach (l) ->
@@ -204,6 +209,42 @@ Position = (width, height, margin) ->
   
   # return an instance of the Position object
   position
+# --- Position ---------------------------------------------------------
+
+Description = (element, step) ->
+
+  description = () ->
+  description.show = () ->
+    Mustache.parse(template)
+
+    rendered = Mustache.render(template, {
+      name: step.name,
+      code: code,
+      description: step.desc
+    })
+    tooltip = $(rendered)
+
+    pos = $(selection).parent().position()
+    bcr = this.getBoundingClientRect()
+
+    tooltip
+      .attr("id", "tooltip_#{step.id}")
+      .css({left: bcr.left + bcr.width, top: bcr.top + bcr.height})
+      .find("pre code").each (i, block) -> hljs.highlightBlock(block)
+    tooltip.find(".inner").css({zoom: .1})
+    
+    this.tooltip?.remove()
+    this.tooltip = tooltip.appendTo(selection)
+
+    tooltip.css({visibility: 'visible'})
+      .find(".inner")
+      .animate({zoom: 1}, 'fast')
+
+  description.hide = () ->
+    thisNode = this
+    this.tooltip?.find('.inner').animate({zoom: 0}, 'fast', 'swing', () -> thisNode.tooltip?.remove())
+
+
 
 
 
@@ -229,10 +270,11 @@ Widget = (selection) ->
     pos = Position(width, height, nodeR)
 
   setEvents = () ->
-    ui.on('mousemove', moveLenses)
-    ui.on('mouseout', resetScale)
+    ui.on('canvas:mousemove', moveLenses)
+    ui.on('canvas:mouseout', resetScale)
+    ui.on('node:mouseover', showDialog)
 
-  moveLenses = (e) ->
+  moveLenses = (d) ->
     data.resetScale()
     mouse  = ui.mousePosition()
     nodes = ui.nodesNear(mouse, lenseR)
@@ -242,9 +284,12 @@ Widget = (selection) ->
       datum.scale = 1 + lenseR/nodeR * Math.sqrt(1-scale)
     ui.updatePositions()
   
-  resetScale = (e) ->
+  resetScale = (d) ->
     data.resetScale()
     ui.updatePositions()
+  
+  showDialog = (d) ->
+    console.log(d)
 
   return widget
 
