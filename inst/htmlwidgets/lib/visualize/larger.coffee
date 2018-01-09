@@ -11,18 +11,19 @@ mapNodes = (nodes) ->
     nodesMap.set(n.id, n)
   nodesMap
 
+euclidean = (a, b) ->
+  Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2)
+
 
 # --- Utils ------------------------------------------------------------
 
-UI = (selection) ->
+UI = (selection, nodeR = 25, innerR = 25) ->
   outer  = null
   canvas = null
   linksG = null
   nodesG = null
-  nodeR  = 25
 
   ui = () ->
-  ui.nodeR = nodeR
 
   ui.initialize = () ->
     outer = d3.select(selection)
@@ -50,17 +51,17 @@ UI = (selection) ->
     enter = node.enter().append("svg")
       .attr("class", (d) -> "variable #{d.type}")
       .attr("id", (d) -> d.id)
-      .attr("viewBox", "0 0 #{2*nodeR} #{2*nodeR}")
+      .attr("viewBox", "0 0 #{2*innerR} #{2*innerR}")
       .attr("width", 2*nodeR)
       .attr("height", 2*nodeR)
     enter.each (d) ->
       element = d3.select(this)
       if d.type is 'object'
         element.append("rect")
-          .attr("width", 2*nodeR)
-          .attr("height", 2*nodeR)
-          .attr("rx", nodeR/4)
-          .attr("ry", nodeR/4)
+          .attr("width", 2*innerR)
+          .attr("height", 2*innerR)
+          .attr("rx", innerR/2)
+          .attr("ry", innerR/2)
         element.append("text")
           .attr("class", "label")
           .attr("text-anchor", "middle")
@@ -70,20 +71,18 @@ UI = (selection) ->
           .text((d) -> d.name)
         element.append("rect")
           .attr("class", "face")
-          .attr("width", 2*nodeR)
-          .attr("height", 2*nodeR)
-          .attr("rx", nodeR/4)
-          .attr("ry", nodeR/4)
+          .attr("width", 2*innerR)
+          .attr("height", 2*innerR)
       else
         if d.contents
           element.append("image")
-            .attr("width", 2*nodeR)
-            .attr("height", 2*nodeR)
+            .attr("width", 2*innerR)
+            .attr("height", 2*innerR)
             .attr("xlink:href", $("#plot#{d.id}").attr("href"))
         else
           element.append("rect")
-            .attr('width', 2*nodeR)
-            .attr('height', 2*nodeR)
+            .attr('width', 2*innerR)
+            .attr('height', 2*innerR)
             .style("fill", "grey")
     node.exit().remove()
     
@@ -97,13 +96,41 @@ UI = (selection) ->
 
   ui.updatePositions = () ->
     nodesG.selectAll("svg.variable")
-      .attr("x", (d) -> d.x - nodeR)
-      .attr("y", (d) -> d.y - nodeR)
+      .attr("x", (d) -> d.x - d.scale * nodeR)
+      .attr("y", (d) -> d.y - d.scale * nodeR)
+      .attr("width", (d) -> d.scale * 2*nodeR)
+      .attr("height", (d) -> d.scale * 2*nodeR)
+
     link = linksG.selectAll("line.link")
       .attr("x1", (d) -> d.source.x)
       .attr("y1", (d) -> d.source.y)
       .attr("x2", (d) -> d.target.x)
       .attr("y2", (d) -> d.target.y)
+
+  ui.mousePosition = () ->
+    [x,y] = d3.mouse(canvas.node())
+    {x: x, y: y}
+
+  ui.nodesNear = (point, distance) ->
+    rc = canvas.node().createSVGRect()
+    rc.x = point.x - distance
+    rc.y = point.y - distance
+    rc.width = 2 * distance
+    rc.height = 2 * distance
+    # returns SVG node elements inside the parent svg
+    intList = canvas.node().getIntersectionList(rc, nodesG.node())
+    parents = (n.parentNode for n in intList).unique()
+    parents.filter((n) -> euclidean(d3.select(n).datum(), point) <= distance)
+
+
+  # --- events ---
+  ui.on = (event, callback) ->
+    if event is 'mousemove'
+      canvas.on("mousemove", callback)
+    if event is 'mouseout'
+      canvas.on("mouseout", callback)
+
+
 
   ui.initialize()
   return ui
@@ -111,11 +138,13 @@ UI = (selection) ->
 
 Data = (data) ->
 
-  dta = () ->
-  dta.data = data
+  data.resetScale = () ->
+    data.steps.forEach (s) ->
+      s.scale = 1
 
   # pre-process the input data
   setupData = () ->
+    data.resetScale()
     # replace target/source references in links with actual objects
     stepsMap = mapNodes(data.steps)
     data.links.forEach (l) ->
@@ -124,7 +153,8 @@ Data = (data) ->
 
   # initialize the object
   setupData()
-  return dta
+  return data
+
 # --- Data -------------------------------------------------------------
 
 Position = (width, height, margin) ->
@@ -179,23 +209,57 @@ Position = (width, height, margin) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
-  ui = UI(selection)
-  pos = Position(500, 500, ui.nodeR)
-  data = null
+  nodeR  = 15
+  lenseR = 50
+  ui     = UI(selection, nodeR)
+  pos    = Position(500, 500, nodeR)
+  data   = null
 
   widget = () ->
 
   widget.setData = (input) ->
     data = Data(input)
-    ui.setData(data.data)
-    pos.calculate(data.data)
+    ui.setData(data)
+    pos.calculate(data)
     ui.updatePositions()
+    setEvents()
 
   widget.setSize = (width, height) ->
     ui.setSize(width,height)
-    pos = Position(width, height, ui.nodeR)
+    pos = Position(width, height, nodeR)
+
+  setEvents = () ->
+    ui.on('mousemove', moveLenses)
+    ui.on('mouseout', resetScale)
+
+  moveLenses = (e) ->
+    data.resetScale()
+    mouse  = ui.mousePosition()
+    nodes = ui.nodesNear(mouse, lenseR)
+    nodes.forEach (n) ->
+      datum = d3.select(n).datum()
+      scale = euclidean(mouse, datum)/lenseR
+      datum.scale = 1 + lenseR/nodeR * Math.sqrt(1-scale)
+    ui.updatePositions()
+  
+  resetScale = (e) ->
+    data.resetScale()
+    ui.updatePositions()
 
   return widget
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Widget2 = (selection) ->
 

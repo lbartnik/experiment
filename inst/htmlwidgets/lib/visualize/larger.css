@@ -26,6 +26,7 @@
 
 .face {
     fill: transparent;
+    stroke: transparent;
 }
 
 .tooltip {
