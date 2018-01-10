@@ -14,6 +14,12 @@ mapNodes = (nodes) ->
 euclidean = (a, b) ->
   Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2)
 
+viewport = () ->
+  w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+  h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+  {width: w, height: h}
+
+
 
 # --- Utils ------------------------------------------------------------
 
@@ -213,17 +219,6 @@ Position = (width, height, margin) ->
 
 Description = (element, step, outer) ->
 
-  template =
-    """
-    <div class="tooltip">
-        <div class="inner">
-            <span class="name">{{name}}</span>
-            <span class="description">{{description}}</span>
-            <pre><code class="R">{{code}}</code></pre>
-        </div>
-    </div>
-    """
-
   description = () ->
   description.show = () ->
     tooltip = $("<div>").addClass("tooltip").attr("id", "tooltip_#{step.id}")
@@ -236,17 +231,26 @@ Description = (element, step, outer) ->
     else
       $("<img>", {src: 'links/' + step.contents, width: 300}).appendTo(tooltip)
 
-
     pos = $(outer).parent().position()
-    bcr = element.getBoundingClientRect()
+    node = element.getBoundingClientRect()
 
+    # append the <div> and collect its dimensions to see if it needs to
+    # be moved up or to the right
     tooltip
-      .css({left: bcr.left + bcr.width, top: bcr.top + bcr.height})
+      .css({left: node.left + node.width, top: node.top + node.height})
+      .appendTo(outer)
     
+    bcr = tooltip.get(0).getBoundingClientRect()
+    dy = Math.max(bcr.bottom - viewport().height, 0)
+    dx = Math.max(bcr.right - viewport().width, 0)
+
+    # move if necessary
+    tooltip
+      .css({visibility: "visible", left: node.left + node.width - dx, top: node.top + node.height - dy})
+
+    # show
     element.tooltip?.remove()
-    element.tooltip = tooltip.appendTo(outer)
-      .css({visibility: 'visible'})
-      .fadeTo('fast', 1)
+    element.tooltip = tooltip.fadeTo('fast', 1)
 
   description.hide = () ->
     element.tooltip?.fadeTo('fast', 0, () -> element.tooltip?.remove())
@@ -289,7 +293,7 @@ Widget = (selection) ->
     nodes.forEach (n) ->
       datum = d3.select(n).datum()
       scale = euclidean(mouse, datum)/lenseR
-      datum.scale = 1 + lenseR/nodeR * Math.sqrt(1-scale)
+      datum.scale = 1 + lenseR/nodeR * (1-scale)**2
     ui.updatePositions()
   
   resetScale = (d) ->
