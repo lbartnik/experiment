@@ -20,6 +20,11 @@ viewport = () ->
   {width: w, height: h}
 
 
+# add style to notifyjs, just once
+$.notify.addStyle('simplenotification', {
+  html: "<div><span data-notify-text/></div>"
+})
+
 
 # --- Utils ------------------------------------------------------------
 
@@ -135,7 +140,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     if event in ['canvas:mousemove', 'canvas:mouseout'] 
       canvas.on(event.substring(7), callback)
     # node-level events
-    if event in ['node:mouseover', 'node:mouseout']
+    if event in ['node:mouseover', 'node:mouseout', 'node:click']
       nodesG.selectAll(".face,image")
         .on(event.substring(5), callback)
 
@@ -285,6 +290,7 @@ Widget = (selection) ->
     ui.on('canvas:mouseout', resetScale)
     ui.on('node:mouseover', showDialog)
     ui.on('node:mouseout', hideDialog)
+    ui.on('node:click', clickNode)
 
   moveLenses = (d) ->
     data.resetScale()
@@ -307,8 +313,19 @@ Widget = (selection) ->
   hideDialog = (d) ->
     this.description.hide()
 
+  clickNode = (d) ->
+    input = $("<input>")
+      .appendTo(selection)
+      .val("restore('#{d.id}')")
+      .select()
+    document.execCommand("copy")
+    input.remove()
+    $.notify("ID copied to clipboard", {autoHideDelay: 1000, className: 'info', style: 'simplenotification'})
+
   return widget
 
+# export the Widget
+window.Widget = Widget
 
 
 
@@ -628,11 +645,3 @@ Widget2 = (selection) ->
 
   widget.setSize($(selection).width(), $(selection).height())
   widget
-
-# add style to notifyjs, just once
-$.notify.addStyle('simplenotification', {
-  html: "<div><span data-notify-text/></div>"
-})
-
-# export the Widget
-window.Widget = Widget

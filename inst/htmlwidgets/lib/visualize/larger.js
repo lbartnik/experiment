@@ -45,6 +45,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
   };
 
+  // add style to notifyjs, just once
+  $.notify.addStyle('simplenotification', {
+    html: "<div><span data-notify-text/></div>"
+  });
+
   // --- Utils ------------------------------------------------------------
   UI = function UI(selection) {
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
@@ -170,7 +175,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         canvas.on(event.substring(7), callback);
       }
       // node-level events
-      if (event === 'node:mouseover' || event === 'node:mouseout') {
+      if (event === 'node:mouseover' || event === 'node:mouseout' || event === 'node:click') {
         return nodesG.selectAll(".face,image").on(event.substring(5), callback);
       }
     };
@@ -329,7 +334,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var data, hideDialog, lenseR, moveLenses, nodeR, pos, resetScale, setEvents, showDialog, ui, widget;
+    var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, pos, resetScale, setEvents, showDialog, ui, widget;
     nodeR = 15;
     lenseR = 50;
     ui = UI(selection, nodeR);
@@ -351,7 +356,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       ui.on('canvas:mousemove', moveLenses);
       ui.on('canvas:mouseout', resetScale);
       ui.on('node:mouseover', showDialog);
-      return ui.on('node:mouseout', hideDialog);
+      ui.on('node:mouseout', hideDialog);
+      return ui.on('node:click', clickNode);
     };
     moveLenses = function moveLenses(d) {
       var mouse, nodes;
@@ -377,8 +383,22 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     hideDialog = function hideDialog(d) {
       return this.description.hide();
     };
+    clickNode = function clickNode(d) {
+      var input;
+      input = $("<input>").appendTo(selection).val("restore('" + d.id + "')").select();
+      document.execCommand("copy");
+      input.remove();
+      return $.notify("ID copied to clipboard", {
+        autoHideDelay: 1000,
+        className: 'info',
+        style: 'simplenotification'
+      });
+    };
     return widget;
   };
+
+  // export the Widget
+  window.Widget = Widget;
 
   Widget2 = function Widget2(selection) {
     var addPlot, createVisuals, data, enableEvents, filterData, hidePlot, hideVariable, lenses, lenses_r, linksG, moveLenses, nodesG, placeVisuals, refreshVisuals, setupData, showPlot, showVariable, template, thumbnail, timeout, toClipboard, updatePositions, vis, widget, zoomFrame, zoomed;
@@ -692,12 +712,4 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     widget.setSize($(selection).width(), $(selection).height());
     return widget;
   };
-
-  // add style to notifyjs, just once
-  $.notify.addStyle('simplenotification', {
-    html: "<div><span data-notify-text/></div>"
-  });
-
-  // export the Widget
-  window.Widget = Widget;
 }).call(undefined);
