@@ -290,7 +290,7 @@ Description = (element, step, outer) ->
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
   nodeR  = 15
-  lenseR = 50
+  lenseR = 30
   ui     = UI(selection, nodeR, 15)
   pos    = Position(500, 500, nodeR)
   data   = null
@@ -328,7 +328,7 @@ Widget = (selection) ->
     nodes.forEach (n) ->
       datum = d3.select(n).datum()
       scale = euclidean(mouse, datum)/lenseR
-      datum.scale = 1 + lenseR/nodeR * (1-scale)**2
+      datum.scale = 1 + lenseR/nodeR * (1-scale)**3
     ui.updatePositions()
   
   resetScale = (d) ->

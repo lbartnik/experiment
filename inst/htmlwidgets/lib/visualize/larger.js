@@ -385,7 +385,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   Widget = function Widget(selection) {
     var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, pos, resetScale, setEvents, showDialog, ui, updateCanvas, widget;
     nodeR = 15;
-    lenseR = 50;
+    lenseR = 30;
     ui = UI(selection, nodeR, 15);
     pos = Position(500, 500, nodeR);
     data = null;
@@ -423,7 +423,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         var datum, scale;
         datum = d3.select(n).datum();
         scale = euclidean(mouse, datum) / lenseR;
-        return datum.scale = 1 + lenseR / nodeR * Math.pow(1 - scale, 2);
+        return datum.scale = 1 + lenseR / nodeR * Math.pow(1 - scale, 3);
       });
       return ui.updatePositions();
     };
