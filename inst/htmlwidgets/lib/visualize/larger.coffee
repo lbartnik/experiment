@@ -71,11 +71,10 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     enter.each (d) ->
       element = d3.select(this)
       if d.type is 'object'
-        element.append("rect")
-          .attr("width", 2*innerR)
-          .attr("height", 2*innerR)
-          .attr("rx", innerR/2)
-          .attr("ry", innerR/2)
+        element.append("circle")
+          .attr("cx", innerR)
+          .attr("cy", innerR)
+          .attr("r", innerR * .96)
         text = element.append("text")
           .attr("class", "label")
           .attr("text-anchor", "middle")
@@ -113,7 +112,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   scaleText = (text) ->
     textWidth = text.node().getBoundingClientRect().width
     fontSize  = parseFloat(text.style('font-size'))
-    fontSize  = fontSize * (textWidth/(innerR*2.2))
+    fontSize  = Math.min(12, fontSize * (innerR*1.6/textWidth))
     "#{fontSize}px"
 
   ui.updatePositions = () ->

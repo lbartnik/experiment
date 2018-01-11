@@ -110,7 +110,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         var element, text;
         element = d3.select(this);
         if (d.type === 'object') {
-          element.append("rect").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("rx", innerR / 2).attr("ry", innerR / 2);
+          element.append("circle").attr("cx", innerR).attr("cy", innerR).attr("r", innerR * .96);
           text = element.append("text").attr("class", "label").attr("text-anchor", "middle").attr("alignment-baseline", "middle").attr("y", '50%').attr("x", '50%').text(function (d) {
             return d.name;
           });
@@ -138,7 +138,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       var fontSize, textWidth;
       textWidth = text.node().getBoundingClientRect().width;
       fontSize = parseFloat(text.style('font-size'));
-      fontSize = fontSize * (textWidth / (innerR * 2.2));
+      fontSize = Math.min(12, fontSize * (innerR * 1.6 / textWidth));
       return fontSize + "px";
     };
     ui.updatePositions = function () {
