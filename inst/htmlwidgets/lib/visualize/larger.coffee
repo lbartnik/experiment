@@ -76,13 +76,14 @@ UI = (selection, nodeR = 25, innerR = 25) ->
           .attr("height", 2*innerR)
           .attr("rx", innerR/2)
           .attr("ry", innerR/2)
-        element.append("text")
+        text = element.append("text")
           .attr("class", "label")
           .attr("text-anchor", "middle")
           .attr("alignment-baseline", "middle")
           .attr("y", '50%')
           .attr("x", '50%')
           .text((d) -> d.name)
+        text.style('font-size', scaleText(text))
         element.append("rect")
           .attr("class", "face")
           .attr("width", 2*innerR)
@@ -107,6 +108,13 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .attr("stroke", "#ddd")
     link.exit().remove()
   # --- createGraphics
+
+  # make sure text fits inside the node icon
+  scaleText = (text) ->
+    textWidth = text.node().getBoundingClientRect().width
+    fontSize  = parseFloat(text.style('font-size'))
+    fontSize  = fontSize * (textWidth/(innerR*2.2))
+    "#{fontSize}px"
 
   ui.updatePositions = () ->
     nodesG.selectAll("svg.variable")
@@ -284,7 +292,7 @@ Description = (element, step, outer) ->
 Widget = (selection) ->
   nodeR  = 15
   lenseR = 50
-  ui     = UI(selection, nodeR)
+  ui     = UI(selection, nodeR, 15)
   pos    = Position(500, 500, nodeR)
   data   = null
 

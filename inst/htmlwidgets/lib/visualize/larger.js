@@ -76,7 +76,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, linksG, nodesG, outer, ui;
+    var canvas, createGraphics, linksG, nodesG, outer, scaleText, ui;
     outer = null;
     canvas = null;
     linksG = null;
@@ -107,13 +107,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return d.id;
       }).attr("viewBox", "0 0 " + 2 * innerR + " " + 2 * innerR).attr("width", 2 * nodeR).attr("height", 2 * nodeR);
       enter.each(function (d) {
-        var element;
+        var element, text;
         element = d3.select(this);
         if (d.type === 'object') {
           element.append("rect").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("rx", innerR / 2).attr("ry", innerR / 2);
-          element.append("text").attr("class", "label").attr("text-anchor", "middle").attr("alignment-baseline", "middle").attr("y", '50%').attr("x", '50%').text(function (d) {
+          text = element.append("text").attr("class", "label").attr("text-anchor", "middle").attr("alignment-baseline", "middle").attr("y", '50%').attr("x", '50%').text(function (d) {
             return d.name;
           });
+          text.style('font-size', scaleText(text));
           return element.append("rect").attr("class", "face").attr("width", 2 * innerR).attr("height", 2 * innerR);
         } else {
           if (d.contents) {
@@ -131,6 +132,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return link.exit().remove();
     };
     // --- createGraphics
+
+    // make sure text fits inside the node icon
+    scaleText = function scaleText(text) {
+      var fontSize, textWidth;
+      textWidth = text.node().getBoundingClientRect().width;
+      fontSize = parseFloat(text.style('font-size'));
+      fontSize = fontSize * (textWidth / (innerR * 2.2));
+      return fontSize + "px";
+    };
     ui.updatePositions = function () {
       var link;
       nodesG.selectAll("svg.variable").attr("x", function (d) {
@@ -376,7 +386,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, pos, resetScale, setEvents, showDialog, ui, updateCanvas, widget;
     nodeR = 15;
     lenseR = 50;
-    ui = UI(selection, nodeR);
+    ui = UI(selection, nodeR, 15);
     pos = Position(500, 500, nodeR);
     data = null;
     widget = function widget() {};
