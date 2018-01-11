@@ -339,7 +339,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     lenseR = 50;
     ui = UI(selection, nodeR);
     pos = Position(500, 500, nodeR);
-    data = null;
+    data = {};
     widget = function widget() {};
     widget.setData = function (input) {
       data = Data(input);

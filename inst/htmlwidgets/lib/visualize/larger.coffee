@@ -270,7 +270,7 @@ Widget = (selection) ->
   lenseR = 50
   ui     = UI(selection, nodeR)
   pos    = Position(500, 500, nodeR)
-  data   = null
+  data   = {}
 
   widget = () ->
 

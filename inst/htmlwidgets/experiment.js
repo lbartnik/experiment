@@ -11,8 +11,12 @@ HTMLWidgets.widget({
 
     // return widget instance
     return {
-      renderValue: function(x) {
-        visvis.setData(x.data);
+      renderValue: function(id) {
+        $.ajax({url: $("#" + id + "-data-attachment").attr("href"),
+                dataType: 'json'}).done(function (data) {
+          console.log(data);
+          visvis.setData(data);
+        });
       },
 
       resize: function(width, height) {
