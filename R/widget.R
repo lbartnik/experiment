@@ -54,7 +54,7 @@ extract_html_dependencies <- function (data)
   plots <- vapply(plots, `[[`, character(1), i = 'contents')
   names(plots) <- ids
 
-  jsonlite::write_json(data, file.path(html_dir, 'data.json'),
+  jsonlite::write_json(unclass(data), file.path(html_dir, 'data.json'),
                        pretty = TRUE, auto_unbox = TRUE)
 
   list(

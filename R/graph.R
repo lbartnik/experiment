@@ -153,9 +153,10 @@ is_steps <- function (x) inherits(x, 'steps')
 #'
 plot.steps <- function (x, ...)
 {
-  input <- list(data = x)
+  deps <- extract_html_dependencies(x)
+
   # create the widget
-  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
+  htmlwidgets::createWidget("experiment", 'data', dependencies = deps)
 }
 
 
