@@ -11,6 +11,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       Widget,
       euclidean,
       mapNodes,
+      plotHref,
       viewport,
       _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
@@ -59,6 +60,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       width: w,
       height: h
     };
+  };
+
+  plotHref = function plotHref(id) {
+    return $("#plots-" + id + "-attachment").attr("href");
   };
 
   // add style to notifyjs, just once
@@ -112,7 +117,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
           return element.append("rect").attr("class", "face").attr("width", 2 * innerR).attr("height", 2 * innerR);
         } else {
           if (d.contents) {
-            return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", $("#plot" + d.id + "-plot-attachment").attr("href"));
+            return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", plotHref(d.id));
           } else {
             return element.append("rect").attr('width', 2 * innerR).attr('height', 2 * innerR).style("fill", "grey");
           }
@@ -313,7 +318,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         // an image needs to be first loaded, before its dimensions and final
         // position can be calculated
         $("<img>", {
-          src: $("#plot" + step.id + "-plot-attachment").attr("href"),
+          src: plotHref(step.id),
           height: height
         }).appendTo(tooltip).on('load', function () {
           return position(element, tooltip);

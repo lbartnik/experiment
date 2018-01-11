@@ -43,32 +43,32 @@ extract_html_dependencies <- function (data)
   data$steps <- lapply(data$steps, function (step) {
     if (!identical(step$type, "plot")) return(step)
     rsvg::rsvg_png(jsonlite::base64_dec(step$contents),
-                   file.path(html_dir, paste0(step$id, '_min.png')))
+                   file.path(html_dir, paste0(step$id, '_min.png')),
+                   height = 300)
     step$contents <- paste0(step$id, '_min.png')
     step
   })
 
-  deps <- Filter(function (step) identical(step$type, 'plot'), data$steps)
-  deps <- lapply(deps, function (step) {
-    htmltools::htmlDependency(
-      paste0("plot", step$id),
-      version = "0.1.0",
-      src = html_dir,
-      attachment = list(plot = step$contents)
-    )
-  })
+  plots <- Filter(function (step) identical(step$type, 'plot'), data$steps)
+  ids   <- vapply(plots, `[[`, character(1), i = 'id')
+  plots <- vapply(plots, `[[`, character(1), i = 'contents')
+  names(plots) <- ids
 
   jsonlite::write_json(data, file.path(html_dir, 'data.json'),
                        pretty = TRUE, auto_unbox = TRUE)
 
-  c(deps,
-    list(
-      htmltools::htmlDependency(
-        'data',
-        version = "0.1.0",
-        src = html_dir,
-        attachment = list(data = 'data.json')
-      )
+  list(
+    htmltools::htmlDependency(
+      'data',
+      version = "1",
+      src = html_dir,
+      attachment = list(data = 'data.json')
+    ),
+    htmltools::htmlDependency(
+      "plots",
+      version = "1",
+      src = html_dir,
+      attachment = plots
     )
   )
 }

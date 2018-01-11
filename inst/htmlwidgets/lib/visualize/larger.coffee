@@ -19,6 +19,9 @@ viewport = () ->
   h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
   {width: w, height: h}
 
+plotHref = (id) ->
+  $("#plots-#{id}-attachment").attr("href")
+
 
 # add style to notifyjs, just once
 $.notify.addStyle('simplenotification', {
@@ -89,7 +92,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
           element.append("image")
             .attr("width", 2*innerR)
             .attr("height", 2*innerR)
-            .attr("xlink:href", $("#plot#{d.id}-plot-attachment").attr("href"))
+            .attr("xlink:href", plotHref(d.id))
         else
           element.append("rect")
             .attr('width', 2*innerR)
@@ -237,10 +240,7 @@ Description = (element, step, outer) ->
       height = Math.min(300, viewport().height - 65)
       # an image needs to be first loaded, before its dimensions and final
       # position can be calculated
-      $("<img>", {
-        src: $("#plot#{step.id}-plot-attachment").attr("href"),
-        height: height
-      })
+      $("<img>", { src: plotHref(step.id), height: height })
         .appendTo(tooltip)
         .on('load', () -> position(element, tooltip))
 
