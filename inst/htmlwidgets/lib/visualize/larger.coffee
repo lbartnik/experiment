@@ -150,9 +150,10 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
 Data = (data) ->
 
-  data.resetScale = () ->
+  resetScale = () ->
     data.steps.forEach (s) ->
       s.scale = 1
+  data = {resetScale: resetScale, data...}
 
   # pre-process the input data
   setupData = () ->
@@ -270,20 +271,26 @@ Widget = (selection) ->
   lenseR = 50
   ui     = UI(selection, nodeR)
   pos    = Position(500, 500, nodeR)
-  data   = {}
+  data   = null
 
   widget = () ->
 
   widget.setData = (input) ->
     data = Data(input)
     ui.setData(data)
-    pos.calculate(data)
-    ui.updatePositions()
+    updateCanvas()
     setEvents()
 
   widget.setSize = (width, height) ->
     ui.setSize(width,height)
     pos = Position(width, height, nodeR)
+    updateCanvas()
+
+  updateCanvas = () ->
+    if data
+      pos.calculate(data)
+      ui.updatePositions()
+
 
   setEvents = () ->
     ui.on('canvas:mousemove', moveLenses)

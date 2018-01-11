@@ -8,13 +8,13 @@ HTMLWidgets.widget({
 
     // create our vis object and bind it to the element
     var visvis = new Widget(el);
+    visvis.setSize($(el).width(), $(el).height());
 
     // return widget instance
     return {
       renderValue: function(id) {
         $.ajax({url: $("#" + id + "-data-attachment").attr("href"),
                 dataType: 'json'}).done(function (data) {
-          console.log(data);
           visvis.setData(data);
         });
       },
