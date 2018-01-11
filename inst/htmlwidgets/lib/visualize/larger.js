@@ -112,7 +112,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
           return element.append("rect").attr("class", "face").attr("width", 2 * innerR).attr("height", 2 * innerR);
         } else {
           if (d.contents) {
-            return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", $("#plot" + d.id).attr("href"));
+            return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", $("#plot" + d.id + "-plot-attachment").attr("href"));
           } else {
             return element.append("rect").attr('width', 2 * innerR).attr('height', 2 * innerR).style("fill", "grey");
           }
@@ -299,11 +299,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Position ---------------------------------------------------------
   Description = function Description(element, step, outer) {
-    var description;
+    var description, position;
     description = function description() {};
     description.show = function () {
-      var bcr, dx, dy, inner, node, pos, ref, tooltip;
+      var inner, ref, tooltip;
       tooltip = $("<div>").addClass("tooltip").attr("id", "tooltip_" + step.id);
+
+      // regular object can be created and positioned right away
       if (step.type === "object") {
         inner = $("<div>").addClass("inner").appendTo(tooltip);
         $("<span>").addClass("name").appendTo(inner).text(step.name);
@@ -312,29 +314,18 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         inner.find("pre code").each(function (i, block) {
           return hljs.highlightBlock(block);
         });
+        position(element, tooltip);
       } else {
+        // an image needs to be first loaded, before its dimensions and final
+        // position can be calculated
         $("<img>", {
-          src: 'links/' + step.contents,
+          src: $("#plot" + step.id + "-plot-attachment").attr("href"),
           width: 300
-        }).appendTo(tooltip);
+        }).appendTo(tooltip).on('load', function () {
+          return position(element, tooltip);
+        });
       }
-      pos = $(outer).parent().position();
-      node = element.getBoundingClientRect();
-      // append the <div> and collect its dimensions to see if it needs to
-      // be moved up or to the right
-      tooltip.css({
-        left: node.left + node.width,
-        top: node.top + node.height
-      }).appendTo(outer);
-      bcr = tooltip.get(0).getBoundingClientRect();
-      dy = Math.max(bcr.bottom - viewport().height, 0);
-      dx = Math.max(bcr.right - viewport().width, 0);
-      // move if necessary
-      tooltip.css({
-        visibility: "visible",
-        left: node.left + node.width - dx,
-        top: node.top + node.height - dy
-      });
+
       // show
       if ((ref = element.tooltip) != null) {
         ref.remove();
@@ -347,6 +338,27 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         var ref1;
         return (ref1 = element.tooltip) != null ? ref1.remove() : void 0;
       }) : void 0;
+    };
+    position = function position(element, tooltip) {
+      var bcr, dx, dy, left, node, top;
+      // append the <div> and collect its dimensions to see if it needs to
+      // be moved up or to the right
+      tooltip.css({
+        left: 0,
+        top: 0
+      }).appendTo(outer);
+      bcr = tooltip.get(0).getBoundingClientRect();
+      node = element.getBoundingClientRect();
+      left = node.left + node.width;
+      top = node.top + node.height;
+      dx = Math.max(left + bcr.width - viewport().width, 0);
+      dy = Math.max(top + bcr.height - viewport().height, 0);
+      // place where it can be seen, move if necessary by [dx, dy]
+      return tooltip.css({
+        visibility: "visible",
+        left: left - dx,
+        top: top - dy
+      });
     };
     return description;
   };

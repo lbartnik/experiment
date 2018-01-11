@@ -89,7 +89,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
           element.append("image")
             .attr("width", 2*innerR)
             .attr("height", 2*innerR)
-            .attr("xlink:href", $("#plot#{d.id}").attr("href"))
+            .attr("xlink:href", $("#plot#{d.id}-plot-attachment").attr("href"))
         else
           element.append("rect")
             .attr('width', 2*innerR)
@@ -228,38 +228,46 @@ Description = (element, step, outer) ->
   description = () ->
   description.show = () ->
     tooltip = $("<div>").addClass("tooltip").attr("id", "tooltip_#{step.id}")
+    
+    # regular object can be created and positioned right away
     if step.type is "object"
       inner   = $("<div>").addClass("inner").appendTo(tooltip)
       $("<span>").addClass("name").appendTo(inner).text(step.name)
       $("<span>").addClass("description").appendTo(inner).text(step.desc)
       $("<pre>").appendTo(inner).append $("<code>").addClass("R").text(step.expr)
       inner.find("pre code").each (i, block) -> hljs.highlightBlock(block)
+      position(element, tooltip)
     else
-      $("<img>", {src: 'links/' + step.contents, width: 300}).appendTo(tooltip)
-
-    pos = $(outer).parent().position()
-    node = element.getBoundingClientRect()
-
-    # append the <div> and collect its dimensions to see if it needs to
-    # be moved up or to the right
-    tooltip
-      .css({left: node.left + node.width, top: node.top + node.height})
-      .appendTo(outer)
-    
-    bcr = tooltip.get(0).getBoundingClientRect()
-    dy = Math.max(bcr.bottom - viewport().height, 0)
-    dx = Math.max(bcr.right - viewport().width, 0)
-
-    # move if necessary
-    tooltip
-      .css({visibility: "visible", left: node.left + node.width - dx, top: node.top + node.height - dy})
-
+      # an image needs to be first loaded, before its dimensions and final
+      # position can be calculated
+      $("<img>", {src: $("#plot#{step.id}-plot-attachment").attr("href"), width: 300})
+        .appendTo(tooltip)
+        .on('load', () -> position(element, tooltip))
+  
     # show
     element.tooltip?.remove()
     element.tooltip = tooltip.fadeTo('fast', 1)
 
   description.hide = () ->
     element.tooltip?.fadeTo('fast', 0, () -> element.tooltip?.remove())
+
+  position = (element, tooltip) ->
+    # append the <div> and collect its dimensions to see if it needs to
+    # be moved up or to the right
+    tooltip
+      .css({left: 0, top: 0})
+      .appendTo(outer)
+
+    bcr  = tooltip.get(0).getBoundingClientRect()
+    node = element.getBoundingClientRect()
+    left = node.left + node.width
+    top  = node.top + node.height
+    dx = Math.max(left + bcr.width - viewport().width, 0)
+    dy = Math.max(top + bcr.height - viewport().height, 0)
+
+    # place where it can be seen, move if necessary by [dx, dy]
+    tooltip
+      .css({visibility: "visible", left: left - dx, top: top - dy})
 
   return description
 
