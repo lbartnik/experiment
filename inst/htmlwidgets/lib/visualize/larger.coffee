@@ -229,20 +229,28 @@ Description = (element, step, outer) ->
   description.show = () ->
     tooltip = $("<div>").addClass("tooltip").attr("id", "tooltip_#{step.id}")
     
-    # regular object can be created and positioned right away
     if step.type is "object"
-      inner   = $("<div>").addClass("inner").appendTo(tooltip)
-      $("<span>").addClass("name").appendTo(inner).text(step.name)
-      $("<span>").addClass("description").appendTo(inner).text(step.desc)
-      $("<pre>").appendTo(inner).append $("<code>").addClass("R").text(step.expr)
-      inner.find("pre code").each (i, block) -> hljs.highlightBlock(block)
-      position(element, tooltip)
+      $("<span>").addClass("name").appendTo(tooltip).text(step.name)
+      $("<span>").addClass("description").appendTo(tooltip).text(step.desc)
     else
+      # 35 for the code
+      height = Math.min(300, viewport().height - 65)
       # an image needs to be first loaded, before its dimensions and final
       # position can be calculated
-      $("<img>", {src: $("#plot#{step.id}-plot-attachment").attr("href"), width: 300})
+      $("<img>", {
+        src: $("#plot#{step.id}-plot-attachment").attr("href"),
+        height: height
+      })
         .appendTo(tooltip)
         .on('load', () -> position(element, tooltip))
+
+    # add code describing this step
+    $("<pre>").appendTo(tooltip).append $("<code>").addClass("R").text(step.expr)
+    tooltip.find("pre code").each (i, block) -> hljs.highlightBlock(block)
+
+    # regular object can be created and positioned right away
+    if step.type is 'object'
+      position(element, tooltip)
   
     # show
     element.tooltip?.remove()
