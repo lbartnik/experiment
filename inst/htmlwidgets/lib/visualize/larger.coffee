@@ -1,6 +1,6 @@
 Array::unique = () ->
       output = {}
-      (output[@[key]] = @[key]) for key in [0...@length]
+      (output[@[key].id ? @[key]] = @[key]) for key in [0...@length]
       value for key, value of output
 
 # Helper function to map node id's to node objects.
@@ -135,7 +135,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     intList = canvas.node().getIntersectionList(rc, nodesG.node())
     parents = (n.parentNode for n in intList).unique()
     parents.filter((n) -> euclidean(d3.select(n).datum(), point) <= distance)
-
 
   # --- events ---
   ui.on = (event, callback) ->

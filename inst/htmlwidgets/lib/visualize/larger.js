@@ -24,10 +24,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   Array.prototype.unique = function () {
-    var j, key, output, ref, results, value;
+    var j, key, output, ref, ref1, results, value;
     output = {};
     for (key = j = 0, ref = this.length; 0 <= ref ? j < ref : j > ref; key = 0 <= ref ? ++j : --j) {
-      output[this[key]] = this[key];
+      output[(ref1 = this[key].id) != null ? ref1 : this[key]] = this[key];
     }
     results = [];
     for (key in output) {
