@@ -19,8 +19,12 @@ viewport = () ->
   h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
   {width: w, height: h}
 
-plotHref = (id) ->
-  $("#plots-#{id}-attachment").attr("href")
+
+plotHref = (step, embedPlots) ->
+  if embedPlots
+    "data:image/png;base64,#{step.contents}"
+  else
+    $("#plots-#{step.id}-attachment").attr("href")
 
 
 # add style to notifyjs, just once
@@ -31,7 +35,7 @@ $.notify.addStyle('simplenotification', {
 
 # --- Utils ------------------------------------------------------------
 
-UI = (selection, nodeR = 25, innerR = 25) ->
+UI = (selection, nodeR = 25, innerR = 25, options = {}) ->
   outer  = null
   canvas = null
   linksG = null
@@ -92,7 +96,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
           element.append("image")
             .attr("width", 2*innerR)
             .attr("height", 2*innerR)
-            .attr("xlink:href", plotHref(d.id))
+            .attr("xlink:href", plotHref(d, options?.embedPlots))
         else
           element.append("rect")
             .attr('width', 2*innerR)
@@ -232,7 +236,7 @@ Position = (width, height, margin) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step, outer) ->
+Description = (element, step, outer, options) ->
 
   description = () ->
   description.show = () ->
@@ -246,7 +250,7 @@ Description = (element, step, outer) ->
       height = Math.min(300, viewport().height - 65)
       # an image needs to be first loaded, before its dimensions and final
       # position can be calculated
-      $("<img>", { src: plotHref(step.id), height: height })
+      $("<img>", { src: plotHref(step, options?.embedPlots), height: height })
         .appendTo(tooltip)
         .on('load', () -> position(element, tooltip))
 
@@ -289,9 +293,10 @@ Description = (element, step, outer) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
+  options= { embedPlots: false }
   nodeR  = 15
   lenseR = 30
-  ui     = UI(selection, nodeR, 15)
+  ui     = UI(selection, nodeR, 15, options)
   pos    = Position(500, 500, nodeR)
   data   = null
 
@@ -307,6 +312,11 @@ Widget = (selection) ->
     ui.setSize(width,height)
     pos = Position(width, height, nodeR)
     updateCanvas()
+
+  widget.setOption = (what, value) ->
+    if what of options
+      value = (options[what].constructor)(value)
+      options[what] = value
 
   updateCanvas = () ->
     if data
@@ -336,7 +346,7 @@ Widget = (selection) ->
     ui.updatePositions()
   
   showDialog = (d) ->
-    this.description = Description(this, d, selection)
+    this.description = Description(this, d, selection, options)
     this.description.show()
   
   hideDialog = (d) ->

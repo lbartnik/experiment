@@ -43,3 +43,7 @@ not_null <- function (...)
   stopifnot(!is.na(p))
   x[[p]]
 }
+
+
+
+is_knitr <- function () getOption("knitr.in.progress", FALSE)

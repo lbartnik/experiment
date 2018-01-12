@@ -27,8 +27,15 @@
 <script type="text/coffeescript">
 myWidget = Widget('#canvas')
 myWidget.setSize(500, 500)
-$.ajax($("#data-data-attachment").attr("href")).done (data) ->
-  myWidget.setData(data)
+
+embedPlots = true
+if embedPlots
+  $.ajax("data.json").done (data) ->
+    myWidget.setOption("embedPlots", true)
+    myWidget.setData(data)
+else
+  $.ajax($("#data-data-attachment").attr("href")).done (data) ->
+    myWidget.setData(data)
 </script>
 
 </body>

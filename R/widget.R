@@ -35,34 +35,40 @@ create_widget <- function (x)
 }
 
 
-extract_html_dependencies <- function (data)
+extract_html_dependencies <- function (data, in_knitr = is_knitr())
 {
   html_dir <- file.path(tempdir(), 'experiment-html-deps')
   dir.create(html_dir, showWarnings = FALSE)
 
   data$steps <- lapply(data$steps, function (step) {
     if (!identical(step$type, "plot")) return(step)
-    rsvg::rsvg_png(jsonlite::base64_dec(step$contents),
-                   file.path(html_dir, paste0(step$id, '_min.png')),
-                   height = 300)
-    step$contents <- paste0(step$id, '_min.png')
+    path <- file.path(html_dir, paste0(step$id, '.png'))
+    rsvg::rsvg_png(jsonlite::base64_dec(step$contents), path, height = 300)
+
+    step$contents <- if (isTRUE(in_knitr))
+      jsonlite::base64_enc(readBin(path, 'raw', file.info(path)$size))
+    else
+      basename(path)
     step
   })
 
-  plots <- Filter(function (step) identical(step$type, 'plot'), data$steps)
-  ids   <- vapply(plots, `[[`, character(1), i = 'id')
-  plots <- vapply(plots, `[[`, character(1), i = 'contents')
-  names(plots) <- ids
+  deps <- list()
+  if (!isTRUE(in_knitr)) {
+    plots <- Filter(function (step) identical(step$type, 'plot'), data$steps)
+    ids   <- vapply(plots, `[[`, character(1), i = 'id')
+    plots <- vapply(plots, `[[`, character(1), i = 'contents')
+    names(plots) <- ids
 
-  deps <-
-    list(
-      htmltools::htmlDependency(
-        "plots",
-        version = "1",
-        src = html_dir,
-        attachment = plots
+    deps <-
+      list(
+        htmltools::htmlDependency(
+          "plots",
+          version = "1",
+          src = html_dir,
+          attachment = plots
+        )
       )
-    )
+  }
 
   list(data = data, deps = deps)
 }

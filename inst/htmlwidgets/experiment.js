@@ -12,8 +12,9 @@ HTMLWidgets.widget({
 
     // return widget instance
     return {
-      renderValue: function(data) {
-        visvis.setData(input);
+      renderValue: function(input) {
+        visvis.setOption('embedPlots', Boolean(input.options.embed_plots))
+        visvis.setData(input.data);
       },
 
       resize: function(width, height) {

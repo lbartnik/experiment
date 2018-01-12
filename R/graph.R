@@ -153,10 +153,17 @@ is_steps <- function (x) inherits(x, 'steps')
 #'
 plot.steps <- function (x, ...)
 {
-  extracted <- extract_html_dependencies(x)
+  extracted <- extract_html_dependencies(x, is_knitr())
+
+  input <- list(
+    data = extracted$data,
+    options = list(
+      embed_plots = is_knitr()
+    )
+  )
 
   # create the widget
-  htmlwidgets::createWidget("experiment", extracted$data, dependencies = extracted$deps)
+  htmlwidgets::createWidget("experiment", input, dependencies = extracted$deps)
 }
 
 
