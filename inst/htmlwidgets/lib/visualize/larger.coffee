@@ -19,12 +19,17 @@ viewport = () ->
   h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
   {width: w, height: h}
 
-
-plotHref = (step, embedPlots) ->
-  if embedPlots
-    "data:image/png;base64,#{step.contents}"
-  else
-    $("#plots-#{step.id}-attachment").attr("href")
+# returns:
+#   - the embedded image, if contents present
+#   - the image from link, if can be found
+#   - a grey 30x30 png, if nothing else works
+plotHref = (step) ->
+  if step.contents
+    return "data:image/png;base64,#{step.contents}"
+  from_id = $("#plots-#{step.id}-attachment").attr("href")
+  if from_id
+    return from_id
+  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII="
 
 
 # add style to notifyjs, just once
@@ -35,7 +40,7 @@ $.notify.addStyle('simplenotification', {
 
 # --- Utils ------------------------------------------------------------
 
-UI = (selection, nodeR = 25, innerR = 25, options = {}) ->
+UI = (selection, nodeR = 25, innerR = 25) ->
   outer  = null
   canvas = null
   linksG = null
@@ -91,17 +96,11 @@ UI = (selection, nodeR = 25, innerR = 25, options = {}) ->
           .attr("class", "face")
           .attr("width", 2*innerR)
           .attr("height", 2*innerR)
-      else
-        if d.contents
-          element.append("image")
-            .attr("width", 2*innerR)
-            .attr("height", 2*innerR)
-            .attr("xlink:href", plotHref(d, options?.embedPlots))
-        else
-          element.append("rect")
-            .attr('width', 2*innerR)
-            .attr('height', 2*innerR)
-            .style("fill", "grey")
+      else # type == plot
+        element.append("image")
+          .attr("width", 2*innerR)
+          .attr("height", 2*innerR)
+          .attr("xlink:href", plotHref(d))
     node.exit().remove()
     
     link = linksG.selectAll("line.link")
@@ -236,7 +235,7 @@ Position = (width, height, margin) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step, outer, options) ->
+Description = (element, step, outer) ->
 
   description = () ->
   description.show = () ->
@@ -250,7 +249,7 @@ Description = (element, step, outer, options) ->
       height = Math.min(300, viewport().height - 65)
       # an image needs to be first loaded, before its dimensions and final
       # position can be calculated
-      $("<img>", { src: plotHref(step, options?.embedPlots), height: height })
+      $("<img>", { src: plotHref(step), height: height })
         .appendTo(tooltip)
         .on('load', () -> position(element, tooltip))
 
@@ -293,12 +292,12 @@ Description = (element, step, outer, options) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
-  options= { embedPlots: false }
-  nodeR  = 15
-  lenseR = 30
-  ui     = UI(selection, nodeR, 15, options)
-  pos    = Position(500, 500, nodeR)
-  data   = null
+  options = { }
+  nodeR   = 15
+  lenseR  = 30
+  ui      = UI(selection, nodeR, 15)
+  pos     = Position(500, 500, nodeR)
+  data    = null
 
   widget = () ->
 
@@ -346,7 +345,7 @@ Widget = (selection) ->
     ui.updatePositions()
   
   showDialog = (d) ->
-    this.description = Description(this, d, selection, options)
+    this.description = Description(this, d, selection)
     this.description.show()
   
   hideDialog = (d) ->

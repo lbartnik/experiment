@@ -16,6 +16,7 @@ Imports:
     defer,
     formatR,
     ggplot2,
+    htmltools,
     htmlwidgets,
     jsonlite,
     lazyeval,

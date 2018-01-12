@@ -13,7 +13,6 @@ HTMLWidgets.widget({
     // return widget instance
     return {
       renderValue: function(input) {
-        visvis.setOption('embedPlots', Boolean(input.options.embed_plots))
         visvis.setData(input.data);
       },
 

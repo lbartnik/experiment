@@ -62,12 +62,20 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
   };
 
-  plotHref = function plotHref(step, embedPlots) {
-    if (embedPlots) {
+  // returns:
+  //   - the embedded image, if contents present
+  //   - the image from link, if can be found
+  //   - a grey 30x30 png, if nothing else works
+  plotHref = function plotHref(step) {
+    var from_id;
+    if (step.contents) {
       return "data:image/png;base64," + step.contents;
-    } else {
-      return $("#plots-" + step.id + "-attachment").attr("href");
     }
+    from_id = $("#plots-" + step.id + "-attachment").attr("href");
+    if (from_id) {
+      return from_id;
+    }
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII=";
   };
 
   // add style to notifyjs, just once
@@ -79,7 +87,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   UI = function UI(selection) {
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
-    var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
     var canvas, createGraphics, linksG, nodesG, outer, scaleText, ui;
     outer = null;
@@ -120,13 +127,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
             return d.name;
           });
           text.style('font-size', scaleText(text));
-          return element.append("rect").attr("class", "face").attr("width", 2 * innerR).attr("height", 2 * innerR);
+          return element.append("rect").attr("class", "face").attr("width", 2 * innerR).attr("height", 2 * innerR); // type == plot
         } else {
-          if (d.contents) {
-            return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", plotHref(d, options != null ? options.embedPlots : void 0));
-          } else {
-            return element.append("rect").attr('width', 2 * innerR).attr('height', 2 * innerR).style("fill", "grey");
-          }
+          return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", plotHref(d));
         }
       });
       node.exit().remove();
@@ -318,7 +321,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   // --- Position ---------------------------------------------------------
-  Description = function Description(element, step, outer, options) {
+  Description = function Description(element, step, outer) {
     var description, position;
     description = function description() {};
     description.show = function () {
@@ -333,7 +336,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         // an image needs to be first loaded, before its dimensions and final
         // position can be calculated
         $("<img>", {
-          src: plotHref(step, options != null ? options.embedPlots : void 0),
+          src: plotHref(step),
           height: height
         }).appendTo(tooltip).on('load', function () {
           return position(element, tooltip);
@@ -389,12 +392,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
     var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, updateCanvas, widget;
-    options = {
-      embedPlots: false
-    };
+    options = {};
     nodeR = 15;
     lenseR = 30;
-    ui = UI(selection, nodeR, 15, options);
+    ui = UI(selection, nodeR, 15);
     pos = Position(500, 500, nodeR);
     data = null;
     widget = function widget() {};
@@ -446,7 +447,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return ui.updatePositions();
     };
     showDialog = function showDialog(d) {
-      this.description = Description(this, d, selection, options);
+      this.description = Description(this, d, selection);
       return this.description.show();
     };
     hideDialog = function hideDialog(d) {
