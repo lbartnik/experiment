@@ -8,6 +8,7 @@
 \alias{find_root_id}
 \alias{format_expression}
 \alias{description}
+\alias{plot_to_dependencies}
 \title{Transform a graph of commits into a graph of steps.}
 \usage{
 graph_to_steps(graph)
@@ -23,6 +24,8 @@ find_root_id(g)
 format_expression(code)
 
 description(object)
+
+plot_to_dependencies(steps, embed = is_knitr())
 }
 \arguments{
 \item{graph}{Object returned by \code{\link[=graph]{graph()}}.}
@@ -42,6 +45,10 @@ description(object)
 \item{code}{R \code{expression}.}
 
 \item{object}{Object to be described.}
+
+\item{steps}{A list of \code{step}s.}
+
+\item{embed}{Whether to embed plots as base64-encoded strings.}
 }
 \value{
 Object of S3 class \code{steps}.
@@ -81,6 +88,14 @@ in a HTML page.
 
 \code{description} format the expression for display
 in a HTML page.
+
+\code{plot_to_dependencies} processes the \code{steps} list and
+either:
+\itemize{
+\item extracts plots into \code{png`` files, which are then attached to the html widget via}dependencies` (see \link[htmltools:htmlDependency]{htmltools::htmlDependency})
+\item embeds the png bitmap as base64-encoded string under the \code{contents}
+key
+}
 }
 \details{
 \code{graph_to_steps} is the main function that orchestrates the

@@ -153,9 +153,11 @@ is_steps <- function (x) inherits(x, 'steps')
 #'
 plot.steps <- function (x, ...)
 {
-  input <- list(data = x)
+  processed <- plot_to_dependencies(x$steps, is_knitr())
+  x$steps <- processed$steps
+
   # create the widget
-  htmlwidgets::createWidget("experiment", input, width = NULL, height = NULL)
+  htmlwidgets::createWidget("experiment", list(data = x), dependencies = processed$html_deps)
 }
 
 
@@ -379,6 +381,56 @@ svg_equal <- function (a, b)
   isTRUE(all.equal(a, b))
 }
 
+
+#' @description `plot_to_dependencies` processes the `steps` list and
+#' either:
+#' * extracts plots into `png`` files, which are then attached to the
+#'   html widget via `dependencies` (see [htmltools::htmlDependency])
+#' * embeds the png bitmap as base64-encoded string under the `contents`
+#'   key
+#'
+#' @param embed Whether to embed plots as base64-encoded strings.
+#' @param steps A list of `step`s.
+#'
+#' @rdname steps_internal
+plot_to_dependencies <- function (steps, embed = is_knitr())
+{
+  html_dir <- file.path(tempdir(), 'experiment-html-deps')
+  dir.create(html_dir, showWarnings = FALSE)
+
+  steps <- lapply(steps, function (step) {
+    if (!identical(step$type, "plot")) return(step)
+    path <- file.path(html_dir, paste0(step$id, '.png'))
+    rsvg::rsvg_png(jsonlite::base64_dec(step$contents), path, height = 300)
+
+    step$contents <- if (isTRUE(embed))
+      jsonlite::base64_enc(readBin(path, 'raw', file.info(path)$size))
+
+    step
+  })
+
+  if (isTRUE(embed)) {
+    deps <- list()
+  }
+  else {
+    plots <- Filter(function (step) identical(step$type, 'plot'), steps)
+    ids   <- vapply(plots, `[[`, character(1), i = 'id')
+    plots <- vapply(plots, function(plot) paste0(plot$id, '.png'), character(1))
+    names(plots) <- ids
+
+    deps <-
+      list(
+        htmltools::htmlDependency(
+          "plots",
+          version = "1",
+          src = html_dir,
+          attachment = plots
+        )
+      )
+  }
+
+  list(steps = steps, html_deps = deps)
+}
 
 
 

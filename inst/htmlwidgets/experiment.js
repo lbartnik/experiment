@@ -8,11 +8,12 @@ HTMLWidgets.widget({
 
     // create our vis object and bind it to the element
     var visvis = new Widget(el);
+    visvis.setSize($(el).width(), $(el).height());
 
     // return widget instance
     return {
-      renderValue: function(x) {
-        visvis.setData(x.data);
+      renderValue: function(input) {
+        visvis.setData(input.data);
       },
 
       resize: function(width, height) {
