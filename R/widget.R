@@ -28,8 +28,8 @@ create_widget <- function (x)
     )
   )
 
-  extracted <- extract_html_dependencies(data)
+  processed <- plot_to_dependencies(data$steps)
+  data$steps <- processed$steps
 
-  htmlwidgets::createWidget("experiment", extracted$data,
-                            dependencies = extracted$deps)
+  htmlwidgets::createWidget("experiment", data, dependencies = processed$deps)
 }
