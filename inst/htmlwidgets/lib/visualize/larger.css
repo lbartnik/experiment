@@ -1,6 +1,8 @@
 .widget {
     width: 100%;
-}
+/*    overflow: auto;
+    overflow-y: auto;
+*/}
 
 .lenses {
     fill: black;

@@ -43,6 +43,11 @@ browserAddin <- function (data = fullhistory())
       # the gadget is closed after 'done' is clicked.
       stopApp()
     })
+
+    observe({
+      input$object_selected
+      print(input$object_selected)
+    })
   }
 
 #  shinyApp(ui = ui, server = server)
