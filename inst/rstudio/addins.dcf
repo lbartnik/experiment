@@ -1,0 +1,4 @@
+Name: Interactive Object Browser
+Description: Shows history of objects in R session
+Binding: browserAddin
+Interactive: true

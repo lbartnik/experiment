@@ -14,12 +14,16 @@ renderExperiment <- function(expr, env = parent.frame(), quoted = FALSE) {
 
 #' @importFrom shiny shinyUI fluidPage checkboxInput shinyApp
 #' @export
-runShiny <- function (data)
+browserAddin <- function (data = fullhistory())
 {
   stopifnot(is_steps(data))
 
-  ui = shinyUI(fluidPage(
-    experimentOutput('experiment')
+  ui = shinyUI(miniUI::miniPage(
+    miniUI::gadgetTitleBar(title = "Interactive Object Browser",
+                           left = miniTitleBarCancelButton(),
+                           right = miniTitleBarButton("done", "Done", primary = TRUE)),
+    miniUI::miniContentPanel(experimentOutput('experiment'),
+                             padding = 15, scrollable = TRUE)
   ))
 
   server = function(input, output) {
@@ -42,7 +46,7 @@ runShiny <- function (data)
   }
 
 #  shinyApp(ui = ui, server = server)
-  shiny::runGadget(ui, server, viewer = dialogViewer("Interactive Browser"))
+  shiny::runGadget(ui, server, viewer = dialogViewer("Interactive Browser", width = 750))
 }
 
 
