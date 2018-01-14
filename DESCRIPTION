@@ -45,6 +45,7 @@ Collate:
   'package.R'
   'query.R'
   'result.R'
+  'shiny.R'
   'track.R'
   'utils.R'
   'widget.R'
