@@ -27,5 +27,14 @@ runShiny <- function (data)
   }
 
 #  shinyApp(ui = ui, server = server)
-  runGadget(ui, server)
+  shiny::runGadget(ui, server)
+}
+
+
+# temporary utility function
+attachStore <- function (path = file.path(getwd(), "project-store"))
+{
+  store <- prepare_object_store(path)
+  reattach_to_store(internal_state, store, globalenv(), "abort")
+  invisible()
 }
