@@ -4,18 +4,12 @@
     programmatic (non-interactive) API
 
 * Widget:
-  - expression that produced a plot
-
   - maximize tooltip/plot towards the center of the canvas
     add onmouseout to tooltip/plot in case it covers the node/miniature
 
   - make tooltip the size of the node and transparent, and then maximize
     it similarly to plots - the mouse cursor will stay "mouseover" throught
     the interaction
-
-  - export plots as PNG miniatures rather than SVG; for big/complex plots
-    that might be much more efficient
-    https://stackoverflow.com/questions/6249664/does-svg-support-embedding-of-bitmap-images
 
   - use RStudio addins to browse history with keyboard (up/down),
     similarly to Ctrl+R in regular R console
@@ -32,7 +26,6 @@
 * UI:
   - show history of commits
   - print commits
-  - do not print commits in stashed()
   - show history of expressions in the current branch
   - list branches
   - name branches
