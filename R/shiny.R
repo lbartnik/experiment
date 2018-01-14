@@ -24,10 +24,25 @@ runShiny <- function (data)
 
   server = function(input, output) {
     output$experiment <- renderExperiment(plot(data))
+
+    ## Your reactive logic goes here.
+
+    # Listen for the 'done' event. This event will be fired when a user
+    # is finished interacting with your application, and clicks the 'done'
+    # button.
+    observeEvent(input$done, {
+
+      # Here is where your Shiny application might now go an affect the
+      # contents of a document open in RStudio, using the `rstudioapi` package.
+      #
+      # At the end, your application should call 'stopApp()' here, to ensure that
+      # the gadget is closed after 'done' is clicked.
+      stopApp()
+    })
   }
 
 #  shinyApp(ui = ui, server = server)
-  shiny::runGadget(ui, server)
+  shiny::runGadget(ui, server, viewer = dialogViewer("Interactive Browser"))
 }
 
 
@@ -35,6 +50,6 @@ runShiny <- function (data)
 attachStore <- function (path = file.path(getwd(), "project-store"))
 {
   store <- prepare_object_store(path)
-  reattach_to_store(internal_state, store, globalenv(), "abort")
+  reattach_to_store(internal_state, store, globalenv(), "overwrite")
   invisible()
 }
