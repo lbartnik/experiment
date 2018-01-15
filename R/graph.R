@@ -195,19 +195,21 @@ commit_to_steps <- function (commit, objects)
   generate_step <- function(name, id, object) {
     if (identical(name, '.plot')) {
       list(
-        type = 'plot',
-        id   = id,
-        expr = format_expression(commit$expr),
-        contents = as.character(object)
+        type      = 'plot',
+        id        = id,
+        expr      = format_expression(commit$expr),
+        contents  = as.character(object),
+        commit_id = commit$id
       )
     }
     else {
       list(
-        name = name,
-        type = "object",
-        id   = id,
-        expr = format_expression(commit$expr),
-        desc = description(object)
+        name      = name,
+        type      = "object",
+        id        = id,
+        expr      = format_expression(commit$expr),
+        desc      = description(object),
+        commit_id = commit$id
       )
     }
   }
