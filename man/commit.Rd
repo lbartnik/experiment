@@ -10,7 +10,7 @@ commit(contents, expression, parent, id, object_ids)
 
 is_commit(x)
 
-\method{print}{commit}(x, simple = FALSE, ..., store)
+\method{print}{commit}(x, simple = FALSE, header = TRUE, ..., store)
 }
 \arguments{
 \item{contents}{An environment or a list of objects.}

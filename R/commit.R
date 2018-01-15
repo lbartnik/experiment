@@ -166,7 +166,7 @@ cleanup_object <- function (obj)
 #' @param store Optionally, the [storage::object_store] that holds the
 #'        commit; defaults in the internal store of the R session.
 #'
-print.commit <- function (x, simple = FALSE, ..., store)
+print.commit <- function (x, simple = FALSE, header = TRUE, ..., store)
 {
   if (missing(store)) store <- internal_state$stash
   if (isTRUE(simple))
@@ -181,14 +181,35 @@ print.commit <- function (x, simple = FALSE, ..., store)
       paste0('[', paste(x, collapse = ', '), ']')
     }
 
-    cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+    # header
+    if (isTRUE(header))
+      cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+
+    # contents
+    obj <- x$objects
+    iob  <- names(obj) != '.plot'
+
+    print_tags <- function (tags) {
+      tags <- vapply(tags, tag_print, character(1))
+      cat(paste(names(tags), '=', tags, collapse = ', '))
+    }
+
     cat('objects :\n')
     mapply(function (name, id) {
+        cat('  ', name, ': ')
+        print_tags(storage::os_read_tags(store, id))
+        cat('\n')
+      },
+      name = names(x$objects)[iob],
+      id = as.character(x$object_ids)[iob])
+
+    if (!all(iob)) {
+      id <- x$object_ids[[which(!iob)]]
       tags <- storage::os_read_tags(store, id)
-      tags <- vapply(tags, tag_print, character(1))
-      cat('  ', name, ': ', paste(names(tags), '=', tags, collapse = ', '), '\n')
-    }, name = names(x$objects), id = as.character(x$object_ids))
-    cat('\n')
+      tags$class <- NULL
+      cat('plot :\n  ')
+      print_tags(tags)
+    }
   }
 }
 

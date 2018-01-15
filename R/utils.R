@@ -47,3 +47,6 @@ not_null <- function (...)
 
 
 is_knitr <- function () getOption("knitr.in.progress", FALSE)
+
+
+cat0 <- function (..., sep = '') cat(..., sep = sep)

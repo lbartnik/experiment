@@ -52,6 +52,7 @@ browserAddin <- function (steps = fullhistory())
     # is finished interacting with your application, and clicks the 'done'
     # button.
     shiny::observeEvent(input$done, {
+      # TODO restore commit based on the chosen id
 
       # Here is where your Shiny application might now go an affect the
       # contents of a document open in RStudio, using the `rstudioapi` package.
@@ -74,7 +75,13 @@ browserAddin <- function (steps = fullhistory())
 onClick <- function (steps, object_id)
 {
   st <- step_by_id(steps, object_id)
-  co <- commit_restore(st$commit_id, internal_state$stash, .data = TRUE)
-  print(co)
+  co <- commit_restore(st$commit_id, internal_state$stash, .data = FALSE)
+
+  cat('\n')
+  cat0(crayon::green ('Chosen'), ': ', st$type, ' `', st$name, '` (id: ', st$id, ')\n')
+  cat0(crayon::yellow('belongs to commit'), ': ', co$id, '\n')
+  cat0('\n')
+
+  print(co, header = FALSE)
 }
 
