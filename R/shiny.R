@@ -51,24 +51,24 @@ browserAddin <- function (steps = fullhistory())
     # Listen for the 'done' event. This event will be fired when a user
     # is finished interacting with your application, and clicks the 'done'
     # button.
-    observeEvent(input$done, {
+    shiny::observeEvent(input$done, {
 
       # Here is where your Shiny application might now go an affect the
       # contents of a document open in RStudio, using the `rstudioapi` package.
       #
       # At the end, your application should call 'stopApp()' here, to ensure that
       # the gadget is closed after 'done' is clicked.
-      stopApp()
+      shiny::stopApp()
     })
 
-    observe({
+    shiny::observe({
       input$object_selected
       if (!is.null(input$object_selected))
         onClick(input$object_selected)
     })
   }
 
-  shiny::runGadget(ui, server, viewer = dialogViewer("Interactive Browser", width = 750))
+  shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
 }
 
 
