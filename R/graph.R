@@ -28,6 +28,7 @@ graph <- function (store, .data = FALSE)
   assign_children(commits, find_root_id(commits), 1)
 }
 
+
 # identify children and levels; start with root
 # used only inside graph()
 assign_children <- function (commits, id, level)

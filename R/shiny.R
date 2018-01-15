@@ -1,33 +1,48 @@
-#' @export
-#' @importFrom htmlwidgets shinyWidgetOutput
 experimentOutput <- function(outputId, width = "100%", height = "400px") {
   htmlwidgets::shinyWidgetOutput(outputId, "experiment", width, height, package = "experiment")
 }
 
-#' @export
-#' @importFrom htmlwidgets shinyRenderWidget
+
 renderExperiment <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   htmlwidgets::shinyRenderWidget(expr, experimentOutput, env, quoted = TRUE)
 }
 
 
-#' @importFrom shiny shinyUI fluidPage checkboxInput shinyApp
-#' @export
-browserAddin <- function (data = fullhistory())
+# temporary utility function
+attachStore <- function (path = file.path(getwd(), "project-store"))
 {
-  stopifnot(is_steps(data))
+  store <- prepare_object_store(path)
+  reattach_to_store(internal_state, store, globalenv(), "overwrite")
+  invisible()
+}
 
-  ui = shinyUI(miniUI::miniPage(
+
+
+#' RStudio AddIn function.
+#'
+#' @description `browserAddin` runs the `htmlwidget` implemented in this
+#' package as a RStudio AddIn (see [shiny::runGadget] for details).
+#'
+#' @param steps A `steps` data structure, see [fullhistory] for an example.
+#'
+#' @export
+browserAddin <- function (steps = fullhistory())
+{
+  stopifnot(is_steps(steps))
+
+
+  ui <- shiny::shinyUI(miniUI::miniPage(
     miniUI::gadgetTitleBar(title = "Interactive Object Browser",
-                           left = miniTitleBarCancelButton(),
-                           right = miniTitleBarButton("done", "Done", primary = TRUE)),
+                           left  = miniUI::miniTitleBarCancelButton(),
+                           right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
     miniUI::miniContentPanel(experimentOutput('experiment'),
                              padding = 15, scrollable = TRUE)
   ))
 
-  server = function(input, output) {
-    output$experiment <- renderExperiment(plot(data))
+
+  server <- function(input, output) {
+    output$experiment <- renderExperiment(plot(steps))
 
     ## Your reactive logic goes here.
 
@@ -46,19 +61,17 @@ browserAddin <- function (data = fullhistory())
 
     observe({
       input$object_selected
-      print(input$object_selected)
+      onClick(input$object_selected)
     })
   }
 
-#  shinyApp(ui = ui, server = server)
   shiny::runGadget(ui, server, viewer = dialogViewer("Interactive Browser", width = 750))
 }
 
 
-# temporary utility function
-attachStore <- function (path = file.path(getwd(), "project-store"))
+onClick <- function (steps, object_id)
 {
-  store <- prepare_object_store(path)
-  reattach_to_store(internal_state, store, globalenv(), "overwrite")
-  invisible()
+  print(object_id)
+
 }
+
