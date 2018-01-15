@@ -71,7 +71,8 @@ browserAddin <- function (steps = fullhistory())
 
 onClick <- function (steps, object_id)
 {
-  print(object_id)
-
+  st <- step_by_id(steps, object_id)
+  co <- commit_restore(st$commit_id, internal_state$stash, .data = TRUE)
+  print(co)
 }
 

@@ -436,6 +436,19 @@ plot_to_dependencies <- function (steps, embed = is_knitr())
 }
 
 
+step_by_id <- function (steps, step_id)
+{
+  stopifnot(is_steps(steps))
+  i <- (vapply(steps$steps, `[[`, character(1), i = 'id') == step_id)
+
+  # TODO this actually doesn't have to hold, it's possible that the same
+  # object appears in a number of commits and gets promoted as a step
+  stopifnot(sum(i) == 1)
+  nth(steps$steps, which(i))
+}
+
+
+
 
 #' @import jsonlite
 graph_to_json <- function (g)

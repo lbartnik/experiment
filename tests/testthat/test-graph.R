@@ -103,3 +103,13 @@ test_that("descriptions can be added later", {
   expect_equal(vapply(r$steps, `[[`, character(1), i = 'desc'),
                c('numeric', 'integer', 'character', 'numeric'))
 })
+
+
+test_that("finding step by id", {
+  s <- sample_steps()
+  t <- step_by_id(s, 'r')
+
+  expect_equal(t$id, 'r')
+  expect_equal(t$commit_id, 'c')
+  expect_equal(t$name, 'x')
+})

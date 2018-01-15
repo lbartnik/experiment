@@ -74,6 +74,13 @@ sample_graph <- function ()
 }
 
 
+sample_steps <- function (.data = TRUE)
+{
+  m <- commit_memory_store()
+  s <- graph_to_steps(graph(m, .data = .data))
+}
+
+
 empty_steps <- function ()
 {
   structure(list(steps = list(), links = list()), class = 'steps')
