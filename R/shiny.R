@@ -30,7 +30,9 @@ attachStore <- function (path = file.path(getwd(), "project-store"))
 browserAddin <- function (steps = fullhistory())
 {
   stopifnot(is_steps(steps))
-
+  if (!length(steps)) {
+    stop('history is empty, not showing the browser', call. = FALSE)
+  }
 
   ui <- shiny::shinyUI(miniUI::miniPage(
     miniUI::gadgetTitleBar(title = "Interactive Object Browser",
@@ -61,7 +63,8 @@ browserAddin <- function (steps = fullhistory())
 
     observe({
       input$object_selected
-      onClick(input$object_selected)
+      if (!is.null(input$object_selected))
+        onClick(input$object_selected)
     })
   }
 

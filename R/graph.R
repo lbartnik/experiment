@@ -448,6 +448,11 @@ step_by_id <- function (steps, step_id)
 }
 
 
+length.steps <- function (x)
+{
+  stopifnot(is_steps(x))
+  length(x$steps)
+}
 
 
 #' @import jsonlite
