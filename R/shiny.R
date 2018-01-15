@@ -30,7 +30,7 @@ attachStore <- function (path = file.path(getwd(), "project-store"))
 browserAddin <- function (steps = fullhistory())
 {
   stopifnot(is_steps(steps))
-  if (!length(steps)) {
+  if (!count(steps)) {
     stop('history is empty, not showing the browser', call. = FALSE)
   }
 
@@ -62,9 +62,8 @@ browserAddin <- function (steps = fullhistory())
     })
 
     shiny::observe({
-      input$object_selected
       if (!is.null(input$object_selected))
-        onClick(input$object_selected)
+        onClick(steps, input$object_selected)
     })
   }
 
