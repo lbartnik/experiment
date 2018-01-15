@@ -56,28 +56,17 @@ commit_filesystem_store <- function (where = tempdir()) fill_commits(empty_store
 
 
 
-sample_graph <- function ()
+sample_graph <- function (.data = TRUE)
 {
-  structure(list(a = list(id         = 'a',
-                          parent     = 'b',
-                          objects    = list(x = '3', y = 2L),
-                          object_ids = list(x = 'r', y = 'q')),
-                 b = list(id         = 'b',
-                          parent     = 'c',
-                          objects    = list(x = 1, y = 2L),
-                          object_ids = list(x = 'p', y = 'q')),
-                 c = list(id         = 'c',
-                          parent     = NA,
-                          objects    = list(x = 1),
-                          object_ids = list(x = 'p'))),
-            class = 'graph')
+  m <- commit_memory_store()
+  graph(m, .data = .data)
 }
 
 
 sample_steps <- function (.data = TRUE)
 {
   m <- commit_memory_store()
-  s <- graph_to_steps(graph(m, .data = .data))
+  graph_to_steps(graph(m, .data = .data))
 }
 
 
@@ -111,4 +100,3 @@ expect_exists <- function (what, where, info = NULL)
   expect(any(cmp), sprintf("%s does not exist in %s", what_label$lab, where_label$lab),
          info = info)
 }
-
