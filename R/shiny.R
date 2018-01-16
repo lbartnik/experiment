@@ -33,7 +33,12 @@ browserAddin <- function (steps = fullhistory())
   if (!count(steps)) {
     stop('history is empty, not showing the browser', call. = FALSE)
   }
+  if (is.na(internal_state$task_callback_id)) {
+    stop('tracking must be turned on in inder to open the widget',
+         call. = FALSE)
+  }
 
+  # the definition of the UI
   ui <- shiny::shinyUI(miniUI::miniPage(
     miniUI::gadgetTitleBar(title = "Interactive Object Browser",
                            left  = miniUI::miniTitleBarCancelButton(),
@@ -41,7 +46,6 @@ browserAddin <- function (steps = fullhistory())
     miniUI::miniContentPanel(experimentOutput('experiment'),
                              padding = 15, scrollable = TRUE)
   ))
-
 
   server <- function(input, output) {
     output$experiment <- renderExperiment(plot(steps))
@@ -51,12 +55,15 @@ browserAddin <- function (steps = fullhistory())
     # Listen for the 'done' event. This event will be fired when a user
     # is finished interacting with your application, and clicks the 'done'
     # button.
+    #
+    # Here is where your Shiny application might now go an affect the
+    # contents of a document open in RStudio, using the `rstudioapi` package.
     shiny::observeEvent(input$done, {
-      # TODO restore commit based on the chosen id
+      # we can safely assume that tracking is turned on, otherwise there
+      # would be no history to look at
+      st <- step_by_id(steps, input$object_selected)
+      restore_commit(internal_state, st$commit_id, globalenv())
 
-      # Here is where your Shiny application might now go an affect the
-      # contents of a document open in RStudio, using the `rstudioapi` package.
-      #
       # At the end, your application should call 'stopApp()' here, to ensure that
       # the gadget is closed after 'done' is clicked.
       shiny::stopApp()
@@ -68,7 +75,23 @@ browserAddin <- function (steps = fullhistory())
     })
   }
 
-  shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
+  onStart()
+  suppressMessages({
+    shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
+  })
+}
+
+
+onStart <- function ()
+{
+  cat0(paste(rep_len('-', getOption('width')), collapse = ''), '\n\n')
+  str <- paste(
+    'Choose a node (an object or a plot) on the graph. When the choice',
+    'is made, click the "Done" button and the state of R session when',
+    'that object or plot was created.'
+  )
+  cat(paste(strwrap(str, width = getOption('width')), collapse = '\n'))
+  cat('\n\n')
 }
 
 
