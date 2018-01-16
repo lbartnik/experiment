@@ -4,14 +4,20 @@
     programmatic (non-interactive) API
 
 * Widget:
-  - expression that produced a plot
-
+  - show dialog with information about clicking on node when opening in shiny
+  
   - maximize tooltip/plot towards the center of the canvas
-    add onmouseout to tooltip/plot in case it covers the node/miniature
+    add onmouseout to tooltip/plot in case it covers the node/miniature;
+    Hide with a delay to give a chance to hover over the tooltip
+    
+  - calculate size so that the tooltip does not cover the node it belongs to
 
   - make tooltip the size of the node and transparent, and then maximize
     it similarly to plots - the mouse cursor will stay "mouseover" throught
     the interaction
+    
+  - snow an onClose message when "done" is clicked; intercept the exception
+    when cancel is clicked
 
   - export plots as PNG miniatures rather than SVG; for big/complex plots
     that might be much more efficient
