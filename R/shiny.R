@@ -87,8 +87,8 @@ onStart <- function ()
   cat0(paste(rep_len('-', getOption('width')), collapse = ''), '\n\n')
   str <- paste(
     'Choose a node (an object or a plot) on the graph. When the choice',
-    'is made, click the "Done" button and the state of R session when',
-    'that object or plot was created.'
+    'is made, click the "Done" button and this will restore the state',
+    'of R session when that object or plot was created.'
   )
   cat(paste(strwrap(str, width = getOption('width')), collapse = '\n'))
   cat('\n\n')

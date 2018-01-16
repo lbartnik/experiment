@@ -120,6 +120,16 @@ commit_restore_data <- function (co, store)
 }
 
 
+commit_timestamp <- function (co, store)
+{
+  stopifnot(is_commit(co))
+  time <- min(vapply(co$object_ids, function (id) {
+    tags <- storage::os_read_tags(store, id)
+    as.integer(tags$time)
+  }, integer(1)))
+  as.POSIXct(time, tz = 'UTC', origin = '1970-01-01')
+}
+
 
 # TODO could be turned into a S3 method
 auto_tags <- function (obj)
