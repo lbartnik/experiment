@@ -372,31 +372,37 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }) : void 0;
     };
     position = function position(element, tooltip) {
-      var bcr, dx, dy, left, node, top;
+      var box, dx, dy, isRight, ldx, left, node, rdx, scale, top;
       // append the <div> and collect its dimensions to see if it needs to
       // be moved up or to the right
       tooltip.css({
         left: 0,
         top: 0
       }).appendTo(outer);
-      bcr = tooltip.get(0).getBoundingClientRect();
       node = element.getBoundingClientRect();
-      dx = Math.max(node.right + bcr.width - viewport.size().width, 0);
-      dy = Math.max(node.bottom + bcr.height - viewport.size().height, 0);
+      box = tooltip.get(0).getBoundingClientRect();
+      // compare left and right sides and decide where to place the window
+      rdx = Math.max(node.right + box.width - viewport.size().width, 0);
+      ldx = Math.max(box.width - node.left, 0);
+      isRight = rdx <= ldx; // on the right of the node sticks out less
+      dx = isRight ? rdx : ldx;
+      scale = dx > 0 ? (box.width - dx) / box.width : 1;
+      dy = Math.max(node.bottom + box.height - viewport.size().height, 0);
       // place where it can be seen, move if necessary by [dx, dy]
-      left = node.right - dx;
+      left = isRight ? node.right : node.left - box.width * scale;
       top = node.bottom - dy;
       tooltip.css({
         left: left,
-        top: top
+        top: top,
+        transform: "scale(" + scale + ")"
       });
       // when running as R Studio AddIn, viewport gets messed up, so here
       // we perform one more adjustment: if the actual BCR is moved according
       // top the requested (left, top) we move it again by the difference, in
       // the hope that this will finally place it withing the visible viewport
-      bcr = tooltip.get(0).getBoundingClientRect();
-      left += left - bcr.left;
-      top += top - bcr.top;
+      box = tooltip.get(0).getBoundingClientRect();
+      left += left - box.left;
+      top += top - box.top;
       return tooltip.css({
         visibility: "visible",
         left: left,
