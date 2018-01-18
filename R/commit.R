@@ -120,6 +120,16 @@ commit_restore_data <- function (co, store)
 }
 
 
+commit_timestamp <- function (co, store)
+{
+  stopifnot(is_commit(co))
+  time <- min(vapply(co$object_ids, function (id) {
+    tags <- storage::os_read_tags(store, id)
+    as.integer(tags$time)
+  }, integer(1)))
+  as.POSIXct(time, tz = 'UTC', origin = '1970-01-01')
+}
+
 
 # TODO could be turned into a S3 method
 auto_tags <- function (obj)
@@ -162,11 +172,12 @@ cleanup_object <- function (obj)
 #' @export
 #'
 #' @param simple Show simplified printout.
+#' @param header If extended output (`simple` is `FALSE`), print a header line.
 #' @param ... Additional parameters to control printout.
 #' @param store Optionally, the [storage::object_store] that holds the
 #'        commit; defaults in the internal store of the R session.
 #'
-print.commit <- function (x, simple = FALSE, ..., store)
+print.commit <- function (x, simple = FALSE, header = TRUE, ..., store)
 {
   if (missing(store)) store <- internal_state$stash
   if (isTRUE(simple))
@@ -181,14 +192,35 @@ print.commit <- function (x, simple = FALSE, ..., store)
       paste0('[', paste(x, collapse = ', '), ']')
     }
 
-    cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+    # header
+    if (isTRUE(header))
+      cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+
+    # contents
+    obj <- x$objects
+    iob  <- names(obj) != '.plot'
+
+    print_tags <- function (tags) {
+      tags <- vapply(tags, tag_print, character(1))
+      cat(paste(names(tags), '=', tags, collapse = ', '))
+    }
+
     cat('objects :\n')
     mapply(function (name, id) {
+        cat('  ', name, ': ')
+        print_tags(storage::os_read_tags(store, id))
+        cat('\n')
+      },
+      name = names(x$objects)[iob],
+      id = as.character(x$object_ids)[iob])
+
+    if (!all(iob)) {
+      id <- x$object_ids[[which(!iob)]]
       tags <- storage::os_read_tags(store, id)
-      tags <- vapply(tags, tag_print, character(1))
-      cat('  ', name, ': ', paste(names(tags), '=', tags, collapse = ', '), '\n')
-    }, name = names(x$objects), id = as.character(x$object_ids))
-    cat('\n')
+      tags$class <- NULL
+      cat('plot :\n  ')
+      print_tags(tags)
+    }
   }
 }
 

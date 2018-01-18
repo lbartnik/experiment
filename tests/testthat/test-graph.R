@@ -5,7 +5,7 @@ test_that("root can be found", {
   g <- sample_graph()
 
   # root is identified
-  expect_equal(find_root_id(g), 'c')
+  expect_equal(find_root_id(g), 'a')
 })
 
 test_that("only one root allowed", {
@@ -20,8 +20,8 @@ test_that("assign children", {
   g <- assign_children(g, find_root_id(g), 1)
 
   children <- unlist(lapply(g, `[[`, i = 'children'))
-  expect_named(children, c('b', 'c'))
-  expect_equivalent(children, c('a', 'b'))
+  expect_named(children, c('a', 'b', 'c'))
+  expect_equivalent(children, c('b', 'c', 'd'))
 })
 
 
@@ -42,7 +42,7 @@ test_that("filter on plots", {
 
 test_that("convert commit", {
   g <- sample_graph()
-  r <- commit_to_steps(g$a, c('x', 'y'))
+  r <- commit_to_steps(g$b, c('x', 'y'))
 
   expect_named(r, c('steps', 'links'))
   expect_length(r$steps, 2)
@@ -54,9 +54,12 @@ test_that("convert commit", {
   type <- unique(vapply(r$steps, `[[`, character(1), i = 'type'))
   expect_equal(type, 'object')
 
+  commit_id <- unique(vapply(r$steps, `[[`, character(1), i = 'commit_id'))
+  expect_equal(commit_id, 'b')
+
   link <- nth(r$links, 1)
   expect_named(link, c('source', 'target'))
-  expect_equal(link$source, 'r')
+  expect_equal(link$source, 'p')
   expect_equal(link$target, 'q')
 })
 
@@ -67,11 +70,11 @@ test_that("convert graph", {
 
   s <- graph_to_steps(g)
   expect_named(s, c('steps', 'links'))
-  expect_length(s$steps, 3)
-  expect_length(s$links, 2)
+  expect_length(s$steps, 4)
+  expect_length(s$links, 3)
 
   nms <- vapply(s$steps, `[[`, character(1), i = 'name')
-  expect_equal(nms, c('x', 'y', 'x'))
+  expect_equal(nms, c('x', 'y', 'x', 'z'))
 
   expect_exists(list(source = 'p', target = 'q'), s$links)
   expect_exists(list(source = 'q', target = 'r'), s$links)
@@ -99,4 +102,14 @@ test_that("descriptions can be added later", {
   r <- read_objects(s, m)
   expect_equal(vapply(r$steps, `[[`, character(1), i = 'desc'),
                c('numeric', 'integer', 'character', 'numeric'))
+})
+
+
+test_that("finding step by id", {
+  s <- sample_steps()
+  t <- step_by_id(s, 'r')
+
+  expect_equal(t$id, 'r')
+  expect_equal(t$commit_id, 'c')
+  expect_equal(t$name, 'x')
 })

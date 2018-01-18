@@ -14,10 +14,20 @@ mapNodes = (nodes) ->
 euclidean = (a, b) ->
   Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2)
 
-viewport = () ->
-  w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
-  h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
-  {width: w, height: h}
+
+Viewport = (selection) ->
+  viewport = () ->
+  viewport.size = () ->
+    # actual viewport; in R Studio, when running as AddIn, this is somehow
+    # distorted and reports size larger than the actual viewport area
+    w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+    h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+    # thus, we compare it with the size of the enclosing HTML element and
+    # choose whatever is smaller
+    w = Math.min(w, $(selection).width())
+    h = Math.min(h, $(selection).height())
+    {width: w, height: h}
+  return viewport
 
 # returns:
 #   - the embedded image, if contents present
@@ -30,12 +40,6 @@ plotHref = (step) ->
   if from_id
     return from_id
   return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII="
-
-
-# add style to notifyjs, just once
-$.notify.addStyle('simplenotification', {
-  html: "<div><span data-notify-text/></div>"
-})
 
 
 # --- Utils ------------------------------------------------------------
@@ -52,8 +56,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     outer = d3.select(selection)
       .append("div")
       .attr("class", "widget")
-      .style("overflow", "auto")
-      .style('overflow-y', 'auto')
     canvas = outer.append("svg")
     linksG = canvas.append("g").attr("id", "links")
     nodesG = canvas.append("g").attr("id", "nodes")
@@ -235,7 +237,7 @@ Position = (width, height, margin) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step, outer) ->
+Description = (element, step, outer, viewport) ->
 
   description = () ->
   description.show = () ->
@@ -246,7 +248,7 @@ Description = (element, step, outer) ->
       $("<span>").addClass("description").appendTo(tooltip).text(step.desc)
     else
       # 35 for the code
-      height = Math.min(300, viewport().height - 65)
+      height = Math.min(300, viewport.size().height - 65)
       # an image needs to be first loaded, before its dimensions and final
       # position can be calculated
       $("<img>", { src: plotHref(step), height: height })
@@ -277,14 +279,25 @@ Description = (element, step, outer) ->
 
     bcr  = tooltip.get(0).getBoundingClientRect()
     node = element.getBoundingClientRect()
-    left = node.left + node.width
-    top  = node.top + node.height
-    dx = Math.max(left + bcr.width - viewport().width, 0)
-    dy = Math.max(top + bcr.height - viewport().height, 0)
+    dx = Math.max(node.right + bcr.width - viewport.size().width, 0)
+    dy = Math.max(node.bottom + bcr.height - viewport.size().height, 0)
 
     # place where it can be seen, move if necessary by [dx, dy]
+    left = node.right - dx
+    top  = node.bottom - dy
+    tooltip.css({left: left, top: top})
+
+    # when running as R Studio AddIn, viewport gets messed up, so here
+    # we perform one more adjustment: if the actual BCR is moved according
+    # top the requested (left, top) we move it again by the difference, in
+    # the hope that this will finally place it withing the visible viewport
+    bcr = tooltip.get(0).getBoundingClientRect()
+    left += (left - bcr.left)
+    top  += (top - bcr.top)
+
     tooltip
-      .css({visibility: "visible", left: left - dx, top: top - dy})
+      .css({visibility: "visible", left: left, top: top})
+
 
   return description
 
@@ -292,7 +305,7 @@ Description = (element, step, outer) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
-  options = { }
+  options = { shiny: false }
   nodeR   = 15
   lenseR  = 30
   ui      = UI(selection, nodeR, 15)
@@ -345,20 +358,15 @@ Widget = (selection) ->
     ui.updatePositions()
   
   showDialog = (d) ->
-    this.description = Description(this, d, selection)
+    this.description = Description(this, d, selection, Viewport(selection))
     this.description.show()
   
   hideDialog = (d) ->
     this.description.hide()
 
   clickNode = (d) ->
-    input = $("<input>")
-      .appendTo(selection)
-      .val("restore('#{d.id}')")
-      .select()
-    document.execCommand("copy")
-    input.remove()
-    $.notify("ID copied to clipboard", {autoHideDelay: 1000, className: 'info', style: 'simplenotification'})
+    if options.shiny
+      Shiny.onInputChange("object_selected", d.id)
 
   return widget
 

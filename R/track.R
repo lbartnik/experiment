@@ -429,8 +429,11 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
     }
 
     if (isFALSE(.silent)) {
-      message("there are ", length(lv), " commit(s) that can become the ",
-              "HEAD: ", paste(names(lv), collapse = ", "))
+      times <- lapply(lv, function (x) as.character(commit_timestamp(x, store)))
+      message("there are ", length(lv), " commit(s) that we can attach to ",
+              "at this point:\n  ",
+              paste(names(lv), " created on ", as.character(times), collapse = "\n  ")
+      )
       lapply(lv, function (lf) print(lf, simple = TRUE, store = store))
     }
 
@@ -450,7 +453,7 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
 
   # if there is nothing in the current R session, simply reattach
   # in the chosen point in history
-  if (!length(env)) {
+  if (!length(ls(env, all.names = FALSE))) {
     state$stash <- store
     restore_commit(state, ct$id, env)
 

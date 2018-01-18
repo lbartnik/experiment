@@ -28,6 +28,7 @@ graph <- function (store, .data = FALSE)
   assign_children(commits, find_root_id(commits), 1)
 }
 
+
 # identify children and levels; start with root
 # used only inside graph()
 assign_children <- function (commits, id, level)
@@ -194,19 +195,21 @@ commit_to_steps <- function (commit, objects)
   generate_step <- function(name, id, object) {
     if (identical(name, '.plot')) {
       list(
-        type = 'plot',
-        id   = id,
-        expr = format_expression(commit$expr),
-        contents = as.character(object)
+        type      = 'plot',
+        id        = id,
+        expr      = format_expression(commit$expr),
+        contents  = as.character(object),
+        commit_id = commit$id
       )
     }
     else {
       list(
-        name = name,
-        type = "object",
-        id   = id,
-        expr = format_expression(commit$expr),
-        desc = description(object)
+        name      = name,
+        type      = "object",
+        id        = id,
+        expr      = format_expression(commit$expr),
+        desc      = description(object),
+        commit_id = commit$id
       )
     }
   }
@@ -432,6 +435,24 @@ plot_to_dependencies <- function (steps, embed = is_knitr())
   list(steps = steps, html_deps = deps)
 }
 
+
+step_by_id <- function (steps, step_id)
+{
+  stopifnot(is_steps(steps))
+  i <- (vapply(steps$steps, `[[`, character(1), i = 'id') == step_id)
+
+  # TODO this actually doesn't have to hold, it's possible that the same
+  # object appears in a number of commits and gets promoted as a step
+  stopifnot(sum(i) == 1)
+  nth(steps$steps, which(i))
+}
+
+
+count <- function (x)
+{
+  stopifnot(is_steps(x))
+  length(x$steps)
+}
 
 
 #' @import jsonlite

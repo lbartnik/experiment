@@ -19,10 +19,6 @@
   - snow an onClose message when "done" is clicked; intercept the exception
     when cancel is clicked
 
-  - export plots as PNG miniatures rather than SVG; for big/complex plots
-    that might be much more efficient
-    https://stackoverflow.com/questions/6249664/does-svg-support-embedding-of-bitmap-images
-
   - use RStudio addins to browse history with keyboard (up/down),
     similarly to Ctrl+R in regular R console
 
@@ -38,7 +34,6 @@
 * UI:
   - show history of commits
   - print commits
-  - do not print commits in stashed()
   - show history of expressions in the current branch
   - list branches
   - name branches

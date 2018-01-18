@@ -4,7 +4,6 @@ dependencies:
     src: htmlwidgets/lib/jquery-3.2.1
     script:
       - jquery.js
-      - notify.js
   - name: d3
     version: 4.11.0
     src: htmlwidgets/lib/d3-4.11.0

@@ -8,11 +8,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       Description,
       Position,
       UI,
+      Viewport,
       Widget,
       euclidean,
       mapNodes,
       plotHref,
-      viewport,
       _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];for (var key in source) {
@@ -52,14 +52,25 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
   };
 
-  viewport = function viewport() {
-    var h, w;
-    w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    return {
-      width: w,
-      height: h
+  Viewport = function Viewport(selection) {
+    var viewport;
+    viewport = function viewport() {};
+    viewport.size = function () {
+      var h, w;
+      // actual viewport; in R Studio, when running as AddIn, this is somehow
+      // distorted and reports size larger than the actual viewport area
+      w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      // thus, we compare it with the size of the enclosing HTML element and
+      // choose whatever is smaller
+      w = Math.min(w, $(selection).width());
+      h = Math.min(h, $(selection).height());
+      return {
+        width: w,
+        height: h
+      };
     };
+    return viewport;
   };
 
   // returns:
@@ -78,11 +89,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII=";
   };
 
-  // add style to notifyjs, just once
-  $.notify.addStyle('simplenotification', {
-    html: "<div><span data-notify-text/></div>"
-  });
-
   // --- Utils ------------------------------------------------------------
   UI = function UI(selection) {
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
@@ -95,7 +101,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     nodesG = null;
     ui = function ui() {};
     ui.initialize = function () {
-      outer = d3.select(selection).append("div").attr("class", "widget").style("overflow", "auto").style('overflow-y', 'auto');
+      outer = d3.select(selection).append("div").attr("class", "widget");
       canvas = outer.append("svg");
       linksG = canvas.append("g").attr("id", "links");
       return nodesG = canvas.append("g").attr("id", "nodes");
@@ -321,7 +327,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   // --- Position ---------------------------------------------------------
-  Description = function Description(element, step, outer) {
+  Description = function Description(element, step, outer, viewport) {
     var description, position;
     description = function description() {};
     description.show = function () {
@@ -332,7 +338,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         $("<span>").addClass("description").appendTo(tooltip).text(step.desc);
       } else {
         // 35 for the code
-        height = Math.min(300, viewport().height - 65);
+        height = Math.min(300, viewport.size().height - 65);
         // an image needs to be first loaded, before its dimensions and final
         // position can be calculated
         $("<img>", {
@@ -375,15 +381,26 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }).appendTo(outer);
       bcr = tooltip.get(0).getBoundingClientRect();
       node = element.getBoundingClientRect();
-      left = node.left + node.width;
-      top = node.top + node.height;
-      dx = Math.max(left + bcr.width - viewport().width, 0);
-      dy = Math.max(top + bcr.height - viewport().height, 0);
+      dx = Math.max(node.right + bcr.width - viewport.size().width, 0);
+      dy = Math.max(node.bottom + bcr.height - viewport.size().height, 0);
       // place where it can be seen, move if necessary by [dx, dy]
+      left = node.right - dx;
+      top = node.bottom - dy;
+      tooltip.css({
+        left: left,
+        top: top
+      });
+      // when running as R Studio AddIn, viewport gets messed up, so here
+      // we perform one more adjustment: if the actual BCR is moved according
+      // top the requested (left, top) we move it again by the difference, in
+      // the hope that this will finally place it withing the visible viewport
+      bcr = tooltip.get(0).getBoundingClientRect();
+      left += left - bcr.left;
+      top += top - bcr.top;
       return tooltip.css({
         visibility: "visible",
-        left: left - dx,
-        top: top - dy
+        left: left,
+        top: top
       });
     };
     return description;
@@ -392,7 +409,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
     var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, updateCanvas, widget;
-    options = {};
+    options = {
+      shiny: false
+    };
     nodeR = 15;
     lenseR = 30;
     ui = UI(selection, nodeR, 15);
@@ -447,22 +466,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return ui.updatePositions();
     };
     showDialog = function showDialog(d) {
-      this.description = Description(this, d, selection);
+      this.description = Description(this, d, selection, Viewport(selection));
       return this.description.show();
     };
     hideDialog = function hideDialog(d) {
       return this.description.hide();
     };
     clickNode = function clickNode(d) {
-      var input;
-      input = $("<input>").appendTo(selection).val("restore('" + d.id + "')").select();
-      document.execCommand("copy");
-      input.remove();
-      return $.notify("ID copied to clipboard", {
-        autoHideDelay: 1000,
-        className: 'info',
-        style: 'simplenotification'
-      });
+      if (options.shiny) {
+        return Shiny.onInputChange("object_selected", d.id);
+      }
     };
     return widget;
   };

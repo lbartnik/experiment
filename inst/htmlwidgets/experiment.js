@@ -9,6 +9,9 @@ HTMLWidgets.widget({
     // create our vis object and bind it to the element
     var visvis = new Widget(el);
     visvis.setSize($(el).width(), $(el).height());
+    if (typeof HTMLWidgets != 'undefined' && HTMLWidgets.shinyMode) {
+      visvis.setOption('shiny', true);
+    }
 
     // return widget instance
     return {

@@ -152,7 +152,6 @@ utils::globalVariables(c('iris'))
 
 simulate_modelling <- function ()
 {
-
   user_space <- eval_space()
 
   user_space$simulate(x <- stats::lm(Sepal.Width ~ Sepal.Length, iris))
