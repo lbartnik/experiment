@@ -172,6 +172,7 @@ cleanup_object <- function (obj)
 #' @export
 #'
 #' @param simple Show simplified printout.
+#' @param header If extended output (`simple` is `FALSE`), print a header line.
 #' @param ... Additional parameters to control printout.
 #' @param store Optionally, the [storage::object_store] that holds the
 #'        commit; defaults in the internal store of the R session.

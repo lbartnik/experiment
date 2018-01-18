@@ -150,7 +150,6 @@ simulate_london_meters <- function (overwrite = FALSE)
 # Suppress checks in `simulate_modelling`.
 utils::globalVariables(c('iris'))
 
-#' @export
 simulate_modelling <- function ()
 {
   user_space <- eval_space()

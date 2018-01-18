@@ -27,6 +27,8 @@ is_commit(x)
 
 \item{simple}{Show simplified printout.}
 
+\item{header}{If extended output (\code{simple} is \code{FALSE}), print a header line.}
+
 \item{...}{Additional parameters to control printout.}
 
 \item{store}{Optionally, the \link[storage:object_store]{storage::object_store} that holds the
