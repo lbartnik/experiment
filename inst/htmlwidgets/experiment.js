@@ -13,6 +13,8 @@ HTMLWidgets.widget({
       visvis.setOption('shiny', true);
     }
 
+    var popup = PopUp(el, 'tekst');
+
     // return widget instance
     return {
       renderValue: function(input) {
