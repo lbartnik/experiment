@@ -13,6 +13,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       euclidean,
       mapNodes,
       plotHref,
+      sign,
       _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];for (var key in source) {
@@ -36,6 +37,18 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     }
     return results;
   };
+
+  if (Math.sign === void 0) {
+    sign = function sign(x) {
+      if (x < 0) {
+        return -1;
+      } else {
+        return 1;
+      }
+    };
+  } else {
+    sign = Math.sign;
+  }
 
   // Helper function to map node id's to node objects.
   // Returns d3.map of ids -> nodes
@@ -327,8 +340,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   // --- Position ---------------------------------------------------------
-  Description = function Description(element, step, outer, viewport) {
-    var description, position;
+  Description = function Description(element, step, outer, viewport, nodeR) {
+    var asArea, compare, description, position;
     description = function description() {};
     description.show = function () {
       var height, ref, tooltip;
@@ -371,30 +384,70 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return (ref1 = element.tooltip) != null ? ref1.remove() : void 0;
       }) : void 0;
     };
+    // area: potential placement of the tooltip
+    // box:  dimensions of the tooltip
+    // center: where is the node we want to be close to
+    // returns: {left, top, scale}
+    compare = function compare(area, box, center) {
+      var dx, dy, height, left, scale, scalex, scaley, top, width;
+      scalex = (area.right - area.left) / box.width;
+      scaley = (area.bottom - area.top) / box.height;
+      scale = Math.min(scalex, scaley, 1);
+      width = box.width * scale;
+      height = box.height * scale;
+      left = area.left + (area.right - area.left - width) / 2;
+      top = area.top + (area.bottom - area.top - height) / 2;
+      // direction towards the node
+      dx = center.x - (left + width / 2);
+      dy = center.y - (top + height / 2);
+      dx = sign(dx) * Math.max(Math.abs(dx) - nodeR - width / 2, 0);
+      dy = sign(dy) * Math.max(Math.abs(dy) - nodeR - height / 2, 0);
+      return {
+        left: left + dx,
+        top: top + dy,
+        scale: scale
+      };
+    };
+    asArea = function asArea(numbers) {
+      return {
+        left: numbers[0],
+        right: numbers[1],
+        top: numbers[2],
+        bottom: numbers[3]
+      };
+    };
     position = function position(element, tooltip) {
-      var box, dx, dy, isRight, ldx, left, node, rdx, scale, top;
+      var bottom, box, center, choice, left, node, right, top, view;
       // append the <div> and collect its dimensions to see if it needs to
       // be moved up or to the right
       tooltip.css({
         left: 0,
         top: 0
       }).appendTo(outer);
-      node = element.getBoundingClientRect();
       box = tooltip.get(0).getBoundingClientRect();
-      // compare left and right sides and decide where to place the window
-      rdx = Math.max(node.right + box.width - viewport.size().width, 0);
-      ldx = Math.max(box.width - node.left, 0);
-      isRight = rdx <= ldx; // on the right of the node sticks out less
-      dx = isRight ? rdx : ldx;
-      scale = dx > 0 ? (box.width - dx) / box.width : 1;
-      dy = Math.max(node.bottom + box.height - viewport.size().height, 0);
-      // place where it can be seen, move if necessary by [dx, dy]
-      left = isRight ? node.right : node.left - box.width * scale;
-      top = node.bottom - dy;
+      node = element.getBoundingClientRect();
+      view = viewport.size();
+      center = {
+        x: node.left + node.width / 2,
+        y: node.top + node.height / 2
+      };
+      left = compare(asArea([0, node.left, 0, view.height]), box, center);
+      right = compare(asArea([node.right, view.width, 0, view.height]), box, center);
+      top = compare(asArea([0, view.width, 0, node.top]), box, center);
+      bottom = compare(asArea([0, view.width, node.bottom, view.height]), box, center);
+      choice = [left, right, top, bottom].reduce(function (a, b) {
+        if (a.scale > b.scale) {
+          return a;
+        } else {
+          return b;
+        }
+      });
+      left = choice.left;
+      top = choice.top;
       tooltip.css({
         left: left,
         top: top,
-        transform: "scale(" + scale + ")"
+        transform: "scale(" + choice.scale + ")"
       });
       // when running as R Studio AddIn, viewport gets messed up, so here
       // we perform one more adjustment: if the actual BCR is moved according
@@ -472,7 +525,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return ui.updatePositions();
     };
     showDialog = function showDialog(d) {
-      this.description = Description(this, d, selection, Viewport(selection));
+      this.description = Description(this, d, selection, Viewport(selection), nodeR);
       return this.description.show();
     };
     hideDialog = function hideDialog(d) {

@@ -3,6 +3,11 @@ Array::unique = () ->
       (output[@[key].id ? @[key]] = @[key]) for key in [0...@length]
       value for key, value of output
 
+if Math.sign is undefined
+  sign = (x) -> if x < 0 then -1 else 1
+else
+  sign = Math.sign
+
 # Helper function to map node id's to node objects.
 # Returns d3.map of ids -> nodes
 mapNodes = (nodes) ->
@@ -237,7 +242,7 @@ Position = (width, height, margin) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step, outer, viewport) ->
+Description = (element, step, outer, viewport, nodeR) ->
 
   description = () ->
   description.show = () ->
@@ -270,6 +275,29 @@ Description = (element, step, outer, viewport) ->
   description.hide = () ->
     element.tooltip?.fadeTo('fast', 0, () -> element.tooltip?.remove())
 
+  # area: potential placement of the tooltip
+  # box:  dimensions of the tooltip
+  # center: where is the node we want to be close to
+  # returns: {left, top, scale}
+  compare = (area, box, center) ->
+    scalex = (area.right - area.left) / box.width
+    scaley = (area.bottom - area.top) / box.height
+    scale  = Math.min(scalex, scaley, 1)
+    width  = box.width * scale
+    height = box.height * scale
+    left   = area.left + (area.right - area.left - width)/2
+    top    = area.top + (area.bottom - area.top - height)/2
+    # direction towards the node
+    dx = center.x - (left + width/2)
+    dy = center.y - (top + height/2)
+    dx = sign(dx) * Math.max(Math.abs(dx) - nodeR - width/2, 0)
+    dy = sign(dy) * Math.max(Math.abs(dy) - nodeR - height/2, 0)
+
+    { left: left + dx, top: top + dy, scale: scale }
+
+  asArea = (numbers) ->
+    { left: numbers[0], right: numbers[1], top: numbers[2], bottom: numbers[3] }
+
   position = (element, tooltip) ->
     # append the <div> and collect its dimensions to see if it needs to
     # be moved up or to the right
@@ -277,22 +305,20 @@ Description = (element, step, outer, viewport) ->
       .css({left: 0, top: 0})
       .appendTo(outer)
 
-    node = element.getBoundingClientRect()
     box  = tooltip.get(0).getBoundingClientRect()
+    node = element.getBoundingClientRect()
+    view = viewport.size()
+    center = {x: node.left + node.width/2, y: node.top + node.height/2}
 
-    # compare left and right sides and decide where to place the window
-    rdx = Math.max(node.right + box.width - viewport.size().width, 0)
-    ldx = Math.max(box.width - node.left, 0)
+    left   = compare(asArea([ 0, node.left, 0, view.height ]), box, center)
+    right  = compare(asArea([ node.right, view.width, 0, view.height ]), box, center)
+    top    = compare(asArea([ 0, view.width, 0, node.top ]), box, center)
+    bottom = compare(asArea([ 0, view.width, node.bottom, view.height ]), box, center)
+    choice = [left, right, top, bottom].reduce((a, b) -> if a.scale > b.scale then a else b)
 
-    isRight = rdx <= ldx # on the right of the node sticks out less
-    dx = if isRight then rdx else ldx
-    scale = if dx > 0 then (box.width - dx)/box.width else 1
-    dy = Math.max(node.bottom + box.height - viewport.size().height, 0)
-
-    # place where it can be seen, move if necessary by [dx, dy]
-    left = if isRight then node.right else node.left - box.width * scale
-    top  = node.bottom - dy
-    tooltip.css({left: left, top: top, transform: "scale(#{scale})"})
+    left = choice.left
+    top  = choice.top
+    tooltip.css({left: left, top: top, transform: "scale(#{choice.scale})"})
 
     # when running as R Studio AddIn, viewport gets messed up, so here
     # we perform one more adjustment: if the actual BCR is moved according
@@ -365,7 +391,7 @@ Widget = (selection) ->
     ui.updatePositions()
   
   showDialog = (d) ->
-    this.description = Description(this, d, selection, Viewport(selection))
+    this.description = Description(this, d, selection, Viewport(selection), nodeR)
     this.description.show()
   
   hideDialog = (d) ->
