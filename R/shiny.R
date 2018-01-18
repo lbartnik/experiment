@@ -62,7 +62,7 @@ browserAddin <- function (steps = fullhistory())
       # we can safely assume that tracking is turned on, otherwise there
       # would be no history to look at
       st <- step_by_id(steps, input$object_selected)
-      restore_commit(internal_state, st$commit_id, globalenv())
+      onRestore(st$commit_id)
 
       # At the end, your application should call 'stopApp()' here, to ensure that
       # the gadget is closed after 'done' is clicked.
@@ -76,15 +76,25 @@ browserAddin <- function (steps = fullhistory())
   }
 
   onStart()
-  suppressMessages({
-    shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
+  tryCatch({
+    suppressMessages({
+      shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
+    })
+  }, error = function (e) {
+    if (identical(e$message, 'User cancel'))
+      onCancel()
+    else
+      stop(e$message, call. = TRUE)
   })
 }
 
 
+hline <- function ()  cat0(paste(rep_len('-', getOption('width')), collapse = ''), '\n\n')
+
+
 onStart <- function ()
 {
-  cat0(paste(rep_len('-', getOption('width')), collapse = ''), '\n\n')
+  hline()
   str <- paste(
     'Choose a node (an object or a plot) on the graph. When the choice',
     'is made, click the "Done" button and this will restore the state',
@@ -108,3 +118,17 @@ onClick <- function (steps, object_id)
   print(co, header = FALSE)
 }
 
+
+onRestore <- function (commit_id)
+{
+  cat0('\n\n', crayon::green('Restoring commit'), ': ', commit_id, '\n')
+  hline()
+  restore_commit(internal_state, commit_id, globalenv())
+}
+
+
+onCancel <- function ()
+{
+  cat('\nUser cancel, commit will not be restored.\n')
+  hline()
+}
