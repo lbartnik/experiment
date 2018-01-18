@@ -89,11 +89,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII=";
   };
 
-  // add style to notifyjs, just once
-  $.notify.addStyle('simplenotification', {
-    html: "<div><span data-notify-text/></div>"
-  });
-
   // --- Utils ------------------------------------------------------------
   UI = function UI(selection) {
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
@@ -414,7 +409,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
     var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, updateCanvas, widget;
-    options = {};
+    options = {
+      shiny: false
+    };
     nodeR = 15;
     lenseR = 30;
     ui = UI(selection, nodeR, 15);
@@ -476,16 +473,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return this.description.hide();
     };
     clickNode = function clickNode(d) {
-      var input;
-      input = $("<input>").appendTo(selection).val("restore('" + d.id + "')").select();
-      document.execCommand("copy");
-      input.remove();
-      $.notify("ID copied to clipboard", {
-        autoHideDelay: 1000,
-        className: 'info',
-        style: 'simplenotification'
-      });
-      if (typeof HTMLWidgets !== "undefined" && HTMLWidgets !== null ? HTMLWidgets.shinyMode : void 0) {
+      if (options.shiny) {
         return Shiny.onInputChange("object_selected", d.id);
       }
     };

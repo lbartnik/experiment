@@ -42,12 +42,6 @@ plotHref = (step) ->
   return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII="
 
 
-# add style to notifyjs, just once
-$.notify.addStyle('simplenotification', {
-  html: "<div><span data-notify-text/></div>"
-})
-
-
 # --- Utils ------------------------------------------------------------
 
 UI = (selection, nodeR = 25, innerR = 25) ->
@@ -311,7 +305,7 @@ Description = (element, step, outer, viewport) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
-  options = { }
+  options = { shiny: false }
   nodeR   = 15
   lenseR  = 30
   ui      = UI(selection, nodeR, 15)
@@ -371,14 +365,7 @@ Widget = (selection) ->
     this.description.hide()
 
   clickNode = (d) ->
-    input = $("<input>")
-      .appendTo(selection)
-      .val("restore('#{d.id}')")
-      .select()
-    document.execCommand("copy")
-    input.remove()
-    $.notify("ID copied to clipboard", {autoHideDelay: 1000, className: 'info', style: 'simplenotification'})
-    if HTMLWidgets?.shinyMode
+    if options.shiny
       Shiny.onInputChange("object_selected", d.id)
 
   return widget
