@@ -1,8 +1,10 @@
 .widget {
     width: 100%;
-/*    overflow: auto;
+    /*    overflow: auto;
     overflow-y: auto;
-*/}
+*/
+    /* visibility:  hidden; */
+  }
 
 .lenses {
     fill: black;
@@ -14,9 +16,19 @@
     stroke: black;
 }
 
-.variable {
+.object {
     fill: rgb(247, 247, 247);
     stroke: rgb(150, 150, 150);
+}
+
+.plot {
+    fill: transparent;
+    stroke: rgb(150, 150, 150);
+    stroke-width: 2pt;
+}
+
+.selected {
+    stroke: rgb(38, 177, 38);
 }
 
 .label {
@@ -62,12 +74,4 @@
 .tooltip code {
     pointer-events: none;
     font-size: 8pt;
-}
-
-.notifyjs-simplenotification-base {
-    white-space: nowrap;
-    background-color: lightgrey;
-    padding: 3pt;
-    font-size: 9pt;
-    border-radius: 4pt;
 }

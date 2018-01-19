@@ -152,14 +152,21 @@ is_steps <- function (x) inherits(x, 'steps')
 #' @export
 #' @rdname steps
 #'
-plot.steps <- function (x, ...)
+plot.steps <- function (x, ...) render_steps(x)
+
+
+render_steps <- function (steps, options = list())
 {
-  processed <- plot_to_dependencies(x$steps, is_knitr())
-  x$steps <- processed$steps
+  stopifnot(is_steps(steps))
+
+  processed <- plot_to_dependencies(steps$steps, is_knitr())
+  steps$steps <- processed$steps
 
   # create the widget
-  htmlwidgets::createWidget("experiment", list(data = x), dependencies = processed$html_deps)
+  htmlwidgets::createWidget("experiment", list(data = steps, options = options),
+                            dependencies = processed$html_deps)
 }
+
 
 
 #' @description `plot.steps` open an interactive history viewer.

@@ -9,14 +9,9 @@ renderExperiment <- function(expr, env = parent.frame(), quoted = FALSE) {
 }
 
 
-# temporary utility function
-attachStore <- function (path = file.path(getwd(), "project-store"))
-{
-  store <- prepare_object_store(path)
-  reattach_to_store(internal_state, store, globalenv(), "overwrite")
-  invisible()
-}
-
+gui_state <- as.environment(list(
+  popup_clicked = FALSE
+))
 
 
 #' RStudio AddIn function.
@@ -47,8 +42,17 @@ browserAddin <- function (steps = fullhistory())
                              padding = 15, scrollable = TRUE)
   ))
 
+  welcomeMessage <- paste(
+    'Choose a node (an object or a plot) on the graph. When the choice',
+    'is made, click on the "Done" button and this will restore the state',
+    'of R session when that object or plot was created.'
+  )
+
+  widget_opts <- list(welcome = welcomeMessage)
+  if (isTRUE(gui_state$popup_clicked)) widget_opts$welcome <- NULL
+
   server <- function(input, output) {
-    output$experiment <- renderExperiment(plot(steps))
+    output$experiment <- renderExperiment(render_steps(steps, widget_opts))
 
     ## Your reactive logic goes here.
 
@@ -61,8 +65,13 @@ browserAddin <- function (steps = fullhistory())
     shiny::observeEvent(input$done, {
       # we can safely assume that tracking is turned on, otherwise there
       # would be no history to look at
-      st <- step_by_id(steps, input$object_selected)
-      onRestore(st$commit_id)
+      if (is.null(input$object_selected)) {
+        cat('Selection empty, R session left unchanged.\n')
+        hline()
+      } else {
+        st <- step_by_id(steps, input$object_selected)
+        onRestore(st$commit_id)
+      }
 
       # At the end, your application should call 'stopApp()' here, to ensure that
       # the gadget is closed after 'done' is clicked.
@@ -73,9 +82,14 @@ browserAddin <- function (steps = fullhistory())
       if (!is.null(input$object_selected))
         onClick(steps, input$object_selected)
     })
+
+    shiny::observe({
+      if (isTRUE(input$popup_clicked))
+        gui_state$popup_clicked <- TRUE
+    })
   }
 
-  onStart()
+  onStart(welcomeMessage)
   tryCatch({
     suppressMessages({
       shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
@@ -92,15 +106,10 @@ browserAddin <- function (steps = fullhistory())
 hline <- function ()  cat0(paste(rep_len('-', getOption('width')), collapse = ''), '\n\n')
 
 
-onStart <- function ()
+onStart <- function (message)
 {
   hline()
-  str <- paste(
-    'Choose a node (an object or a plot) on the graph. When the choice',
-    'is made, click the "Done" button and this will restore the state',
-    'of R session when that object or plot was created.'
-  )
-  cat(paste(strwrap(str, width = getOption('width')), collapse = '\n'))
+  cat(paste(strwrap(message, width = getOption('width')), collapse = '\n'))
   cat('\n\n')
 }
 
@@ -132,3 +141,14 @@ onCancel <- function ()
   cat('\nUser cancel, commit will not be restored.\n')
   hline()
 }
+
+
+
+# temporary utility function
+attachStore <- function (path = file.path(getwd(), "project-store"))
+{
+  store <- prepare_object_store(path)
+  reattach_to_store(internal_state, store, globalenv(), "overwrite")
+  invisible()
+}
+

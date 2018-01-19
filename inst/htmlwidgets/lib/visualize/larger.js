@@ -122,7 +122,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       enter = node.enter().append("svg").attr("class", function (d) {
         return "variable " + d.type;
       }).attr("id", function (d) {
-        return d.id;
+        return "node_" + d.id;
       }).attr("viewBox", "0 0 " + 2 * innerR + " " + 2 * innerR).attr("width", 2 * nodeR).attr("height", 2 * nodeR);
       enter.each(function (d) {
         var element, text;
@@ -135,12 +135,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
           text.style('font-size', scaleText(text));
           return element.append("rect").attr("class", "face").attr("width", 2 * innerR).attr("height", 2 * innerR); // type == plot
         } else {
-          return element.append("image").attr("width", 2 * innerR).attr("height", 2 * innerR).attr("xlink:href", plotHref(d));
+          element.append("image").attr("xlink:href", plotHref(d));
+          element.append("rect");
+          element.append("rect").classed("face", true);
+          return element.selectAll("image,rect").attr("width", 2 * innerR).attr("height", 2 * innerR);
         }
       });
       node.exit().remove();
       link = linksG.selectAll("line.link").data(data.links, function (d) {
-        return d.source.id + "_" + d.target.id;
+        return "link_" + d.source.id + "_" + d.target.id;
       });
       link.enter().append("line").attr("class", "link").attr("stroke", "#ddd");
       return link.exit().remove();
@@ -221,8 +224,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
       // node-level events
       if (event === 'node:mouseover' || event === 'node:mouseout' || event === 'node:click') {
-        return nodesG.selectAll(".face,image").on(event.substring(5), callback);
+        return nodesG.selectAll(".face").on(event.substring(5), callback);
       }
+    };
+
+    // --- graphical node selection ---
+    ui.select = function (id) {
+      nodesG.selectAll(".variable").classed("selected", false);
+      return nodesG.selectAll("#node_" + id).classed("selected", true);
     };
     ui.initialize();
     return ui;
@@ -474,8 +483,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     clickNode = function clickNode(d) {
       if (options.shiny) {
-        return Shiny.onInputChange("object_selected", d.id);
+        Shiny.onInputChange("object_selected", d.id);
       }
+      return ui.select(d.id);
     };
     return widget;
   };

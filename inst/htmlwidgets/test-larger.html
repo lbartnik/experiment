@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8"/>
 <script src="lib/jquery-3.2.1/jquery.js"></script>
-<script src="lib/jquery-3.2.1/notify.js"></script>
 <script src="lib/d3-4.11.0/d3.min.js"></script>
 <script src="lib/coffeescript-2.0/coffeescript.js"></script>
-<script src="lib/mustache-2.3.0/mustache.js"></script>
 <script src="lib/highlight-9.12.0/highlight.js"></script>
 <link rel = "stylesheet" type = "text/css" href = "lib/highlight-9.12.0/styles/zenburn.css">
 <script type="text/coffeescript" src="lib/visualize/larger.coffee"></script>
 <link rel = "stylesheet" type = "text/css" href = "lib/visualize/larger.css">
+<script type="text/coffeescript" src="lib/visualize/popup.coffee"></script>
+<link rel = "stylesheet" type = "text/css" href = "lib/visualize/popup.css">
+
 <link id="data-data-attachment" rel="attachment" href="data-1/data.json"/>
 <link id="plots-934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e-attachment" rel="attachment" href="plots-1/934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e_min.png"/>
 <link id="plots-70d45777477da8efe93e0ff1d3f759223239232c-attachment" rel="attachment" href="plots-1/70d45777477da8efe93e0ff1d3f759223239232c_min.png"/>
@@ -36,6 +37,8 @@ if embedPlots
 else
   $.ajax($("#data-data-attachment").attr("href")).done (data) ->
     myWidget.setData(data)
+  
+popup = PopUp('#canvas', 'tekst')
 </script>
 
 </body>

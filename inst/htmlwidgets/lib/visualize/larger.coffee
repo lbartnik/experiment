@@ -75,7 +75,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .data(data.steps, (d) -> d.id)
     enter = node.enter().append("svg")
       .attr("class", (d) -> "variable #{d.type}")
-      .attr("id", (d) -> d.id)
+      .attr("id", (d) -> "node_#{d.id}")
       .attr("viewBox", "0 0 #{2*innerR} #{2*innerR}")
       .attr("width", 2*nodeR)
       .attr("height", 2*nodeR)
@@ -100,13 +100,17 @@ UI = (selection, nodeR = 25, innerR = 25) ->
           .attr("height", 2*innerR)
       else # type == plot
         element.append("image")
+          .attr("xlink:href", plotHref(d))
+        element.append("rect")
+        element.append("rect")
+          .classed("face", true)
+        element.selectAll("image,rect")
           .attr("width", 2*innerR)
           .attr("height", 2*innerR)
-          .attr("xlink:href", plotHref(d))
     node.exit().remove()
     
     link = linksG.selectAll("line.link")
-      .data(data.links, (d) -> "#{d.source.id}_#{d.target.id}")
+      .data(data.links, (d) -> "link_#{d.source.id}_#{d.target.id}")
     link.enter().append("line")
       .attr("class", "link")
       .attr("stroke", "#ddd")
@@ -155,8 +159,15 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       canvas.on(event.substring(7), callback)
     # node-level events
     if event in ['node:mouseover', 'node:mouseout', 'node:click']
-      nodesG.selectAll(".face,image")
+      nodesG.selectAll(".face")
         .on(event.substring(5), callback)
+  
+  # --- graphical node selection ---
+  ui.select = (id) ->
+    nodesG.selectAll(".variable")
+      .classed("selected", false)
+    nodesG.selectAll("#node_#{id}")
+      .classed("selected", true)
 
   ui.initialize()
   return ui
@@ -367,6 +378,7 @@ Widget = (selection) ->
   clickNode = (d) ->
     if options.shiny
       Shiny.onInputChange("object_selected", d.id)
+    ui.select(d.id)
 
   return widget
 
