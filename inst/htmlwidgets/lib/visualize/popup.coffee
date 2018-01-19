@@ -15,18 +15,20 @@ PopUp = (selection) ->
             .appendTo(dialog)
         $("<input>", { type: 'button', value: 'OK' })
             .appendTo(dialog)
-            .click(remove)
+            .click(clicked)
         
-        outer.click(remove)
+        outer.click(clicked)
         dialog.click(() -> false)
 
     popup.show = (message) ->
         text.html(message)
         outer.css('visibility', 'visible')
 
-    popup.hide = remove
+    popup.hide = clicked
 
-    remove = () -> outer.remove()
+    clicked = () ->
+        outer.remove()
+        Shiny.onInputChange("popup_clicked", true)
 
     popup.initialize()
     return popup

@@ -5,7 +5,7 @@
   var PopUp;
 
   PopUp = function PopUp(selection) {
-    var dialog, outer, popup, remove, text;
+    var clicked, dialog, outer, popup, text;
     outer = null;
     dialog = null;
     text = null;
@@ -17,8 +17,8 @@
       $("<input>", {
         type: 'button',
         value: 'OK'
-      }).appendTo(dialog).click(remove);
-      outer.click(remove);
+      }).appendTo(dialog).click(clicked);
+      outer.click(clicked);
       return dialog.click(function () {
         return false;
       });
@@ -27,9 +27,10 @@
       text.html(message);
       return outer.css('visibility', 'visible');
     };
-    popup.hide = remove;
-    remove = function remove() {
-      return outer.remove();
+    popup.hide = clicked;
+    clicked = function clicked() {
+      outer.remove();
+      return Shiny.onInputChange("popup_clicked", true);
     };
     popup.initialize();
     return popup;

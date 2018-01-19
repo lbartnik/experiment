@@ -9,14 +9,9 @@ renderExperiment <- function(expr, env = parent.frame(), quoted = FALSE) {
 }
 
 
-# temporary utility function
-attachStore <- function (path = file.path(getwd(), "project-store"))
-{
-  store <- prepare_object_store(path)
-  reattach_to_store(internal_state, store, globalenv(), "overwrite")
-  invisible()
-}
-
+gui_state <- as.environment(list(
+  popup_clicked = FALSE
+))
 
 
 #' RStudio AddIn function.
@@ -53,9 +48,11 @@ browserAddin <- function (steps = fullhistory())
     'of R session when that object or plot was created.'
   )
 
+  widget_opts <- list(welcome = welcomeMessage)
+  if (isTRUE(gui_state$popup_clicked)) widget_opts$welcome <- NULL
+
   server <- function(input, output) {
-    output$experiment <- renderExperiment(render_steps(steps,
-                                                       list(welcome = welcomeMessage)))
+    output$experiment <- renderExperiment(render_steps(steps, widget_opts))
 
     ## Your reactive logic goes here.
 
@@ -84,6 +81,11 @@ browserAddin <- function (steps = fullhistory())
     shiny::observe({
       if (!is.null(input$object_selected))
         onClick(steps, input$object_selected)
+    })
+
+    shiny::observe({
+      if (isTRUE(input$popup_clicked))
+        gui_state$popup_clicked <- TRUE
     })
   }
 
@@ -139,3 +141,14 @@ onCancel <- function ()
   cat('\nUser cancel, commit will not be restored.\n')
   hline()
 }
+
+
+
+# temporary utility function
+attachStore <- function (path = file.path(getwd(), "project-store"))
+{
+  store <- prepare_object_store(path)
+  reattach_to_store(internal_state, store, globalenv(), "overwrite")
+  invisible()
+}
+
