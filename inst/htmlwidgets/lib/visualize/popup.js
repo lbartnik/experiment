@@ -4,25 +4,31 @@
 (function () {
   var PopUp;
 
-  PopUp = function PopUp(selection, text) {
-    var close, dialog, outer, popup;
+  PopUp = function PopUp(selection) {
+    var dialog, outer, popup, remove, text;
     outer = null;
     dialog = null;
+    text = null;
     popup = function popup() {};
     popup.initialize = function () {
       outer = $("<div/>").addClass("popup-background").appendTo($(selection));
       dialog = $("<div/>").addClass("popup-dialog").appendTo(outer);
-      $("<div>").html(text).appendTo(dialog);
+      text = $("<div>").appendTo(dialog);
       $("<input>", {
         type: 'button',
         value: 'OK'
-      }).appendTo(dialog);
-      outer.click(function () {
-        return close();
+      }).appendTo(dialog).click(remove);
+      outer.click(remove);
+      return dialog.click(function () {
+        return false;
       });
-      return dialog.click(function () {});
     };
-    close = function close() {
+    popup.show = function (message) {
+      text.html(message);
+      return outer.css('visibility', 'visible');
+    };
+    popup.hide = remove;
+    remove = function remove() {
       return outer.remove();
     };
     popup.initialize();

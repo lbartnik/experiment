@@ -47,8 +47,15 @@ browserAddin <- function (steps = fullhistory())
                              padding = 15, scrollable = TRUE)
   ))
 
+  welcomeMessage <- c(
+    'Choose a node (an object or a plot) on the graph. When the choice',
+    'is made, click the "Done" button and this will restore the state',
+    'of R session when that object or plot was created.'
+  )
+
   server <- function(input, output) {
-    output$experiment <- renderExperiment(plot(steps))
+    output$experiment <- renderExperiment(render_steps(steps,
+                                                       list(welcome = welcomeMessage)))
 
     ## Your reactive logic goes here.
 
@@ -75,7 +82,7 @@ browserAddin <- function (steps = fullhistory())
     })
   }
 
-  onStart()
+  onStart(welcomeMessage)
   tryCatch({
     suppressMessages({
       shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
@@ -92,15 +99,10 @@ browserAddin <- function (steps = fullhistory())
 hline <- function ()  cat0(paste(rep_len('-', getOption('width')), collapse = ''), '\n\n')
 
 
-onStart <- function ()
+onStart <- function (message)
 {
   hline()
-  str <- paste(
-    'Choose a node (an object or a plot) on the graph. When the choice',
-    'is made, click the "Done" button and this will restore the state',
-    'of R session when that object or plot was created.'
-  )
-  cat(paste(strwrap(str, width = getOption('width')), collapse = '\n'))
+  cat(paste(strwrap(message, width = getOption('width')), collapse = '\n'))
   cat('\n\n')
 }
 

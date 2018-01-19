@@ -1,6 +1,7 @@
-PopUp = (selection, text) ->
+PopUp = (selection) ->
     outer  = null
     dialog = null
+    text   = null
 
     popup = () ->
     popup.initialize = () ->
@@ -10,17 +11,22 @@ PopUp = (selection, text) ->
         dialog = $("<div/>")
             .addClass("popup-dialog")
             .appendTo(outer)
-        $("<div>")
-            .html(text)
+        text = $("<div>")
             .appendTo(dialog)
         $("<input>", { type: 'button', value: 'OK' })
             .appendTo(dialog)
+            .click(remove)
         
-        outer.click(() -> close())
-        dialog.click(() -> )
+        outer.click(remove)
+        dialog.click(() -> false)
 
-    close = () ->
-        outer.remove()
+    popup.show = (message) ->
+        text.html(message)
+        outer.css('visibility', 'visible')
+
+    popup.hide = remove
+
+    remove = () -> outer.remove()
 
     popup.initialize()
     return popup

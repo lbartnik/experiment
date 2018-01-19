@@ -21,7 +21,7 @@ dependencies:
     src: htmlwidgets/lib/visualize
     script:
       - larger.js
-        popup.js
+      - popup.js
     stylesheet:
       - larger.css
-        popup.css
+      - popup.css

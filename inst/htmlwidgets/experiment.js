@@ -6,19 +6,22 @@ HTMLWidgets.widget({
 
   factory: function(el, width, height) {
 
+    var shiny = (typeof HTMLWidgets != 'undefined' && HTMLWidgets.shinyMode);
+
     // create our vis object and bind it to the element
     var visvis = new Widget(el);
-    visvis.setSize($(el).width(), $(el).height());
-    if (typeof HTMLWidgets != 'undefined' && HTMLWidgets.shinyMode) {
-      visvis.setOption('shiny', true);
-    }
+    var popup = PopUp(el);
 
-    var popup = PopUp(el, 'tekst');
+    visvis.setSize($(el).width(), $(el).height());
+    visvis.setOption('shiny', shiny);
 
     // return widget instance
     return {
       renderValue: function(input) {
         visvis.setData(input.data);
+        if (shiny && 'options' in input && 'welcome' in input.options) {
+          popup.show(input.options.welcome);
+        }  
       },
 
       resize: function(width, height) {
