@@ -47,9 +47,9 @@ browserAddin <- function (steps = fullhistory())
                              padding = 15, scrollable = TRUE)
   ))
 
-  welcomeMessage <- c(
+  welcomeMessage <- paste(
     'Choose a node (an object or a plot) on the graph. When the choice',
-    'is made, click the "Done" button and this will restore the state',
+    'is made, click on the "Done" button and this will restore the state',
     'of R session when that object or plot was created.'
   )
 
@@ -68,8 +68,13 @@ browserAddin <- function (steps = fullhistory())
     shiny::observeEvent(input$done, {
       # we can safely assume that tracking is turned on, otherwise there
       # would be no history to look at
-      st <- step_by_id(steps, input$object_selected)
-      onRestore(st$commit_id)
+      if (is.null(input$object_selected)) {
+        cat('Selection empty, R session left unchanged.\n')
+        hline()
+      } else {
+        st <- step_by_id(steps, input$object_selected)
+        onRestore(st$commit_id)
+      }
 
       # At the end, your application should call 'stopApp()' here, to ensure that
       # the gadget is closed after 'done' is clicked.
