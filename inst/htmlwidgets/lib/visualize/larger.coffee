@@ -1,12 +1,16 @@
 Array::unique = () ->
-      output = {}
-      (output[@[key].id ? @[key]] = @[key]) for key in [0...@length]
-      value for key, value of output
+  output = {}
+  (output[@[key].id ? @[key]] = @[key]) for key in [0...@length]
+  value for key, value of output
+
+Array::min = () ->
+  @.reduce((a,b) -> Math.min(a, b))
+
+Array::max = () ->
+  @.reduce((a,b) -> Math.max(a, b))
 
 if Math.sign is undefined
-  sign = (x) -> if x < 0 then -1 else 1
-else
-  sign = Math.sign
+  Math::sign = (x) -> if x < 0 then -1 else 1
 
 # Helper function to map node id's to node objects.
 # Returns d3.map of ids -> nodes
@@ -54,6 +58,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   canvas = null
   linksG = null
   nodesG = null
+  sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
+  data   = null
 
   ui = () ->
 
@@ -66,12 +72,15 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     nodesG = canvas.append("g").attr("id", "nodes")
   
   ui.setSize = (width, height) ->
+    sizes.ui.width  = width
+    sizes.ui.height = height
     # reduce the size to make sure scrolls don't show right away
-    canvas.attr("width", width - 10)
-      .attr("height", height - 10)
-      .attr("viewBox", "0 0 #{width} #{height}")
+    outer.style("width", width - 10)
+      .style("height", height - 10)
 
-  ui.setData = (data) ->
+  ui.setData = (Data) ->
+    data = Data
+    recalculateCanvas(data)
     createGraphics(data)
 
   # create all graphical elements on the canvas
@@ -130,6 +139,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     "#{fontSize}px"
 
   ui.updatePositions = () ->
+    recalculateCanvas(data)
+
     nodesG.selectAll("svg.variable")
       .attr("x", (d) -> d.x - d.scale * nodeR)
       .attr("y", (d) -> d.y - d.scale * nodeR)
@@ -142,6 +153,27 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .attr("x2", (d) -> d.target.x)
       .attr("y2", (d) -> d.target.y)
 
+  # compute canvas size from data
+  recalculateCanvas = (data) ->
+    x = (step.x for step in data.steps)
+    y = (step.y for step in data.steps)
+    setCanvasSize(x.min()-nodeR, x.max()+nodeR, y.min()-nodeR, y.max()+nodeR)
+    # now sizes.canvas.* is updated an we can update nodes' coordinates
+    data.centralize(sizes.canvas.width, sizes.canvas.height)
+
+  # canvas size is set independently, and canvas might need to be
+  # scrolled within the outer div element
+  setCanvasSize = (xMin, xMax, yMin, yMax) ->
+    if isNaN(xMin) or isNaN(xMax) or isNaN(yMin) or isNaN(yMax)
+      return
+    sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
+    sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
+    
+    canvas.attr("width", sizes.canvas.width)
+      .attr("height", sizes.canvas.height)
+      .attr("viewBox", "0 0 #{sizes.canvas.width} #{sizes.canvas.height}")
+
+  # returns mouse position relatively to the SVG canvas
   ui.mousePosition = () ->
     [x,y] = d3.mouse(canvas.node())
     {x: x, y: y}
@@ -183,7 +215,17 @@ Data = (data) ->
   resetScale = () ->
     data.steps.forEach (s) ->
       s.scale = 1
-  data = {resetScale: resetScale, data...}
+  
+  centralize = (width, height) ->
+    x = (step.x for step in data.steps)
+    y = (step.y for step in data.steps)
+    dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2
+    dy = y.min() - Math.max(height - (y.max() - y.min()), 0) / 2
+    data.steps.forEach (s) ->
+      s.x -= dx
+      s.y -= dy
+
+  data = {resetScale: resetScale, centralize: centralize, data...}
 
   # pre-process the input data
   setupData = () ->
@@ -204,10 +246,7 @@ Data = (data) ->
 
 # --- Data -------------------------------------------------------------
 
-Position = (width, height, margin) ->
-  width  = width - margin * 2
-  height = height - margin * 2
-
+Position = (nodeR) ->
   position = () ->
 
   stratified = (data) ->
@@ -222,31 +261,23 @@ Position = (width, height, margin) ->
   treed = (data) ->
     data.sort()
     tree = d3.tree()
-      .size([width, height])
+      .nodeSize([4*nodeR,4*nodeR])
     tree(data)
   
   position.calculate = (data) ->
     # use d3 to calculate positions for a tree
     s = stratified(data)
     t = treed(s)
-
-    # centralize the tree
-    x = t.descendants().map((n) -> n.x)
-    y = t.descendants().map((n) -> n.y)
-    min_x = x.reduce((a,b) -> Math.min(a,b))
-    max_x = x.reduce((a,b) -> Math.max(a,b))
-    min_y = y.reduce((a,b) -> Math.min(a,b))
-    max_y = y.reduce((a,b) -> Math.max(a,b))
-
-    dx = (width - max_x) - min_x + margin
-    dy = (height - max_y) - min_y + margin
+    
+    dx = t.descendants().map((n) -> n.x).min() - 2 * nodeR
+    dy = t.descendants().map((n) -> n.y).min() - 2 * nodeR
 
     # update original nodes' positions
     nodesMap = mapNodes(data.steps)
     t.each (n) ->
       s = nodesMap.get(n.id)
-      s.x = n.x + dx
-      s.y = n.y + dy
+      s.x = n.x - dx
+      s.y = n.y - dy
   # --- calculate ---
   
   # return an instance of the Position object
@@ -301,8 +332,8 @@ Description = (element, step, outer, viewport, nodeR) ->
     # direction towards the node
     dx = center.x - (left + width/2)
     dy = center.y - (top + height/2)
-    dx = sign(dx) * Math.max(Math.abs(dx) - nodeR - width/2, 0)
-    dy = sign(dy) * Math.max(Math.abs(dy) - nodeR - height/2, 0)
+    dx = Math.sign(dx) * Math.max(Math.abs(dx) - nodeR - width/2, 0)
+    dy = Math.sign(dy) * Math.max(Math.abs(dy) - nodeR - height/2, 0)
 
     { left: left + dx, top: top + dy, scale: scale }
 
@@ -353,9 +384,9 @@ Widget = (selection) ->
   nodeR   = 15
   lenseR  = 30
   ui      = UI(selection, nodeR, 15)
-  pos     = Position(500, 500, nodeR)
+  pos     = Position(nodeR)
   data    = null
-
+  
   widget = () ->
 
   widget.setData = (input) ->
@@ -366,7 +397,7 @@ Widget = (selection) ->
 
   widget.setSize = (width, height) ->
     ui.setSize(width,height)
-    pos = Position(width, height, nodeR)
+    pos = Position(nodeR)
     updateCanvas()
 
   widget.setOption = (what, value) ->
