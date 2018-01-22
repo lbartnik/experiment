@@ -444,10 +444,24 @@ plot_to_dependencies <- function (steps, embed = is_knitr())
 }
 
 
-step_by_id <- function (steps, step_id)
+step_by <- function (steps, id, object_id)
 {
   stopifnot(is_steps(steps))
-  i <- (vapply(steps$steps, `[[`, character(1), i = 'object_id') == step_id)
+  if (missing(id) && missing(object_id)) {
+    stop('no query provided')
+  }
+
+  find_by <- function (value) {
+    name <- deparse(substitute(value))
+    (vapply(steps$steps, `[[`, character(1), i = name) == value)
+  }
+
+  if (!missing(object_id)) {
+    i <- find_by(object_id)
+  }
+  else {
+    i <- find_by(id)
+  }
 
   # TODO this actually doesn't have to hold, it's possible that the same
   # object appears in a number of commits and gets promoted as a step

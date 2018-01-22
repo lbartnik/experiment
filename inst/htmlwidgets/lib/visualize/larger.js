@@ -310,7 +310,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // --- graphical node selection ---
     ui.select = function (id) {
       nodesG.selectAll(".variable").classed("selected", false);
-      return nodesG.selectAll("#node_" + id).classed("selected", true);
+      if (id) {
+        return nodesG.selectAll("#node_" + id).classed("selected", true);
+      }
     };
     ui.initialize();
     return ui;
@@ -620,10 +622,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return this.description.hide();
     };
     clickNode = function clickNode(d) {
+      var id;
+      this.selected = !this.selected;
+      id = this.selected ? d.id : null;
+      ui.select(id);
       if (options.shiny) {
-        Shiny.onInputChange("object_selected", d.id);
+        return Shiny.onInputChange("object_selected", id);
       }
-      return ui.select(d.id);
     };
     return widget;
   };

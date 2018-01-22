@@ -205,8 +205,9 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.select = (id) ->
     nodesG.selectAll(".variable")
       .classed("selected", false)
-    nodesG.selectAll("#node_#{id}")
-      .classed("selected", true)
+    if id
+      nodesG.selectAll("#node_#{id}")
+        .classed("selected", true)
 
   ui.initialize()
   return ui
@@ -442,9 +443,12 @@ Widget = (selection) ->
     this.description.hide()
 
   clickNode = (d) ->
+    this.selected = not this.selected
+    id = if this.selected then d.id else null
+
+    ui.select(id)
     if options.shiny
-      Shiny.onInputChange("object_selected", d.id)
-    ui.select(d.id)
+      Shiny.onInputChange("object_selected", id)
 
   return widget
 
