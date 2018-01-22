@@ -200,24 +200,25 @@ commit_to_steps <- function (commit, objects)
 {
   # turns an object/plot into a step structure
   generate_step <- function(name, id, object) {
+    ans <- list(
+      id        = crc32(paste0(commit$id, id)),
+      expr      = format_expression(commit$expr),
+      commit_id = commit$id,
+      object_id = id
+    )
+
     if (identical(name, '.plot')) {
-      list(
-        type      = 'plot',
-        id        = id,
-        expr      = format_expression(commit$expr),
-        contents  = as.character(object),
-        commit_id = commit$id
-      )
+      c(ans, list(
+        type = 'plot',
+        contents = as.character(object)
+      ))
     }
     else {
-      list(
-        name      = name,
+      c(ans, list(
         type      = "object",
-        id        = id,
-        expr      = format_expression(commit$expr),
-        desc      = description(object),
-        commit_id = commit$id
-      )
+        name      = name,
+        desc      = description(object)
+      ))
     }
   }
 
@@ -286,7 +287,7 @@ read_objects <- function (s, store)
 {
   s$steps <- lapply(s$steps, function (step) {
     if (!is_empty(step$contents) || !is_empty(step$desc)) return(step)
-    obj <- storage::os_read_object(store, step$id)
+    obj <- storage::os_read_object(store, step$object_id)
 
     if (identical(step$type, 'object')) {
       step$desc <- description(obj)
@@ -446,7 +447,7 @@ plot_to_dependencies <- function (steps, embed = is_knitr())
 step_by_id <- function (steps, step_id)
 {
   stopifnot(is_steps(steps))
-  i <- (vapply(steps$steps, `[[`, character(1), i = 'id') == step_id)
+  i <- (vapply(steps$steps, `[[`, character(1), i = 'object_id') == step_id)
 
   # TODO this actually doesn't have to hold, it's possible that the same
   # object appears in a number of commits and gets promoted as a step

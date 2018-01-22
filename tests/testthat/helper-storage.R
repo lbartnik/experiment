@@ -99,3 +99,18 @@ expect_exists <- function (what, where, info = NULL)
   expect(any(cmp), sprintf("%s does not exist in %s", what_label$lab, where_label$lab),
          info = info)
 }
+
+
+expect_connected <- function (steps, source, target, info = NULL)
+{
+  ids <- vapply(steps$steps, `[[`, character(1), i = 'object_id')
+  source_id <- steps$steps[[match(source, ids)]]$id
+  target_id <- steps$steps[[match(target, ids)]]$id
+
+  cmp <- vapply(steps$links, identical, logical(1),
+                y = list(source = source_id, target = target_id))
+
+  expect(any(cmp), sprintf("there is no link from %s to %s", source, target),
+         info = info)
+}
+

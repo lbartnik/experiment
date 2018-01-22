@@ -45,6 +45,8 @@ not_null <- function (...)
 }
 
 
+crc32 <- function (x) digest::digest(x, algo = 'crc32')
+
 
 is_knitr <- function () getOption("knitr.in.progress", FALSE)
 
