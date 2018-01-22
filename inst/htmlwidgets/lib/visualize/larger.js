@@ -13,6 +13,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       euclidean,
       mapNodes,
       plotHref,
+      sign,
       _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];for (var key in source) {
@@ -50,13 +51,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   if (Math.sign === void 0) {
-    Math.prototype.sign = function (x) {
+    sign = function sign(x) {
       if (x < 0) {
         return -1;
       } else {
         return 1;
       }
     };
+  } else {
+    sign = Math.sign;
   }
 
   // Helper function to map node id's to node objects.
@@ -485,8 +488,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       // direction towards the node
       dx = center.x - (left + width / 2);
       dy = center.y - (top + height / 2);
-      dx = Math.sign(dx) * Math.max(Math.abs(dx) - nodeR - width / 2, 0);
-      dy = Math.sign(dy) * Math.max(Math.abs(dy) - nodeR - height / 2, 0);
+      dx = sign(dx) * Math.max(Math.abs(dx) - nodeR - width / 2, 0);
+      dy = sign(dy) * Math.max(Math.abs(dy) - nodeR - height / 2, 0);
       return {
         left: left + dx,
         top: top + dy,

@@ -10,7 +10,9 @@ Array::max = () ->
   @.reduce((a,b) -> Math.max(a, b))
 
 if Math.sign is undefined
-  Math::sign = (x) -> if x < 0 then -1 else 1
+  sign = (x) -> if x < 0 then -1 else 1
+else
+  sign = Math.sign
 
 # Helper function to map node id's to node objects.
 # Returns d3.map of ids -> nodes
@@ -332,8 +334,8 @@ Description = (element, step, outer, viewport, nodeR) ->
     # direction towards the node
     dx = center.x - (left + width/2)
     dy = center.y - (top + height/2)
-    dx = Math.sign(dx) * Math.max(Math.abs(dx) - nodeR - width/2, 0)
-    dy = Math.sign(dy) * Math.max(Math.abs(dy) - nodeR - height/2, 0)
+    dx = sign(dx) * Math.max(Math.abs(dx) - nodeR - width/2, 0)
+    dy = sign(dy) * Math.max(Math.abs(dy) - nodeR - height/2, 0)
 
     { left: left + dx, top: top + dy, scale: scale }
 
