@@ -65,8 +65,7 @@ sample_graph <- function (.data = TRUE)
 
 sample_steps <- function (.data = TRUE)
 {
-  m <- commit_memory_store()
-  graph_to_steps(graph(m, .data = .data))
+  graph_to_steps(sample_graph(.data))
 }
 
 
