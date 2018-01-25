@@ -1,0 +1,14 @@
+.controls {
+    border: 1px solid black;
+    display: table-cell;
+    vertical-align: top;
+    padding: 2pt;
+}
+
+.controls .button {
+    border: 1px solid black;
+    margin: 1pt;
+    width: 15pt;
+    text-align: center;
+    cursor: pointer;
+}

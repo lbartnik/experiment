@@ -7,10 +7,13 @@
 <script src="lib/coffeescript-2.0/coffeescript.js"></script>
 <script src="lib/highlight-9.12.0/highlight.js"></script>
 <link rel = "stylesheet" type = "text/css" href = "lib/highlight-9.12.0/styles/zenburn.css">
+
 <script type="text/coffeescript" src="lib/visualize/larger.coffee"></script>
 <link rel = "stylesheet" type = "text/css" href = "lib/visualize/larger.css">
 <script type="text/coffeescript" src="lib/visualize/popup.coffee"></script>
 <link rel = "stylesheet" type = "text/css" href = "lib/visualize/popup.css">
+<script type="text/coffeescript" src="lib/visualize/controls.coffee"></script>
+<link rel = "stylesheet" type = "text/css" href = "lib/visualize/controls.css">
 
 <link id="data-data-attachment" rel="attachment" href="data-1/data.json"/>
 <link id="plots-934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e-attachment" rel="attachment" href="plots-1/934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e_min.png"/>
@@ -23,7 +26,7 @@
 </head>
 <body style="background-color:white;">
 
-<div id="canvas"></div>
+<div id="canvas" style="border: 1px solid black"></div>
 
 <script type="text/coffeescript">
 myWidget = Widget('#canvas')

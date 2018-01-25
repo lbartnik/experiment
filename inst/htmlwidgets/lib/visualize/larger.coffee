@@ -62,6 +62,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   nodesG = null
   sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
   data   = null
+  zoom   = 1
 
   ui = () ->
 
@@ -83,6 +84,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.setData = (Data) ->
     data = Data
     recalculateCanvas(data)
+    resetCanvasSize()
     createGraphics(data)
 
   # create all graphical elements on the canvas
@@ -140,9 +142,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     fontSize  = Math.min(12, fontSize * (innerR*1.6/textWidth))
     "#{fontSize}px"
 
-  ui.updatePositions = () ->
-    recalculateCanvas(data)
-
+  ui.updateGraphicalElements = () ->
     nodesG.selectAll("svg.variable")
       .attr("x", (d) -> d.x - d.scale * nodeR)
       .attr("y", (d) -> d.y - d.scale * nodeR)
@@ -159,21 +159,27 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   recalculateCanvas = (data) ->
     x = (step.x for step in data.steps)
     y = (step.y for step in data.steps)
-    setCanvasSize(x.min()-nodeR, x.max()+nodeR, y.min()-nodeR, y.max()+nodeR)
-    # now sizes.canvas.* is updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width, sizes.canvas.height)
+    # calculate marginal positions
+    xMin = x.min()-nodeR
+    xMax = x.max()+nodeR
+    yMin = y.min()-nodeR
+    yMax = y.max()+nodeR
+    # if something went wrong, ignore altogether
+    if isNaN(xMin) or isNaN(xMax) or isNaN(yMin) or isNaN(yMax)
+      return
+    # new canvas dimensions
+    sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
+    sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
-  setCanvasSize = (xMin, xMax, yMin, yMax) ->
-    if isNaN(xMin) or isNaN(xMax) or isNaN(yMin) or isNaN(yMax)
-      return
-    sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
-    sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
-    
+  resetCanvasSize = () ->
+    # sizes.canvas.* are updated an we can update nodes' coordinates
+    data.centralize(sizes.canvas.width * zoom, sizes.canvas.height * zoom)
+    # update graphical elements
     canvas.attr("width", sizes.canvas.width)
       .attr("height", sizes.canvas.height)
-      .attr("viewBox", "0 0 #{sizes.canvas.width} #{sizes.canvas.height}")
+      .attr("viewBox", "0 0 #{sizes.canvas.width * zoom} #{sizes.canvas.height * zoom}")
 
   # returns mouse position relatively to the SVG canvas
   ui.mousePosition = () ->
@@ -208,6 +214,17 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     if id
       nodesG.selectAll("#node_#{id}")
         .classed("selected", true)
+
+  # --- zooming ---
+  ui.zoomIn = () ->
+    zoom = Math.max(1, zoom / 1.1)
+    resetCanvasSize()
+    ui.updateGraphicalElements()
+
+  ui.zoomOut = () ->
+    zoom *= 1.1
+    resetCanvasSize()
+    ui.updateGraphicalElements()
 
   ui.initialize()
   return ui
@@ -383,36 +400,30 @@ Description = (element, step, outer, viewport, nodeR) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
-  options = { shiny: false }
-  nodeR   = 15
-  lenseR  = 30
-  ui      = UI(selection, nodeR, 15)
-  pos     = Position(nodeR)
-  data    = null
+  options  = { shiny: false }
+  nodeR    = 15
+  lenseR   = 30
+  controls = Controls(selection)
+  ui       = UI(selection, nodeR, 15)
+  pos      = Position(nodeR)
+  data     = null
   
   widget = () ->
 
   widget.setData = (input) ->
     data = Data(input)
+    pos.calculate(data)
     ui.setData(data)
-    updateCanvas()
+    ui.updateGraphicalElements()
     setEvents()
 
   widget.setSize = (width, height) ->
     ui.setSize(width,height)
-    pos = Position(nodeR)
-    updateCanvas()
 
   widget.setOption = (what, value) ->
     if what of options
       value = (options[what].constructor)(value)
       options[what] = value
-
-  updateCanvas = () ->
-    if data
-      pos.calculate(data)
-      ui.updatePositions()
-
 
   setEvents = () ->
     ui.on('canvas:mousemove', moveLenses)
@@ -420,6 +431,8 @@ Widget = (selection) ->
     ui.on('node:mouseover', showDialog)
     ui.on('node:mouseout', hideDialog)
     ui.on('node:click', clickNode)
+    controls.on('zoom:in', zoomIn)
+    controls.on('zoom:out', zoomOut)
 
   moveLenses = (d) ->
     data.resetScale()
@@ -429,11 +442,11 @@ Widget = (selection) ->
       datum = d3.select(n).datum()
       scale = euclidean(mouse, datum)/lenseR
       datum.scale = 1 + lenseR/nodeR * (1-scale)**3
-    ui.updatePositions()
+    ui.updateGraphicalElements()
   
   resetScale = (d) ->
     data.resetScale()
-    ui.updatePositions()
+    ui.updateGraphicalElements()
   
   showDialog = (d) ->
     this.description = Description(this, d, selection, Viewport(selection), nodeR)
@@ -449,6 +462,12 @@ Widget = (selection) ->
     ui.select(id)
     if options.shiny
       Shiny.onInputChange("object_selected", id)
+
+  zoomIn = () ->
+    ui.zoomIn()
+
+  zoomOut = () ->
+    ui.zoomOut()
 
   return widget
 

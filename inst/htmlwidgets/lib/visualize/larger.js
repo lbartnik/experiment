@@ -119,7 +119,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, linksG, nodesG, outer, recalculateCanvas, scaleText, setCanvasSize, sizes, ui;
+    var canvas, createGraphics, data, linksG, nodesG, outer, recalculateCanvas, resetCanvasSize, scaleText, sizes, ui, zoom;
     outer = null;
     canvas = null;
     linksG = null;
@@ -135,6 +135,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
     data = null;
+    zoom = 1;
     ui = function ui() {};
     ui.initialize = function () {
       outer = d3.select(selection).append("div").attr("class", "widget");
@@ -151,6 +152,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     ui.setData = function (Data) {
       data = Data;
       recalculateCanvas(data);
+      resetCanvasSize();
       return createGraphics(data);
     };
     // create all graphical elements on the canvas
@@ -198,9 +200,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       fontSize = Math.min(12, fontSize * (innerR * 1.6 / textWidth));
       return fontSize + "px";
     };
-    ui.updatePositions = function () {
+    ui.updateGraphicalElements = function () {
       var link;
-      recalculateCanvas(data);
       nodesG.selectAll("svg.variable").attr("x", function (d) {
         return d.x - d.scale * nodeR;
       }).attr("y", function (d) {
@@ -222,7 +223,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     // compute canvas size from data
     recalculateCanvas = function recalculateCanvas(data) {
-      var step, x, y;
+      var step, x, xMax, xMin, y, yMax, yMin;
       x = function () {
         var j, len, ref, results;
         ref = data.steps;
@@ -243,19 +244,26 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         }
         return results;
       }();
-      setCanvasSize(x.min() - nodeR, x.max() + nodeR, y.min() - nodeR, y.max() + nodeR);
-      // now sizes.canvas.* is updated an we can update nodes' coordinates
-      return data.centralize(sizes.canvas.width, sizes.canvas.height);
-    };
-    // canvas size is set independently, and canvas might need to be
-    // scrolled within the outer div element
-    setCanvasSize = function setCanvasSize(xMin, xMax, yMin, yMax) {
+      // calculate marginal positions
+      xMin = x.min() - nodeR;
+      xMax = x.max() + nodeR;
+      yMin = y.min() - nodeR;
+      yMax = y.max() + nodeR;
+      // if something went wrong, ignore altogether
       if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax)) {
         return;
       }
+      // new canvas dimensions
       sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
-      sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
-      return canvas.attr("width", sizes.canvas.width).attr("height", sizes.canvas.height).attr("viewBox", "0 0 " + sizes.canvas.width + " " + sizes.canvas.height);
+      return sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
+    };
+    // canvas size is set independently, and canvas might need to be
+    // scrolled within the outer div element
+    resetCanvasSize = function resetCanvasSize() {
+      // sizes.canvas.* are updated an we can update nodes' coordinates
+      data.centralize(sizes.canvas.width * zoom, sizes.canvas.height * zoom);
+      // update graphical elements
+      return canvas.attr("width", sizes.canvas.width).attr("height", sizes.canvas.height).attr("viewBox", "0 0 " + sizes.canvas.width * zoom + " " + sizes.canvas.height * zoom);
     };
     // returns mouse position relatively to the SVG canvas
     ui.mousePosition = function () {
@@ -313,6 +321,17 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (id) {
         return nodesG.selectAll("#node_" + id).classed("selected", true);
       }
+    };
+    // --- zooming ---
+    ui.zoomIn = function () {
+      zoom = Math.max(1, zoom / 1.1);
+      resetCanvasSize();
+      return ui.updateGraphicalElements();
+    };
+    ui.zoomOut = function () {
+      zoom *= 1.1;
+      resetCanvasSize();
+      return ui.updateGraphicalElements();
     };
     ui.initialize();
     return ui;
@@ -557,26 +576,26 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, updateCanvas, widget;
+    var clickNode, controls, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, widget, zoomIn, zoomOut;
     options = {
       shiny: false
     };
     nodeR = 15;
     lenseR = 30;
+    controls = Controls(selection);
     ui = UI(selection, nodeR, 15);
     pos = Position(nodeR);
     data = null;
     widget = function widget() {};
     widget.setData = function (input) {
       data = Data(input);
+      pos.calculate(data);
       ui.setData(data);
-      updateCanvas();
+      ui.updateGraphicalElements();
       return setEvents();
     };
     widget.setSize = function (width, height) {
-      ui.setSize(width, height);
-      pos = Position(nodeR);
-      return updateCanvas();
+      return ui.setSize(width, height);
     };
     widget.setOption = function (what, value) {
       if (what in options) {
@@ -584,18 +603,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return options[what] = value;
       }
     };
-    updateCanvas = function updateCanvas() {
-      if (data) {
-        pos.calculate(data);
-        return ui.updatePositions();
-      }
-    };
     setEvents = function setEvents() {
       ui.on('canvas:mousemove', moveLenses);
       ui.on('canvas:mouseout', resetScale);
       ui.on('node:mouseover', showDialog);
       ui.on('node:mouseout', hideDialog);
-      return ui.on('node:click', clickNode);
+      ui.on('node:click', clickNode);
+      controls.on('zoom:in', zoomIn);
+      return controls.on('zoom:out', zoomOut);
     };
     moveLenses = function moveLenses(d) {
       var mouse, nodes;
@@ -608,11 +623,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         scale = euclidean(mouse, datum) / lenseR;
         return datum.scale = 1 + lenseR / nodeR * Math.pow(1 - scale, 3);
       });
-      return ui.updatePositions();
+      return ui.updateGraphicalElements();
     };
     resetScale = function resetScale(d) {
       data.resetScale();
-      return ui.updatePositions();
+      return ui.updateGraphicalElements();
     };
     showDialog = function showDialog(d) {
       this.description = Description(this, d, selection, Viewport(selection), nodeR);
@@ -629,6 +644,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (options.shiny) {
         return Shiny.onInputChange("object_selected", id);
       }
+    };
+    zoomIn = function zoomIn() {
+      return ui.zoomIn();
+    };
+    zoomOut = function zoomOut() {
+      return ui.zoomOut();
     };
     return widget;
   };

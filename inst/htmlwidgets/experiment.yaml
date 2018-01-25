@@ -22,6 +22,8 @@ dependencies:
     script:
       - larger.js
       - popup.js
+      - controls.js
     stylesheet:
       - larger.css
       - popup.css
+      - controls.css
