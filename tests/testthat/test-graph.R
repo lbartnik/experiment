@@ -122,7 +122,7 @@ test_that("descriptions can be added later", {
 
 test_that("finding step by id", {
   s <- sample_steps()
-  t <- step_by_id(s, 'r')
+  t <- step_by(s, object_id = 'r')
 
   expect_equal(t$object_id, 'r')
   expect_equal(t$commit_id, 'c')

@@ -463,6 +463,10 @@ step_by <- function (steps, id, object_id)
     i <- find_by(id)
   }
 
+  if (!sum(i)) {
+    stop("could not find step")
+  }
+
   # TODO this actually doesn't have to hold, it's possible that the same
   # object appears in a number of commits and gets promoted as a step
   stopifnot(sum(i) == 1)
