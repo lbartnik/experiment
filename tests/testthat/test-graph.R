@@ -76,9 +76,24 @@ test_that("convert graph", {
   nms <- vapply(s$steps, `[[`, character(1), i = 'name')
   expect_equal(nms, c('x', 'y', 'x', 'z'))
 
-  expect_exists(list(source = 'p', target = 'q'), s$links)
-  expect_exists(list(source = 'q', target = 'r'), s$links)
+  expect_connected(s, 'p', 'q')
+  expect_connected(s, 'q', 'r')
 })
+
+
+test_that("unique step ids", {
+  # when two commits contain object of the same id
+  m <- commit_memory_store()
+  commit_store(commit(list(x = '3'), bquote(), 'a', 'e', list(x = 'r')), m)
+
+  # extracting steps
+  s <- graph_to_steps(graph(m))
+
+  # every step has an unique id
+  ids <- vapply(s$steps, `[[`, character(1), i = 'id')
+  expect_length(unique(ids), length(ids))
+})
+
 
 
 test_that("objects have descriptions", {
@@ -107,9 +122,9 @@ test_that("descriptions can be added later", {
 
 test_that("finding step by id", {
   s <- sample_steps()
-  t <- step_by_id(s, 'r')
+  t <- step_by(s, object_id = 'r')
 
-  expect_equal(t$id, 'r')
+  expect_equal(t$object_id, 'r')
   expect_equal(t$commit_id, 'c')
   expect_equal(t$name, 'x')
 })

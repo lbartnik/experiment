@@ -14,6 +14,7 @@ Imports:
     broom,
     crayon,
     defer,
+    digest,
     formatR,
     ggplot2,
     htmltools,

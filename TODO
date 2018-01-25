@@ -1,3 +1,9 @@
+This branch:
+
+  - unique node ids, regardless of data-based SHA1
+
+
+
 * General:
   - make the session env a part of the state object
   - add a `commit_id` argument to `tracking_on`; create a `tracking_on_`

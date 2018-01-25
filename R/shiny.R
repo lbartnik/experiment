@@ -65,11 +65,11 @@ browserAddin <- function (steps = fullhistory())
     shiny::observeEvent(input$done, {
       # we can safely assume that tracking is turned on, otherwise there
       # would be no history to look at
-      if (is.null(input$object_selected)) {
-        cat('Selection empty, R session left unchanged.\n')
+      if (is_empty(input$object_selected)) {
+        cat('\nSelection empty, R session left unchanged.\n')
         hline()
       } else {
-        st <- step_by_id(steps, input$object_selected)
+        st <- step_by(steps, input$object_selected)
         onRestore(st$commit_id)
       }
 
@@ -79,7 +79,7 @@ browserAddin <- function (steps = fullhistory())
     })
 
     shiny::observe({
-      if (!is.null(input$object_selected))
+      if (!is_empty(input$object_selected))
         onClick(steps, input$object_selected)
     })
 
@@ -114,9 +114,11 @@ onStart <- function (message)
 }
 
 
-onClick <- function (steps, object_id)
+onClick <- function (steps, id)
 {
-  st <- step_by_id(steps, object_id)
+  stopifnot(!is_empty(id))
+
+  st <- step_by(steps, id = id)
   co <- commit_restore(st$commit_id, internal_state$stash, .data = FALSE)
 
   cat('\n')

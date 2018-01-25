@@ -38,6 +38,18 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     return results;
   };
 
+  Array.prototype.min = function () {
+    return this.reduce(function (a, b) {
+      return Math.min(a, b);
+    });
+  };
+
+  Array.prototype.max = function () {
+    return this.reduce(function (a, b) {
+      return Math.max(a, b);
+    });
+  };
+
   if (Math.sign === void 0) {
     sign = function sign(x) {
       if (x < 0) {
@@ -107,11 +119,22 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, linksG, nodesG, outer, scaleText, ui;
+    var canvas, createGraphics, data, linksG, nodesG, outer, recalculateCanvas, scaleText, setCanvasSize, sizes, ui;
     outer = null;
     canvas = null;
     linksG = null;
     nodesG = null;
+    sizes = {
+      ui: {
+        width: 500,
+        height: 500
+      },
+      canvas: {
+        width: 500,
+        height: 500
+      }
+    };
+    data = null;
     ui = function ui() {};
     ui.initialize = function () {
       outer = d3.select(selection).append("div").attr("class", "widget");
@@ -120,10 +143,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return nodesG = canvas.append("g").attr("id", "nodes");
     };
     ui.setSize = function (width, height) {
+      sizes.ui.width = width;
+      sizes.ui.height = height;
       // reduce the size to make sure scrolls don't show right away
-      return canvas.attr("width", width - 10).attr("height", height - 10).attr("viewBox", "0 0 " + width + " " + height);
+      return outer.style("width", width - 10).style("height", height - 10);
     };
-    ui.setData = function (data) {
+    ui.setData = function (Data) {
+      data = Data;
+      recalculateCanvas(data);
       return createGraphics(data);
     };
     // create all graphical elements on the canvas
@@ -173,6 +200,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     ui.updatePositions = function () {
       var link;
+      recalculateCanvas(data);
       nodesG.selectAll("svg.variable").attr("x", function (d) {
         return d.x - d.scale * nodeR;
       }).attr("y", function (d) {
@@ -192,6 +220,44 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return d.target.y;
       });
     };
+    // compute canvas size from data
+    recalculateCanvas = function recalculateCanvas(data) {
+      var step, x, y;
+      x = function () {
+        var j, len, ref, results;
+        ref = data.steps;
+        results = [];
+        for (j = 0, len = ref.length; j < len; j++) {
+          step = ref[j];
+          results.push(step.x);
+        }
+        return results;
+      }();
+      y = function () {
+        var j, len, ref, results;
+        ref = data.steps;
+        results = [];
+        for (j = 0, len = ref.length; j < len; j++) {
+          step = ref[j];
+          results.push(step.y);
+        }
+        return results;
+      }();
+      setCanvasSize(x.min() - nodeR, x.max() + nodeR, y.min() - nodeR, y.max() + nodeR);
+      // now sizes.canvas.* is updated an we can update nodes' coordinates
+      return data.centralize(sizes.canvas.width, sizes.canvas.height);
+    };
+    // canvas size is set independently, and canvas might need to be
+    // scrolled within the outer div element
+    setCanvasSize = function setCanvasSize(xMin, xMax, yMin, yMax) {
+      if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax)) {
+        return;
+      }
+      sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
+      sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
+      return canvas.attr("width", sizes.canvas.width).attr("height", sizes.canvas.height).attr("viewBox", "0 0 " + sizes.canvas.width + " " + sizes.canvas.height);
+    };
+    // returns mouse position relatively to the SVG canvas
     ui.mousePosition = function () {
       var x, y;
 
@@ -244,7 +310,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // --- graphical node selection ---
     ui.select = function (id) {
       nodesG.selectAll(".variable").classed("selected", false);
-      return nodesG.selectAll("#node_" + id).classed("selected", true);
+      if (id) {
+        return nodesG.selectAll("#node_" + id).classed("selected", true);
+      }
     };
     ui.initialize();
     return ui;
@@ -252,14 +320,44 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var resetScale, setupData;
+    var centralize, resetScale, setupData;
     resetScale = function resetScale() {
       return data.steps.forEach(function (s) {
         return s.scale = 1;
       });
     };
+    centralize = function centralize(width, height) {
+      var dx, dy, step, x, y;
+      x = function () {
+        var j, len, ref, results;
+        ref = data.steps;
+        results = [];
+        for (j = 0, len = ref.length; j < len; j++) {
+          step = ref[j];
+          results.push(step.x);
+        }
+        return results;
+      }();
+      y = function () {
+        var j, len, ref, results;
+        ref = data.steps;
+        results = [];
+        for (j = 0, len = ref.length; j < len; j++) {
+          step = ref[j];
+          results.push(step.y);
+        }
+        return results;
+      }();
+      dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2;
+      dy = y.min() - Math.max(height - (y.max() - y.min()), 0) / 2;
+      return data.steps.forEach(function (s) {
+        s.x -= dx;
+        return s.y -= dy;
+      });
+    };
     data = _extends({
-      resetScale: resetScale
+      resetScale: resetScale,
+      centralize: centralize
     }, data);
     // pre-process the input data
     setupData = function setupData() {
@@ -284,10 +382,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   };
 
   // --- Data -------------------------------------------------------------
-  Position = function Position(width, height, margin) {
+  Position = function Position(nodeR) {
     var position, stratified, treed;
-    width = width - margin * 2;
-    height = height - margin * 2;
     position = function position() {};
     stratified = function stratified(data) {
       var parentsMap, stratify;
@@ -305,41 +401,26 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     treed = function treed(data) {
       var tree;
       data.sort();
-      tree = d3.tree().size([width, height]);
+      tree = d3.tree().nodeSize([4 * nodeR, 4 * nodeR]);
       return tree(data);
     };
     position.calculate = function (data) {
-      var dx, dy, max_x, max_y, min_x, min_y, nodesMap, s, t, x, y;
+      var dx, dy, nodesMap, s, t;
       // use d3 to calculate positions for a tree
       s = stratified(data);
       t = treed(s);
-      // centralize the tree
-      x = t.descendants().map(function (n) {
+      dx = t.descendants().map(function (n) {
         return n.x;
-      });
-      y = t.descendants().map(function (n) {
+      }).min() - 2 * nodeR;
+      dy = t.descendants().map(function (n) {
         return n.y;
-      });
-      min_x = x.reduce(function (a, b) {
-        return Math.min(a, b);
-      });
-      max_x = x.reduce(function (a, b) {
-        return Math.max(a, b);
-      });
-      min_y = y.reduce(function (a, b) {
-        return Math.min(a, b);
-      });
-      max_y = y.reduce(function (a, b) {
-        return Math.max(a, b);
-      });
-      dx = width - max_x - min_x + margin;
-      dy = height - max_y - min_y + margin;
+      }).min() - 2 * nodeR;
       // update original nodes' positions
       nodesMap = mapNodes(data.steps);
       return t.each(function (n) {
         s = nodesMap.get(n.id);
-        s.x = n.x + dx;
-        return s.y = n.y + dy;
+        s.x = n.x - dx;
+        return s.y = n.y - dy;
       });
     };
     // --- calculate ---
@@ -483,7 +564,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     nodeR = 15;
     lenseR = 30;
     ui = UI(selection, nodeR, 15);
-    pos = Position(500, 500, nodeR);
+    pos = Position(nodeR);
     data = null;
     widget = function widget() {};
     widget.setData = function (input) {
@@ -494,7 +575,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     widget.setSize = function (width, height) {
       ui.setSize(width, height);
-      pos = Position(width, height, nodeR);
+      pos = Position(nodeR);
       return updateCanvas();
     };
     widget.setOption = function (what, value) {
@@ -541,10 +622,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return this.description.hide();
     };
     clickNode = function clickNode(d) {
+      var id;
+      this.selected = !this.selected;
+      id = this.selected ? d.id : null;
+      ui.select(id);
       if (options.shiny) {
-        Shiny.onInputChange("object_selected", d.id);
+        return Shiny.onInputChange("object_selected", id);
       }
-      return ui.select(d.id);
     };
     return widget;
   };

@@ -37,7 +37,7 @@ test_that("reducing by class", {
 
   expect_length(t$steps, 2)
   expect_length(t$links, 1)
-  expect_equal(first(t$links), list(source = 'p', target = 's'))
+  expect_connected(t, 'p', 's')
 })
 
 
@@ -56,7 +56,7 @@ test_that("reducing by name", {
 
   expect_length(t$steps, 2)
   expect_length(t$links, 1)
-  expect_equal(first(t$links), list(source = 'p', target = 'r'))
+  expect_connected(t, 'p', 'r')
 })
 
 

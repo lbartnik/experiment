@@ -173,7 +173,7 @@ verify_step <- function (step, dots, parent_env, store)
   stopifnot(storage::is_object_store(store))
 
   # prepare the hierarchy of environments in which lazy dots will be evaluated
-  tags <- storage::os_read_tags(store, step$id)
+  tags <- storage::os_read_tags(store, step$object_id)
   data_env <- as.environment(c(tags, step))
   parent.env(data_env) <- parent_env
 
