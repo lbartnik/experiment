@@ -1,7 +1,22 @@
-This branch:
 
-  - unique node ids, regardless of data-based SHA1
+Errors:
 
+warning messages from top-level task callback '1'
+Warning messages:
+1: In svg(path) :
+  unable to load shared object '/Library/Frameworks/R.framework/Resources/library/grDevices/libs//cairo.so':
+  dlopen(/Library/Frameworks/R.framework/Resources/library/grDevices/libs//cairo.so, 6): Library not loaded: /opt/X11/lib/libcairo.2.dylib
+  Referenced from: /Library/Frameworks/R.framework/Resources/library/grDevices/libs//cairo.so
+  Reason: Incompatible library version: cairo.so requires version 11403.0.0 or later, but libcairo.2.dylib provides version 11203.0.0
+2: In svg(path) : failed to load cairo DLL
+3: In file(con, "rb") :
+  cannot open file '/var/folders/rb/db6l8q955dsd61tzb__3b_cc0000gn/T//Rtmpm1Ld1y/file1fd6658f6f08.svg': No such file or directory
+4: could not create a commit: cannot open the connection 
+
+po tracking_off() próbuję zrobić ponownie tracking_on():
+> tracking_on()
+using an existing object store: "/Users/pchudzia/workspace/project-store"
+Error: global environment is not empty, cannot restore commit, aborting
 
 
 * General:
