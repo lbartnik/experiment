@@ -119,11 +119,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, linksG, nodesG, outer, recalculateCanvas, resetCanvasSize, scaleText, sizes, ui, zoom;
+    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zLimit, zoom;
     outer = null;
     canvas = null;
     linksG = null;
     nodesG = null;
+    namesG = null;
     sizes = {
       ui: {
         width: 500,
@@ -136,12 +137,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     data = null;
     zoom = 1;
+    zLimit = 1.5;
     ui = function ui() {};
     ui.initialize = function () {
       outer = d3.select(selection).append("div").attr("class", "widget");
       canvas = outer.append("svg");
       linksG = canvas.append("g").attr("id", "links");
-      return nodesG = canvas.append("g").attr("id", "nodes");
+      nodesG = canvas.append("g").attr("id", "nodes");
+      return namesG = canvas.append("g").attr("id", "names");
     };
     ui.setSize = function (width, height) {
       sizes.ui.width = width;
@@ -192,6 +195,55 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     // --- createGraphics
 
+    // switch view between zoom-out and close-up
+    switchView = function switchView(which) {
+      if (which === "zoom-out") {
+        nodesG.selectAll(".variable").interrupt("show-nodes").transition("hide-nodes").duration(500).style("opacity", "0").on("end", function (d) {
+          return d3.select(this).style("visibility", "hidden");
+        });
+        linksG.selectAll("line.link").classed("thick", function (d) {
+          return d.source.group === d.target.group;
+        }).style("opacity", "0").transition().duration(500).style("opacity", "1");
+        return linksG.selectAll("line.thick").on("mouseover", showNames).on("mouseout", hideNames); // close-up
+      } else {
+        nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
+        return linksG.selectAll("line.link").classed("thick", function (d) {
+          return false;
+        });
+      }
+    };
+    // --- switchView
+
+    // show node names in the zoom-out mode
+    showNames = function showNames(d) {
+      var names, subSteps;
+      console.log(d);
+      console.log(d.source.group);
+      subSteps = data.steps.filter(function (step) {
+        return step.group === d.source.group;
+      });
+      console.log(subSteps);
+      names = namesG.selectAll("text").data(subSteps, function (d) {
+        return "name_" + d.id;
+      });
+      names.enter().append("text").text(function (d) {
+        if (d.type === "object") {
+          return d.name;
+        } else {
+          return "plot";
+        }
+      }).attr("class", function (d) {
+        return d.type;
+      }).attr("x", function (d) {
+        return d.x;
+      }).attr("y", function (d) {
+        return d.y;
+      });
+      return names.exit().remove();
+    };
+    hideNames = function hideNames(d) {
+      return namesG.selectAll("text").remove();
+    };
     // make sure text fits inside the node icon
     scaleText = function scaleText(text) {
       var fontSize, textWidth;
@@ -326,24 +378,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     ui.zoomIn = function () {
       zoom = Math.max(1, zoom / 1.1);
       resetCanvasSize();
-      if (zoom < 1.5 && 1.5 < zoom * 1.1) {
-        nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
-        return linksG.selectAll("line.link").classed("thick", function (d) {
-          return false;
-        });
+      if (zoom < zLimit && zLimit < zoom * 1.1) {
+        return switchView("close-up");
       }
     };
     ui.zoomOut = function () {
       zoom *= 1.1;
       resetCanvasSize();
-      console.log(zoom);
-      if (zoom >= 1.5 && 1.5 > zoom / 1.1) {
-        nodesG.selectAll(".variable").interrupt("show-nodes").transition("hide-nodes").duration(500).style("opacity", "0").on("end", function (d) {
-          return d3.select(this).style("visibility", "hidden");
-        });
-        return linksG.selectAll("line.link").classed("thick", function (d) {
-          return d.source.group === d.target.group;
-        }).style("opacity", "0").transition().duration(500).style("opacity", "1");
+      if (zoom >= zLimit && zLimit > zoom / 1.1) {
+        return switchView("zoom-out");
       }
     };
     ui.initialize();

@@ -16,18 +16,18 @@
     stroke: black;
 }
 
-.object {
+#nodes .object {
     fill: rgb(247, 247, 247);
     stroke: rgb(150, 150, 150);
 }
 
-.plot {
+#nodes .plot {
     fill: transparent;
     stroke: rgb(150, 150, 150);
     stroke-width: 2pt;
 }
 
-.selected {
+#nodes .selected {
     stroke: rgb(38, 177, 38);
 }
 
@@ -38,7 +38,7 @@
     font-size: 8pt;
 }
 
-.face {
+#nodes .face {
     fill: transparent;
     stroke: transparent;
 }
@@ -46,6 +46,18 @@
 .thick {
     stroke-width: 5pt;
 }
+
+#names {
+}
+
+#names > .object {
+}
+
+#names > .plot {
+    font-style: italic;
+    fill: black;
+}
+
 
 .tooltip {
     visibility: hidden;

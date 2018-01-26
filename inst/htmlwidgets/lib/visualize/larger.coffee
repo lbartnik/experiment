@@ -60,9 +60,11 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   canvas = null
   linksG = null
   nodesG = null
+  namesG = null
   sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
   data   = null
   zoom   = 1
+  zLimit = 1.5
 
   ui = () ->
 
@@ -73,6 +75,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     canvas = outer.append("svg")
     linksG = canvas.append("g").attr("id", "links")
     nodesG = canvas.append("g").attr("id", "nodes")
+    namesG = canvas.append("g").attr("id", "names")
   
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
@@ -134,6 +137,57 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .attr("stroke", "#ddd")
     link.exit().remove()
   # --- createGraphics
+
+  # switch view between zoom-out and close-up
+  switchView = (which) ->
+    if which is "zoom-out"
+      nodesG.selectAll(".variable")
+        .interrupt("show-nodes")
+        .transition("hide-nodes")
+        .duration(500)
+        .style("opacity", "0")
+        .on("end", (d) -> d3.select(this).style("visibility", "hidden"))
+      linksG.selectAll("line.link")
+        .classed("thick", (d) -> d.source.group is d.target.group)
+        .style("opacity", "0")
+        .transition()
+        .duration(500)
+        .style("opacity", "1")
+      linksG.selectAll("line.thick")
+        .on("mouseover", showNames)
+        .on("mouseout", hideNames)
+    else # close-up
+      nodesG.selectAll(".variable")
+        .interrupt("hide-nodes")
+        .style("visibility", "visible")
+        .transition("show-nodes")
+        .duration(500)
+        .style("opacity", "1")
+      linksG.selectAll("line.link")
+        .classed("thick", (d) -> false)
+  # --- switchView
+
+  # show node names in the zoom-out mode
+  showNames = (d) ->
+    console.log(d)
+    console.log(d.source.group)
+    subSteps = data.steps.filter (step) -> step.group is d.source.group
+    console.log(subSteps)
+    names = namesG.selectAll("text")
+      .data(subSteps, (d) -> "name_#{d.id}")
+    names.enter()
+      .append("text")
+      .text((d) -> if d.type is "object" then d.name else "plot")
+      .attr("class", (d) -> d.type)
+      .attr("x", (d) -> d.x)
+      .attr("y", (d) -> d.y)
+    names.exit().remove()
+  
+  hideNames = (d) ->
+    namesG.selectAll("text").remove()
+
+
+
 
   # make sure text fits inside the node icon
   scaleText = (text) ->
@@ -219,33 +273,12 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.zoomIn = () ->
     zoom = Math.max(1, zoom / 1.1)
     resetCanvasSize()
-    if zoom < 1.5 < zoom*1.1
-      nodesG.selectAll(".variable")
-        .interrupt("hide-nodes")
-        .style("visibility", "visible")
-        .transition("show-nodes")
-        .duration(500)
-        .style("opacity", "1")
-      linksG.selectAll("line.link")
-        .classed("thick", (d) -> false)
+    if zoom < zLimit < zoom*1.1 then switchView("close-up")
 
   ui.zoomOut = () ->
     zoom *= 1.1
     resetCanvasSize()
-    console.log(zoom)
-    if zoom >= 1.5 > zoom/1.1
-      nodesG.selectAll(".variable")
-        .interrupt("show-nodes")
-        .transition("hide-nodes")
-        .duration(500)
-        .style("opacity", "0")
-        .on("end", (d) -> d3.select(this).style("visibility", "hidden"))
-      linksG.selectAll("line.link")
-        .classed("thick", (d) -> d.source.group is d.target.group)
-        .style("opacity", "0")
-        .transition()
-        .duration(500)
-        .style("opacity", "1")
+    if zoom >= zLimit > zoom/1.1 then switchView("zoom-out")
 
   ui.initialize()
   return ui
