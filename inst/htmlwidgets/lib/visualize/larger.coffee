@@ -176,18 +176,26 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   # show node names in the zoom-out mode
   showNames = (d) ->
     subSteps = data.steps.filter (step) -> step.group is d.source.group
-    names = namesG.selectAll("text")
+    names = namesG.selectAll("g")
       .data(subSteps, (d) -> "name_#{d.id}")
-    names.enter()
-      .append("text")
+      .enter().append("g")
+    rects = names.append("rect")
+      .classed("bg", true)
+    names.append("text")
       .text((d) -> if d.type is "object" then d.name else "plot")
+      .attr("font-size", 12*zoom)
       .attr("class", (d) -> d.type)
-      .attr("x", (d) -> d.x)
+      .attr("x", (d) -> d.x + 10)
       .attr("y", (d) -> d.y)
-    names.exit().remove()
-  
+    namesG.selectAll("text").each (d, i) ->
+      d.bb = this.getBBox()
+    rects.attr("x", (d) -> d.bb.x - 2)
+      .attr("y", (d) -> d.bb.y - 2)
+      .attr("width", (d) -> d.bb.width + 4)
+      .attr("height", (d) -> d.bb.height + 4)
+
   hideNames = (d) ->
-    namesG.selectAll("text").remove()
+    namesG.selectAll("g").remove()
 
 
   # make sure text fits inside the node icon

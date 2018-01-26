@@ -50,14 +50,18 @@
 #names {
 }
 
-#names > .object {
+#names .object {
 }
 
-#names > .plot {
+#names .plot {
     font-style: italic;
     fill: black;
 }
 
+#names .bg {
+    fill: grey;
+    opacity: .25;
+}
 
 .tooltip {
     visibility: hidden;
