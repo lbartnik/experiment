@@ -170,16 +170,16 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     # new canvas dimensions
     sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
     sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
+    # sizes.canvas.* are updated an we can update nodes' coordinates
+    data.centralize(sizes.canvas.width * zoom, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
   resetCanvasSize = () ->
-    # sizes.canvas.* are updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width * zoom, sizes.canvas.height * zoom)
     # update graphical elements
-    canvas.attr("width", sizes.canvas.width)
-      .attr("height", sizes.canvas.height)
-      .attr("viewBox", "0 0 #{sizes.canvas.width * zoom} #{sizes.canvas.height * zoom}")
+    canvas.attr("width", sizes.canvas.width / zoom)
+      .attr("height", sizes.canvas.height / zoom)
+      .attr("viewBox", "0 0 #{sizes.canvas.width} #{sizes.canvas.height}")
 
   # returns mouse position relatively to the SVG canvas
   ui.mousePosition = () ->
