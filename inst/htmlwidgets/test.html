@@ -32,7 +32,7 @@
 myWidget = Widget('#canvas')
 myWidget.setSize(500, 500)
 
-embedPlots = true
+embedPlots = false
 if embedPlots
   $.ajax("data.json").done (data) ->
     myWidget.setOption("embedPlots", true)

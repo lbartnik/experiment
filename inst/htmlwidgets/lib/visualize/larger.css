@@ -43,6 +43,10 @@
     stroke: transparent;
 }
 
+.thick {
+    stroke-width: 5pt;
+}
+
 .tooltip {
     visibility: hidden;
     pointer-events: none;

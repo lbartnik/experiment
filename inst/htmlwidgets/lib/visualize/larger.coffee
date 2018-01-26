@@ -219,25 +219,33 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.zoomIn = () ->
     zoom = Math.max(1, zoom / 1.1)
     resetCanvasSize()
-    if zoom < 1.5
+    if zoom < 1.5 < zoom*1.1
       nodesG.selectAll(".variable")
         .interrupt("hide-nodes")
         .style("visibility", "visible")
         .transition("show-nodes")
         .duration(500)
         .style("opacity", "1")
+      linksG.selectAll("line.link")
+        .classed("thick", (d) -> false)
 
   ui.zoomOut = () ->
     zoom *= 1.1
     resetCanvasSize()
     console.log(zoom)
-    if zoom >= 1.5
+    if zoom >= 1.5 > zoom/1.1
       nodesG.selectAll(".variable")
         .interrupt("show-nodes")
         .transition("hide-nodes")
         .duration(500)
         .style("opacity", "0")
         .on("end", (d) -> d3.select(this).style("visibility", "hidden"))
+      linksG.selectAll("line.link")
+        .classed("thick", (d) -> d.source.group is d.target.group)
+        .style("opacity", "0")
+        .transition()
+        .duration(500)
+        .style("opacity", "1")
 
   ui.initialize()
   return ui
@@ -248,7 +256,16 @@ Data = (data) ->
   resetScale = () ->
     data.steps.forEach (s) ->
       s.scale = 1
-  
+
+  stratified = () ->
+    parentsMap = d3.map()
+    data.links.forEach (l) ->
+      parentsMap.set(l.target.id, l.source.id)
+    stratify = d3.stratify()
+      .id((d) -> d.id)
+      .parentId((d) -> parentsMap.get(d.id))
+    stratify(data.steps)
+
   centralize = (width, height) ->
     x = (step.x for step in data.steps)
     y = (step.y for step in data.steps)
@@ -258,10 +275,28 @@ Data = (data) ->
       s.x -= dx
       s.y -= dy
 
+  counter = (start = 1) ->
+    () -> start++
+
   # assign nodes to groups based on the time threshold
   groupData = (threshold) ->
+    s = stratified()
 
-  data = {resetScale: resetScale, centralize: centralize, groupData: groupData, data...}
+    groupNo = counter()
+    s.group = groupNo()
+
+    assignGroup = (parent) ->
+      parent.children?.forEach (child) ->
+        dt = child.data.time - parent.data.time
+        child.group = if dt <= threshold then parent.group else groupNo()
+        assignGroup(child)
+    assignGroup(s)
+
+    stepsMap = d3.map()
+    data.steps.forEach (s) -> stepsMap.set(s.id, s)
+
+    s.descendants().forEach (d) ->
+      stepsMap.get(d.id).group = d.group
 
   # pre-process the input data
   setupData = () ->
@@ -276,6 +311,14 @@ Data = (data) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
 
+  # extend with methods
+  methods =
+    resetScale: resetScale
+    stratified: stratified
+    centralize: centralize
+    groupData: groupData
+  data = {methods..., data...}
+
   # initialize the object
   setupData()
   return data
@@ -285,15 +328,6 @@ Data = (data) ->
 Position = (nodeR) ->
   position = () ->
 
-  stratified = (data) ->
-    parentsMap = d3.map()
-    data.links.forEach (l) ->
-      parentsMap.set(l.target.id, l.source.id)
-    stratify = d3.stratify()
-      .id((d) -> d.id)
-      .parentId((d) -> parentsMap.get(d.id))
-    stratify(data.steps)
-
   treed = (data) ->
     data.sort()
     tree = d3.tree()
@@ -302,7 +336,7 @@ Position = (nodeR) ->
   
   position.calculate = (data) ->
     # use d3 to calculate positions for a tree
-    s = stratified(data)
+    s = data.stratified()
     t = treed(s)
     
     dx = t.descendants().map((n) -> n.x).min() - 2 * nodeR
@@ -428,6 +462,7 @@ Widget = (selection) ->
 
   widget.setData = (input) ->
     data = Data(input)
+    data.groupData(200)
     pos.calculate(data)
     ui.setData(data)
     ui.updateGraphicalElements()

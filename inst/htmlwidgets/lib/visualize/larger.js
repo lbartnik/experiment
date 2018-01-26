@@ -326,18 +326,24 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     ui.zoomIn = function () {
       zoom = Math.max(1, zoom / 1.1);
       resetCanvasSize();
-      if (zoom < 1.5) {
-        return nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
+      if (zoom < 1.5 && 1.5 < zoom * 1.1) {
+        nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
+        return linksG.selectAll("line.link").classed("thick", function (d) {
+          return false;
+        });
       }
     };
     ui.zoomOut = function () {
       zoom *= 1.1;
       resetCanvasSize();
       console.log(zoom);
-      if (zoom >= 1.5) {
-        return nodesG.selectAll(".variable").interrupt("show-nodes").transition("hide-nodes").duration(500).style("opacity", "0").on("end", function (d) {
+      if (zoom >= 1.5 && 1.5 > zoom / 1.1) {
+        nodesG.selectAll(".variable").interrupt("show-nodes").transition("hide-nodes").duration(500).style("opacity", "0").on("end", function (d) {
           return d3.select(this).style("visibility", "hidden");
         });
+        return linksG.selectAll("line.link").classed("thick", function (d) {
+          return d.source.group === d.target.group;
+        }).style("opacity", "0").transition().duration(500).style("opacity", "1");
       }
     };
     ui.initialize();
@@ -346,11 +352,24 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var centralize, groupData, resetScale, setupData;
+    var centralize, counter, groupData, methods, resetScale, setupData, stratified;
     resetScale = function resetScale() {
       return data.steps.forEach(function (s) {
         return s.scale = 1;
       });
+    };
+    stratified = function stratified() {
+      var parentsMap, stratify;
+      parentsMap = d3.map();
+      data.links.forEach(function (l) {
+        return parentsMap.set(l.target.id, l.source.id);
+      });
+      stratify = d3.stratify().id(function (d) {
+        return d.id;
+      }).parentId(function (d) {
+        return parentsMap.get(d.id);
+      });
+      return stratify(data.steps);
     };
     centralize = function centralize(width, height) {
       var dx, dy, step, x, y;
@@ -381,13 +400,37 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return s.y -= dy;
       });
     };
+    counter = function counter() {
+      var start = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+      return function () {
+        return start++;
+      };
+    };
     // assign nodes to groups based on the time threshold
-    groupData = function groupData(threshold) {};
-    data = _extends({
-      resetScale: resetScale,
-      centralize: centralize,
-      groupData: groupData
-    }, data);
+    groupData = function groupData(threshold) {
+      var _assignGroup, groupNo, s, stepsMap;
+      s = stratified();
+      groupNo = counter();
+      s.group = groupNo();
+      _assignGroup = function assignGroup(parent) {
+        var ref;
+        return (ref = parent.children) != null ? ref.forEach(function (child) {
+          var dt;
+          dt = child.data.time - parent.data.time;
+          child.group = dt <= threshold ? parent.group : groupNo();
+          return _assignGroup(child);
+        }) : void 0;
+      };
+      _assignGroup(s);
+      stepsMap = d3.map();
+      data.steps.forEach(function (s) {
+        return stepsMap.set(s.id, s);
+      });
+      return s.descendants().forEach(function (d) {
+        return stepsMap.get(d.id).group = d.group;
+      });
+    };
     // pre-process the input data
     setupData = function setupData() {
       var stepsMap;
@@ -405,6 +448,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return l.target = stepsMap.get(l.target);
       });
     };
+    // extend with methods
+    methods = {
+      resetScale: resetScale,
+      stratified: stratified,
+      centralize: centralize,
+      groupData: groupData
+    };
+    data = _extends({}, methods, data);
     // initialize the object
     setupData();
     return data;
@@ -412,21 +463,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Data -------------------------------------------------------------
   Position = function Position(nodeR) {
-    var position, stratified, treed;
+    var position, treed;
     position = function position() {};
-    stratified = function stratified(data) {
-      var parentsMap, stratify;
-      parentsMap = d3.map();
-      data.links.forEach(function (l) {
-        return parentsMap.set(l.target.id, l.source.id);
-      });
-      stratify = d3.stratify().id(function (d) {
-        return d.id;
-      }).parentId(function (d) {
-        return parentsMap.get(d.id);
-      });
-      return stratify(data.steps);
-    };
     treed = function treed(data) {
       var tree;
       data.sort();
@@ -436,7 +474,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     position.calculate = function (data) {
       var dx, dy, nodesMap, s, t;
       // use d3 to calculate positions for a tree
-      s = stratified(data);
+      s = data.stratified();
       t = treed(s);
       dx = t.descendants().map(function (n) {
         return n.x;
@@ -599,6 +637,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     widget = function widget() {};
     widget.setData = function (input) {
       data = Data(input);
+      data.groupData(200);
       pos.calculate(data);
       ui.setData(data);
       ui.updateGraphicalElements();
