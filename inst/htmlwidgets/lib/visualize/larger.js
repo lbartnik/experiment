@@ -140,12 +140,18 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     zLimit = 1.5;
     ui = function ui() {};
     ui.initialize = function () {
+      var zoomer;
       outer = d3.select(selection).append("div").attr("class", "widget");
       canvas = outer.append("svg");
       linksG = canvas.append("g").attr("id", "links");
       nodesG = canvas.append("g").attr("id", "nodes");
-      return namesG = canvas.append("g").attr("id", "names");
+      namesG = canvas.append("g").attr("id", "names");
+      return zoomer = d3.zoom().scaleExtent([1, 10]).on("zoom", function () {
+        return zoomInOut(1 / d3.event.transform.k);
+      });
     };
+    //outer.call(zoomer)
+    //.on("wheel.zoom", null)
     ui.setSize = function (width, height) {
       sizes.ui.width = width;
       sizes.ui.height = height;
@@ -217,12 +223,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // show node names in the zoom-out mode
     showNames = function showNames(d) {
       var names, subSteps;
-      console.log(d);
-      console.log(d.source.group);
       subSteps = data.steps.filter(function (step) {
         return step.group === d.source.group;
       });
-      console.log(subSteps);
       names = namesG.selectAll("text").data(subSteps, function (d) {
         return "name_" + d.id;
       });
@@ -375,19 +378,21 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
     // --- zooming ---
-    ui.zoomIn = function () {
-      zoom = Math.max(1, zoom / 1.1);
-      resetCanvasSize();
-      if (zoom < zLimit && zLimit < zoom * 1.1) {
-        return switchView("close-up");
+    ui.zoom = function (newZoom) {
+      if (newZoom < zLimit && zLimit < zoom) {
+        switchView("close-up");
       }
+      if (newZoom >= zLimit && zLimit > zoom) {
+        switchView("zoom-out");
+      }
+      zoom = newZoom;
+      return resetCanvasSize();
+    };
+    ui.zoomIn = function () {
+      return ui.zoom(Math.max(1, zoom / 1.1));
     };
     ui.zoomOut = function () {
-      zoom *= 1.1;
-      resetCanvasSize();
-      if (zoom >= zLimit && zLimit > zoom / 1.1) {
-        return switchView("zoom-out");
-      }
+      return ui.zoom(zoom * 1.1);
     };
     ui.initialize();
     return ui;
@@ -667,7 +672,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var clickNode, controls, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, widget, zoomIn, zoomOut;
+    var clickNode, controls, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, widget;
     options = {
       shiny: false
     };
@@ -701,8 +706,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       ui.on('node:mouseover', showDialog);
       ui.on('node:mouseout', hideDialog);
       ui.on('node:click', clickNode);
-      controls.on('zoom:in', zoomIn);
-      return controls.on('zoom:out', zoomOut);
+      controls.on('zoom:in', ui.zoomIn);
+      controls.on('zoom:out', ui.zoomOut);
+      return controls.on('zoom', function (scale) {
+        return ui.zoom(scale);
+      });
     };
     moveLenses = function moveLenses(d) {
       var mouse, nodes;
@@ -736,12 +744,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (options.shiny) {
         return Shiny.onInputChange("object_selected", id);
       }
-    };
-    zoomIn = function zoomIn() {
-      return ui.zoomIn();
-    };
-    zoomOut = function zoomOut() {
-      return ui.zoomOut();
     };
     return widget;
   };

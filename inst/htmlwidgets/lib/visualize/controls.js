@@ -15,18 +15,28 @@
         class: "controls"
       }).appendTo(selection);
       plus = $("<div>", {
-        class: "button"
+        class: "button",
+        id: "plus"
       }).appendTo(outer).text("+");
       return minus = $("<div>", {
-        class: "button"
+        class: "button",
+        id: "minus"
       }).appendTo(outer).text("-");
     };
     controls.on = function (event, callback) {
+      var zoom;
       if (event === 'zoom:in') {
         plus.on('click', callback);
       }
       if (event === 'zoom:out') {
-        return minus.on('click', callback);
+        minus.on('click', callback);
+      }
+      if (event === 'zoom') {
+        zoom = d3.zoom().scaleExtent([.1, 2]).on("zoom", function () {
+          return callback(1 / d3.event.transform.k);
+        });
+        d3.select("#plus").call(zoom);
+        return d3.select("#minus").call(zoom);
       }
     };
     controls.initialize();

@@ -76,7 +76,13 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     linksG = canvas.append("g").attr("id", "links")
     nodesG = canvas.append("g").attr("id", "nodes")
     namesG = canvas.append("g").attr("id", "names")
-  
+
+    zoomer = d3.zoom()
+      .scaleExtent([1, 10])
+      .on("zoom", () -> zoomInOut(1/d3.event.transform.k))
+    #outer.call(zoomer)
+      #.on("wheel.zoom", null)
+
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
@@ -169,10 +175,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
   # show node names in the zoom-out mode
   showNames = (d) ->
-    console.log(d)
-    console.log(d.source.group)
     subSteps = data.steps.filter (step) -> step.group is d.source.group
-    console.log(subSteps)
     names = namesG.selectAll("text")
       .data(subSteps, (d) -> "name_#{d.id}")
     names.enter()
@@ -185,8 +188,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   
   hideNames = (d) ->
     namesG.selectAll("text").remove()
-
-
 
 
   # make sure text fits inside the node icon
@@ -270,15 +271,17 @@ UI = (selection, nodeR = 25, innerR = 25) ->
         .classed("selected", true)
 
   # --- zooming ---
-  ui.zoomIn = () ->
-    zoom = Math.max(1, zoom / 1.1)
+  ui.zoom = (newZoom) ->
+    if newZoom < zLimit < zoom then switchView("close-up")
+    if newZoom >= zLimit > zoom then switchView("zoom-out")
+    zoom = newZoom
     resetCanvasSize()
-    if zoom < zLimit < zoom*1.1 then switchView("close-up")
+
+  ui.zoomIn = () ->
+    ui.zoom(Math.max(1, zoom / 1.1))
 
   ui.zoomOut = () ->
-    zoom *= 1.1
-    resetCanvasSize()
-    if zoom >= zLimit > zoom/1.1 then switchView("zoom-out")
+    ui.zoom(zoom * 1.1)
 
   ui.initialize()
   return ui
@@ -515,8 +518,9 @@ Widget = (selection) ->
     ui.on('node:mouseover', showDialog)
     ui.on('node:mouseout', hideDialog)
     ui.on('node:click', clickNode)
-    controls.on('zoom:in', zoomIn)
-    controls.on('zoom:out', zoomOut)
+    controls.on('zoom:in', ui.zoomIn)
+    controls.on('zoom:out', ui.zoomOut)
+    controls.on('zoom', (scale) -> ui.zoom(scale))
 
   moveLenses = (d) ->
     data.resetScale()
@@ -546,12 +550,6 @@ Widget = (selection) ->
     ui.select(id)
     if options.shiny
       Shiny.onInputChange("object_selected", id)
-
-  zoomIn = () ->
-    ui.zoomIn()
-
-  zoomOut = () ->
-    ui.zoomOut()
 
   return widget
 
