@@ -255,15 +255,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
       // new canvas dimensions
       sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
-      return sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
+      sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
+      // sizes.canvas.* are updated an we can update nodes' coordinates
+      return data.centralize(sizes.canvas.width * zoom, sizes.canvas.height);
     };
     // canvas size is set independently, and canvas might need to be
     // scrolled within the outer div element
     resetCanvasSize = function resetCanvasSize() {
-      // sizes.canvas.* are updated an we can update nodes' coordinates
-      data.centralize(sizes.canvas.width * zoom, sizes.canvas.height * zoom);
       // update graphical elements
-      return canvas.attr("width", sizes.canvas.width).attr("height", sizes.canvas.height).attr("viewBox", "0 0 " + sizes.canvas.width * zoom + " " + sizes.canvas.height * zoom);
+      return canvas.attr("width", sizes.canvas.width / zoom).attr("height", sizes.canvas.height / zoom).attr("viewBox", "0 0 " + sizes.canvas.width + " " + sizes.canvas.height);
     };
     // returns mouse position relatively to the SVG canvas
     ui.mousePosition = function () {
@@ -326,12 +326,19 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     ui.zoomIn = function () {
       zoom = Math.max(1, zoom / 1.1);
       resetCanvasSize();
-      return ui.updateGraphicalElements();
+      if (zoom < 1.5) {
+        return nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
+      }
     };
     ui.zoomOut = function () {
       zoom *= 1.1;
       resetCanvasSize();
-      return ui.updateGraphicalElements();
+      console.log(zoom);
+      if (zoom >= 1.5) {
+        return nodesG.selectAll(".variable").interrupt("show-nodes").transition("hide-nodes").duration(500).style("opacity", "0").on("end", function (d) {
+          return d3.select(this).style("visibility", "hidden");
+        });
+      }
     };
     ui.initialize();
     return ui;
@@ -339,7 +346,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var centralize, resetScale, setupData;
+    var centralize, groupData, resetScale, setupData;
     resetScale = function resetScale() {
       return data.steps.forEach(function (s) {
         return s.scale = 1;
@@ -374,9 +381,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return s.y -= dy;
       });
     };
+    // assign nodes to groups based on the time threshold
+    groupData = function groupData(threshold) {};
     data = _extends({
       resetScale: resetScale,
-      centralize: centralize
+      centralize: centralize,
+      groupData: groupData
     }, data);
     // pre-process the input data
     setupData = function setupData() {

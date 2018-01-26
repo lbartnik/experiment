@@ -219,12 +219,25 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.zoomIn = () ->
     zoom = Math.max(1, zoom / 1.1)
     resetCanvasSize()
-    ui.updateGraphicalElements()
+    if zoom < 1.5
+      nodesG.selectAll(".variable")
+        .interrupt("hide-nodes")
+        .style("visibility", "visible")
+        .transition("show-nodes")
+        .duration(500)
+        .style("opacity", "1")
 
   ui.zoomOut = () ->
     zoom *= 1.1
     resetCanvasSize()
-    ui.updateGraphicalElements()
+    console.log(zoom)
+    if zoom >= 1.5
+      nodesG.selectAll(".variable")
+        .interrupt("show-nodes")
+        .transition("hide-nodes")
+        .duration(500)
+        .style("opacity", "0")
+        .on("end", (d) -> d3.select(this).style("visibility", "hidden"))
 
   ui.initialize()
   return ui
@@ -245,7 +258,10 @@ Data = (data) ->
       s.x -= dx
       s.y -= dy
 
-  data = {resetScale: resetScale, centralize: centralize, data...}
+  # assign nodes to groups based on the time threshold
+  groupData = (threshold) ->
+
+  data = {resetScale: resetScale, centralize: centralize, groupData: groupData, data...}
 
   # pre-process the input data
   setupData = () ->
