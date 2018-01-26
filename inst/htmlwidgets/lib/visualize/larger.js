@@ -222,30 +222,42 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     // show node names in the zoom-out mode
     showNames = function showNames(d) {
-      var names, subSteps;
+      var names, rects, subSteps;
       subSteps = data.steps.filter(function (step) {
         return step.group === d.source.group;
       });
-      names = namesG.selectAll("text").data(subSteps, function (d) {
+      names = namesG.selectAll("g").data(subSteps, function (d) {
         return "name_" + d.id;
-      });
-      names.enter().append("text").text(function (d) {
+      }).enter().append("g");
+      rects = names.append("rect").classed("bg", true);
+      names.append("text").text(function (d) {
         if (d.type === "object") {
           return d.name;
         } else {
           return "plot";
         }
-      }).attr("class", function (d) {
+      }).attr("font-size", 12 * zoom).attr("class", function (d) {
         return d.type;
       }).attr("x", function (d) {
-        return d.x;
+        return d.x + 10;
       }).attr("y", function (d) {
         return d.y;
       });
-      return names.exit().remove();
+      namesG.selectAll("text").each(function (d, i) {
+        return d.bb = this.getBBox();
+      });
+      return rects.attr("x", function (d) {
+        return d.bb.x - 2;
+      }).attr("y", function (d) {
+        return d.bb.y - 2;
+      }).attr("width", function (d) {
+        return d.bb.width + 4;
+      }).attr("height", function (d) {
+        return d.bb.height + 4;
+      });
     };
     hideNames = function hideNames(d) {
-      return namesG.selectAll("text").remove();
+      return namesG.selectAll("g").remove();
     };
     // make sure text fits inside the node icon
     scaleText = function scaleText(text) {
