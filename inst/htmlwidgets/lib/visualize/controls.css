@@ -1,8 +1,8 @@
 .controls {
     border: 1px solid black;
-    display: table-cell;
-    vertical-align: top;
     padding: 2pt;
+    float: left;
+    position: fixed;
 }
 
 .controls .button {
