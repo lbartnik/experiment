@@ -19,8 +19,8 @@ Controls = (selection) ->
       zoom = d3.zoom()
         .scaleExtent([.1, 2])
         .on("zoom", () -> callback(1/d3.event.transform.k))
-      d3.select("#plus").call(zoom)
-      d3.select("#minus").call(zoom)
+      d3.select("#plus").call(zoom).on("dblclick.zoom", null)
+      d3.select("#minus").call(zoom).on("dblclick.zoom", null)
 
   controls.initialize()
   return controls

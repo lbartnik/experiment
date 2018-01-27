@@ -200,11 +200,13 @@ commit_to_steps <- function (commit, objects)
 {
   # turns an object/plot into a step structure
   generate_step <- function(name, id, object) {
+    tags <- storage::os_read_tags(internal_state$stash, id)
     ans <- list(
       id        = crc32(paste0(commit$id, id)),
       expr      = format_expression(commit$expr),
       commit_id = commit$id,
-      object_id = id
+      object_id = id,
+      time      = as.integer(tags$time)
     )
 
     if (identical(name, '.plot')) {
