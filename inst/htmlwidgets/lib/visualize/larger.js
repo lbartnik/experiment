@@ -119,7 +119,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zLimit, zoom;
+    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
     outer = null;
     canvas = null;
     linksG = null;
@@ -136,8 +136,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
     data = null;
-    zoom = 1;
-    zLimit = 1.5;
+    zoom = {
+      current: 1,
+      low: 1,
+      high: 3,
+      switch: 1.5,
+      tick: 1.1
+    };
     ui = function ui() {};
     ui.initialize = function () {
       var zoomer;
@@ -150,8 +155,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return zoomInOut(1 / d3.event.transform.k);
       });
     };
-    //outer.call(zoomer)
-    //.on("wheel.zoom", null)
     ui.setSize = function (width, height) {
       sizes.ui.width = width;
       sizes.ui.height = height;
@@ -236,7 +239,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         } else {
           return "plot";
         }
-      }).attr("font-size", 12 * zoom).attr("class", function (d) {
+      }).attr("font-size", 12 * zoom.current).attr("class", function (d) {
         return d.type;
       }).attr("x", function (d) {
         return d.x + 10;
@@ -324,13 +327,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
       sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
       // sizes.canvas.* are updated an we can update nodes' coordinates
-      return data.centralize(sizes.canvas.width * zoom, sizes.canvas.height);
+      return data.centralize(sizes.canvas.width * zoom.current, sizes.canvas.height);
     };
     // canvas size is set independently, and canvas might need to be
     // scrolled within the outer div element
     resetCanvasSize = function resetCanvasSize() {
       // update graphical elements
-      return canvas.attr("width", sizes.canvas.width / zoom).attr("height", sizes.canvas.height / zoom).attr("viewBox", "0 0 " + sizes.canvas.width + " " + sizes.canvas.height);
+      return canvas.attr("width", sizes.canvas.width / zoom.current).attr("height", sizes.canvas.height / zoom.current).attr("viewBox", "0 0 " + sizes.canvas.width + " " + sizes.canvas.height);
     };
     // returns mouse position relatively to the SVG canvas
     ui.mousePosition = function () {
@@ -391,20 +394,22 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     // --- zooming ---
     ui.zoom = function (newZoom) {
-      if (newZoom < zLimit && zLimit < zoom) {
+      var ref, ref1;
+      newZoom = Math.min(zoom.high, Math.max(zoom.low, newZoom));
+      if (newZoom < (ref = zoom.switch) && ref < zoom.current) {
         switchView("close-up");
       }
-      if (newZoom >= zLimit && zLimit > zoom) {
+      if (newZoom >= (ref1 = zoom.switch) && ref1 > zoom.current) {
         switchView("zoom-out");
       }
-      zoom = newZoom;
+      zoom.current = newZoom;
       return resetCanvasSize();
     };
     ui.zoomIn = function () {
-      return ui.zoom(Math.max(1, zoom / 1.1));
+      return ui.zoom(zoom.current / zoom.tick);
     };
     ui.zoomOut = function () {
-      return ui.zoom(zoom * 1.1);
+      return ui.zoom(zoom.current * zoom.tick);
     };
     ui.initialize();
     return ui;

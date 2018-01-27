@@ -1,7 +1,3 @@
-This branch:
-
-  - unique node ids, regardless of data-based SHA1
-
 
 
 * General:
@@ -22,9 +18,6 @@ This branch:
     it similarly to plots - the mouse cursor will stay "mouseover" throught
     the interaction
     
-  - snow an onClose message when "done" is clicked; intercept the exception
-    when cancel is clicked
-
   - use RStudio addins to browse history with keyboard (up/down),
     similarly to Ctrl+R in regular R console
 
@@ -44,6 +37,7 @@ This branch:
   - list branches
   - name branches
   - clean the stash
+  - questions as Shiny Widget (popup) !!!
 
 
 * move plot.result to compare - plot.result should show something

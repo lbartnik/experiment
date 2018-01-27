@@ -63,8 +63,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   namesG = null
   sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
   data   = null
-  zoom   = 1
-  zLimit = 1.5
+  zoom   = { current: 1, low: 1, high: 3, switch: 1.5, tick: 1.1 }
 
   ui = () ->
 
@@ -80,8 +79,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     zoomer = d3.zoom()
       .scaleExtent([1, 10])
       .on("zoom", () -> zoomInOut(1/d3.event.transform.k))
-    #outer.call(zoomer)
-      #.on("wheel.zoom", null)
 
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
@@ -183,7 +180,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .classed("bg", true)
     names.append("text")
       .text((d) -> if d.type is "object" then d.name else "plot")
-      .attr("font-size", 12*zoom)
+      .attr("font-size", 12 * zoom.current)
       .attr("class", (d) -> d.type)
       .attr("x", (d) -> d.x + 10)
       .attr("y", (d) -> d.y)
@@ -234,14 +231,14 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
     sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
     # sizes.canvas.* are updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width * zoom, sizes.canvas.height)
+    data.centralize(sizes.canvas.width * zoom.current, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
   resetCanvasSize = () ->
     # update graphical elements
-    canvas.attr("width", sizes.canvas.width / zoom)
-      .attr("height", sizes.canvas.height / zoom)
+    canvas.attr("width", sizes.canvas.width / zoom.current)
+      .attr("height", sizes.canvas.height / zoom.current)
       .attr("viewBox", "0 0 #{sizes.canvas.width} #{sizes.canvas.height}")
 
   # returns mouse position relatively to the SVG canvas
@@ -280,16 +277,17 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
   # --- zooming ---
   ui.zoom = (newZoom) ->
-    if newZoom < zLimit < zoom then switchView("close-up")
-    if newZoom >= zLimit > zoom then switchView("zoom-out")
-    zoom = newZoom
+    newZoom = Math.min(zoom.high, Math.max(zoom.low, newZoom))
+    if newZoom < zoom.switch < zoom.current then switchView("close-up")
+    if newZoom >= zoom.switch > zoom.current then switchView("zoom-out")
+    zoom.current = newZoom
     resetCanvasSize()
 
   ui.zoomIn = () ->
-    ui.zoom(Math.max(1, zoom / 1.1))
+    ui.zoom(zoom.current / zoom.tick)
 
   ui.zoomOut = () ->
-    ui.zoom(zoom * 1.1)
+    ui.zoom(zoom.current * zoom.tick)
 
   ui.initialize()
   return ui
