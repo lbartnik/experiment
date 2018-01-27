@@ -119,7 +119,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
+    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
     outer = null;
     canvas = null;
     linksG = null;
@@ -223,16 +223,29 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     // --- switchView
 
-    // show node names in the zoom-out mode
+    // create a polygon that follows rectangle `rect` and has its
+    // fifth vertex in point `point`
+    points = function points(point, rect) {
+      var bottom, left, right, top, x, y;
+      x = point.x;
+      y = point.y;
+      left = rect.x;
+      top = rect.y;
+      right = rect.x + rect.width + 2 * zoom.current;
+      bottom = rect.y + rect.height;
+      return x + "," + y + " " + left + "," + top + " " + right + "," + top + " " + right + "," + bottom + " " + left + "," + bottom;
+    };
+    // show node names for a same-time group of nodes in the zoom-out mode
     showNames = function showNames(d) {
-      var names, rects, subSteps;
+      var names, polys, shift, subSteps;
+      shift = 10 * zoom.current;
       subSteps = data.steps.filter(function (step) {
         return step.group === d.source.group;
       });
       names = namesG.selectAll("g").data(subSteps, function (d) {
         return "name_" + d.id;
       }).enter().append("g");
-      rects = names.append("rect").classed("bg", true);
+      polys = names.append("polygon").classed("bg", true);
       names.append("text").text(function (d) {
         if (d.type === "object") {
           return d.name;
@@ -242,21 +255,18 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }).attr("font-size", 12 * zoom.current).attr("class", function (d) {
         return d.type;
       }).attr("x", function (d) {
-        return d.x + 10;
+        return d.x + shift;
       }).attr("y", function (d) {
         return d.y;
       });
       namesG.selectAll("text").each(function (d, i) {
         return d.bb = this.getBBox();
       });
-      return rects.attr("x", function (d) {
-        return d.bb.x - 2;
-      }).attr("y", function (d) {
-        return d.bb.y - 2;
-      }).attr("width", function (d) {
-        return d.bb.width + 4;
-      }).attr("height", function (d) {
-        return d.bb.height + 4;
+      return polys.attr("points", function (d) {
+        return points({
+          x: d.x + 10,
+          y: d.y
+        }, d.bb);
       });
     };
     hideNames = function hideNames(d) {

@@ -170,26 +170,35 @@ UI = (selection, nodeR = 25, innerR = 25) ->
         .classed("thick", (d) -> false)
   # --- switchView
 
-  # show node names in the zoom-out mode
+  # create a polygon that follows rectangle `rect` and has its
+  # fifth vertex in point `point`
+  points = (point, rect) ->
+    x      = point.x
+    y      = point.y
+    left   = rect.x
+    top    = rect.y
+    right  = rect.x + rect.width + 2 * zoom.current
+    bottom = rect.y  + rect.height
+    "#{x},#{y} #{left},#{top} #{right},#{top} #{right},#{bottom} #{left},#{bottom}"
+
+  # show node names for a same-time group of nodes in the zoom-out mode
   showNames = (d) ->
+    shift = 10 * zoom.current
     subSteps = data.steps.filter (step) -> step.group is d.source.group
     names = namesG.selectAll("g")
       .data(subSteps, (d) -> "name_#{d.id}")
       .enter().append("g")
-    rects = names.append("rect")
+    polys = names.append("polygon")
       .classed("bg", true)
     names.append("text")
       .text((d) -> if d.type is "object" then d.name else "plot")
       .attr("font-size", 12 * zoom.current)
       .attr("class", (d) -> d.type)
-      .attr("x", (d) -> d.x + 10)
+      .attr("x", (d) -> d.x + shift)
       .attr("y", (d) -> d.y)
     namesG.selectAll("text").each (d, i) ->
       d.bb = this.getBBox()
-    rects.attr("x", (d) -> d.bb.x - 2)
-      .attr("y", (d) -> d.bb.y - 2)
-      .attr("width", (d) -> d.bb.width + 4)
-      .attr("height", (d) -> d.bb.height + 4)
+    polys.attr("points", (d) -> points({x: d.x + 10, y: d.y}, d.bb))
 
   hideNames = (d) ->
     namesG.selectAll("g").remove()
