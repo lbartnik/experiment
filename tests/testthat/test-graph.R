@@ -51,6 +51,10 @@ test_that("convert commit", {
   expect_equal(nth(r$steps, 1)$name, 'x')
   expect_equal(nth(r$steps, 2)$name, 'y')
 
+  expect_named(nth(r$steps, 1),
+               c('type', 'name', 'desc', 'id', 'expr', 'commit_id', 'object_id', 'time'),
+               ignore.order = TRUE)
+
   type <- unique(vapply(r$steps, `[[`, character(1), i = 'type'))
   expect_equal(type, 'object')
 

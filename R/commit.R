@@ -16,9 +16,11 @@ commit <- function (contents, expression, parent, id, object_ids)
 
   if (missing(parent)) parent <- NA_character_
   if (missing(id)) id <- NA_character_
-  if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
 
-  structure(list(id = id, objects = objects, object_ids = object_ids,
+  if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
+  tags <- lapply(contents, function (x) list())
+
+  structure(list(id = id, objects = objects, object_ids = object_ids, tags = tags,
                  expr = expression, parent = parent),
             class = 'commit')
 }
@@ -116,6 +118,7 @@ commit_restore <- function (id, store, .data = TRUE)
 commit_restore_data <- function (co, store)
 {
   co$objects <- lapply(co$object_ids, function (id) storage::os_read_object(store, id))
+  co$tags <- lapply(co$object_ids, function(id) storage::os_read_tags(store, id))
   co
 }
 

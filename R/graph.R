@@ -199,8 +199,7 @@ print.steps <- function(x, ...)
 commit_to_steps <- function (commit, objects)
 {
   # turns an object/plot into a step structure
-  generate_step <- function(name, id, object) {
-    tags <- storage::os_read_tags(internal_state$stash, id)
+  generate_step <- function(name, id, object, tags) {
     ans <- list(
       id        = crc32(paste0(commit$id, id)),
       expr      = format_expression(commit$expr),
@@ -230,9 +229,10 @@ commit_to_steps <- function (commit, objects)
   names <- names(commit$objects)[filter]
   ids <- as.character(commit$object_ids)[filter]
   objects <- commit$objects[filter]
+  tags <- commit$tags[filter]
 
   # get all steps
-  steps <- mapply(generate_step, name = names, id = ids, object = objects,
+  steps <- mapply(generate_step, name = names, id = ids, object = objects, tags = tags,
                   SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
   # get links between these teps
