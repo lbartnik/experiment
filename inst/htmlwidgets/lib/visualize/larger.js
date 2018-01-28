@@ -138,22 +138,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     data = null;
     zoom = {
       current: 1,
-      low: 1,
-      high: 3,
-      switch: 1.5,
-      tick: 1.1
+      switch: 1.5
     };
     ui = function ui() {};
     ui.initialize = function () {
-      var zoomer;
       outer = d3.select(selection).append("div").attr("class", "widget");
       canvas = outer.append("svg");
       linksG = canvas.append("g").attr("id", "links");
       nodesG = canvas.append("g").attr("id", "nodes");
-      namesG = canvas.append("g").attr("id", "names");
-      return zoomer = d3.zoom().scaleExtent([1, 10]).on("zoom", function () {
-        return zoomInOut(1 / d3.event.transform.k);
-      });
+      return namesG = canvas.append("g").attr("id", "names");
     };
     ui.setSize = function (width, height) {
       sizes.ui.width = width;
@@ -403,23 +396,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
     // --- zooming ---
-    ui.zoom = function (newZoom) {
+    ui.zoom = function (k) {
       var ref, ref1;
-      newZoom = Math.min(zoom.high, Math.max(zoom.low, newZoom));
-      if (newZoom < (ref = zoom.switch) && ref < zoom.current) {
+      if (k < (ref = zoom.switch) && ref < zoom.current) {
         switchView("close-up");
       }
-      if (newZoom >= (ref1 = zoom.switch) && ref1 > zoom.current) {
+      if (k >= (ref1 = zoom.switch) && ref1 > zoom.current) {
         switchView("zoom-out");
       }
-      zoom.current = newZoom;
+      zoom.current = k;
       return resetCanvasSize();
-    };
-    ui.zoomIn = function () {
-      return ui.zoom(zoom.current / zoom.tick);
-    };
-    ui.zoomOut = function () {
-      return ui.zoom(zoom.current * zoom.tick);
     };
     ui.initialize();
     return ui;
@@ -699,13 +685,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var clickNode, controls, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, widget;
+    var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, widget;
     options = {
       shiny: false
     };
     nodeR = 15;
     lenseR = 30;
-    controls = Controls(selection);
     ui = UI(selection, nodeR, 15);
     pos = Position(nodeR);
     data = null;
@@ -727,17 +712,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return options[what] = value;
       }
     };
+    // delegate zooming  
+    widget.zoom = ui.zoom;
     setEvents = function setEvents() {
       ui.on('canvas:mousemove', moveLenses);
       ui.on('canvas:mouseout', resetScale);
       ui.on('node:mouseover', showDialog);
       ui.on('node:mouseout', hideDialog);
-      ui.on('node:click', clickNode);
-      controls.on('zoom:in', ui.zoomIn);
-      controls.on('zoom:out', ui.zoomOut);
-      return controls.on('zoom', function (scale) {
-        return ui.zoom(scale);
-      });
+      return ui.on('node:click', clickNode);
     };
     moveLenses = function moveLenses(d) {
       var mouse, nodes;

@@ -3,6 +3,7 @@
     padding: 2pt;
     float: left;
     position: fixed;
+    z-index: 1000;
 }
 
 .controls .button {

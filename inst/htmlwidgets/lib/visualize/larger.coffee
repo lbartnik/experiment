@@ -63,7 +63,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   namesG = null
   sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
   data   = null
-  zoom   = { current: 1, low: 1, high: 3, switch: 1.5, tick: 1.1 }
+  zoom   = { current: 1, switch: 1.5 }
 
   ui = () ->
 
@@ -75,10 +75,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     linksG = canvas.append("g").attr("id", "links")
     nodesG = canvas.append("g").attr("id", "nodes")
     namesG = canvas.append("g").attr("id", "names")
-
-    zoomer = d3.zoom()
-      .scaleExtent([1, 10])
-      .on("zoom", () -> zoomInOut(1/d3.event.transform.k))
 
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
@@ -285,18 +281,11 @@ UI = (selection, nodeR = 25, innerR = 25) ->
         .classed("selected", true)
 
   # --- zooming ---
-  ui.zoom = (newZoom) ->
-    newZoom = Math.min(zoom.high, Math.max(zoom.low, newZoom))
-    if newZoom < zoom.switch < zoom.current then switchView("close-up")
-    if newZoom >= zoom.switch > zoom.current then switchView("zoom-out")
-    zoom.current = newZoom
+  ui.zoom = (k) ->
+    if k < zoom.switch < zoom.current then switchView("close-up")
+    if k >= zoom.switch > zoom.current then switchView("zoom-out")
+    zoom.current = k
     resetCanvasSize()
-
-  ui.zoomIn = () ->
-    ui.zoom(zoom.current / zoom.tick)
-
-  ui.zoomOut = () ->
-    ui.zoom(zoom.current * zoom.tick)
 
   ui.initialize()
   return ui
@@ -504,7 +493,6 @@ Widget = (selection) ->
   options  = { shiny: false }
   nodeR    = 15
   lenseR   = 30
-  controls = Controls(selection)
   ui       = UI(selection, nodeR, 15)
   pos      = Position(nodeR)
   data     = null
@@ -527,19 +515,19 @@ Widget = (selection) ->
       value = (options[what].constructor)(value)
       options[what] = value
 
+  # delegate zooming  
+  widget.zoom = ui.zoom
+
   setEvents = () ->
     ui.on('canvas:mousemove', moveLenses)
     ui.on('canvas:mouseout', resetScale)
     ui.on('node:mouseover', showDialog)
     ui.on('node:mouseout', hideDialog)
     ui.on('node:click', clickNode)
-    controls.on('zoom:in', ui.zoomIn)
-    controls.on('zoom:out', ui.zoomOut)
-    controls.on('zoom', (scale) -> ui.zoom(scale))
 
   moveLenses = (d) ->
     data.resetScale()
-    mouse  = ui.mousePosition()
+    mouse = ui.mousePosition()
     nodes = ui.nodesNear(mouse, lenseR)
     nodes.forEach (n) ->
       datum = d3.select(n).datum()

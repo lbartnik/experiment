@@ -29,8 +29,11 @@
 <div id="canvas" style="border: 1px solid black"></div>
 
 <script type="text/coffeescript">
+myControls = Controls('#canvas')
+
 myWidget = Widget('#canvas')
 myWidget.setSize(500, 500)
+myControls.on('zoom', myWidget.zoom)
 
 embedPlots = false
 if embedPlots
