@@ -9,13 +9,19 @@ HTMLWidgets.widget({
     var shiny = (typeof HTMLWidgets != 'undefined' && HTMLWidgets.shinyMode);
 
     // create our vis object and bind it to the element
-    var controls = Controls(el, 1, 4);
+    var controls = null;
+    if (shiny) {
+      controls = Controls(el, 1, 4);
+    }
+
     var visvis = Widget(el);
     var popup = PopUp(el);
 
     visvis.setSize($(el).width(), $(el).height());
     visvis.setOption('shiny', shiny);
-    controls.on('zoom', visvis.zoom);
+    if (controls) {
+      controls.on('zoom', visvis.zoom);
+    }
 
     // return widget instance
     return {

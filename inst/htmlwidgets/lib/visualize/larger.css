@@ -1,5 +1,6 @@
 .widget {
-    display: table-cell;
+    display: block;
+    overflow: auto;
 }
 
 .widget > svg {
