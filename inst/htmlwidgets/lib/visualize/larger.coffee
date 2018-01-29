@@ -87,8 +87,11 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       height: Math.min($(selection).height(), height - 10)
     el = $(outer.node())
     if options.restrictSize
+      console.log('size restricted')
+      console.log(dim)
       el.attr(dim).css(dim)
     else
+      console.log('size not restricted')
       el.remove("width height").css({width: "", height: ""})
 
   ui.setData = (Data) ->
@@ -98,7 +101,10 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     createGraphics(data)
   
   ui.restrictSize = (value) ->
-    options.restrictSize = Boolean.constructor(value)
+    console.log("ui.restrictSize #{value}")
+    options.restrictSize = (Boolean.prototype.constructor)(value)
+    console.log("after seeting #{options.restrictSize}")
+    ui.setSize(sizes.ui.width, sizes.ui.height)
   
   # create all graphical elements on the canvas
   createGraphics = (data) ->

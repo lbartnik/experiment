@@ -9,12 +9,15 @@
     var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
     var step = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1.1;
 
-    var callback, controls, current, minus, outer, plus, zoom;
+    var callback, controls, current, minus, options, outer, plus, updateOptions, zoom;
     outer = null;
     plus = null;
     minus = null;
     current = 1;
     callback = null;
+    options = {
+      knitr: false
+    };
     controls = function controls() {};
     controls.initialize = function () {
       var zoomer;
@@ -44,6 +47,20 @@
     controls.on = function (event, fn) {
       if (event === 'zoom') {
         return callback = fn;
+      }
+    };
+    controls.setOption = function (what, value) {
+      if (what in options) {
+        value = options[what].constructor(value);
+        options[what] = value;
+        return updateOptions();
+      }
+    };
+    updateOptions = function updateOptions() {
+      if (options.knitr) {
+        return outer.css({
+          position: 'absolute'
+        });
       }
     };
     zoom = function zoom(k) {

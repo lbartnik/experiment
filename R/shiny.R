@@ -1,4 +1,4 @@
-experimentOutput <- function(outputId, width = "100%", height = "400px") {
+experimentOutput <- function(outputId, width = 'auto', height = 'auto') {
   htmlwidgets::shinyWidgetOutput(outputId, "experiment", width, height, package = "experiment")
 }
 
@@ -39,7 +39,7 @@ browserAddin <- function (steps = fullhistory())
                            left  = miniUI::miniTitleBarCancelButton(),
                            right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
     miniUI::miniContentPanel(experimentOutput('experiment'),
-                             padding = 15, scrollable = TRUE)
+                             padding = 15, scrollable = FALSE)
   ))
 
   welcomeMessage <- paste(

@@ -163,8 +163,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       };
       el = $(outer.node());
       if (options.restrictSize) {
+        console.log('size restricted');
+        console.log(dim);
         return el.attr(dim).css(dim);
       } else {
+        console.log('size not restricted');
         return el.remove("width height").css({
           width: "",
           height: ""
@@ -178,7 +181,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return createGraphics(data);
     };
     ui.restrictSize = function (value) {
-      return options.restrictSize = Boolean.constructor(value);
+      console.log("ui.restrictSize " + value);
+      options.restrictSize = Boolean.prototype.constructor(value);
+      console.log("after seeting " + options.restrictSize);
+      return ui.setSize(sizes.ui.width, sizes.ui.height);
     };
 
     // create all graphical elements on the canvas
