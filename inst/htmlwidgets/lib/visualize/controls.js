@@ -9,15 +9,12 @@
     var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
     var step = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1.1;
 
-    var callback, controls, current, minus, options, outer, plus, zoom;
+    var callback, controls, current, minus, outer, plus, zoom;
     outer = null;
     plus = null;
     minus = null;
     current = 1;
     callback = null;
-    options = {
-      knitr: false
-    };
     controls = function controls() {};
     controls.initialize = function () {
       var zoomer;

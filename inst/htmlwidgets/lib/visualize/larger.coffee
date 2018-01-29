@@ -499,7 +499,7 @@ Widget = (selection) ->
 
   widget.setData = (input) ->
     data = Data(input)
-    data.groupData(200)
+    data.groupData(if options.knitr then 5 else 200)
     pos.calculate(data)
     ui.setData(data)
     ui.updateGraphicalElements()

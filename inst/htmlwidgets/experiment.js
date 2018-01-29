@@ -14,7 +14,6 @@ HTMLWidgets.widget({
 
     var controls = Controls(mainContainerEl, 1, 4);
     var visvis = Widget(mainContainerEl);
-    var popup = PopUp(mainContainerEl);
 
     visvis.setOption('shiny', shiny);
     visvis.setSize(mainContainer.width(), mainContainer.height());
@@ -23,10 +22,10 @@ HTMLWidgets.widget({
     // return widget instance
     return {
       renderValue: function(input) {
-        visvis.setData(input.data);
-        if (shiny && 'options' in input && 'welcome' in input.options) {
-  //        popup.show(input.options.welcome);
+        if ('knitr' in input.options) {
+          visvis.setOption('knitr', input.options.knitr)
         }
+        visvis.setData(input.data);
       },
 
       resize: function(width, height) {

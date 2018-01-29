@@ -702,7 +702,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     widget = function widget() {};
     widget.setData = function (input) {
       data = Data(input);
-      data.groupData(200);
+      data.groupData(options.knitr ? 5 : 2000);
       pos.calculate(data);
       ui.setData(data);
       ui.updateGraphicalElements();

@@ -4,7 +4,6 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
   minus    = null
   current  = 1
   callback = null
-  options  = { knitr: false }
 
   controls = () ->
 
