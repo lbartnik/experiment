@@ -178,7 +178,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   # show node names for a same-time group of nodes in the zoom-out mode
   showNames = (d) ->
     shift = 10 * zoom.current
-    subSteps = data.steps.filter (step) -> step.group is d.source.group
+    subSteps = data.steps.filter (step) -> step.group is d.source.group and step.type is "object"
     names = namesG.selectAll("g")
       .data(subSteps, (d) -> "name_#{d.id}")
       .enter().append("g")

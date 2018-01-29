@@ -237,7 +237,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       var names, polys, shift, subSteps;
       shift = 10 * zoom.current;
       subSteps = data.steps.filter(function (step) {
-        return step.group === d.source.group;
+        return step.group === d.source.group && step.type === "object";
       });
       names = namesG.selectAll("g").data(subSteps, function (d) {
         return "name_" + d.id;
@@ -702,7 +702,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     widget = function widget() {};
     widget.setData = function (input) {
       data = Data(input);
-      data.groupData(options.knitr ? 5 : 2000);
+      data.groupData(options.knitr ? 5 : 200);
       pos.calculate(data);
       ui.setData(data);
       ui.updateGraphicalElements();
