@@ -279,6 +279,11 @@ the expression that produced the given object along with its general
 characteristics, like dimensions of a `data.frame` or the `AIC` value
 for a linear model.
 
+You can also zoom in and out - when zooming out far enough, the view
+switches from showing all individual nodes to showing groups of nodes.
+The nodes are group according to their creating time. Hovering mouse
+over a group reveals the names of its nodes.
+
 
 # Second meter
 
