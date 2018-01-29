@@ -39,7 +39,7 @@
         return zoom(current * step);
       });
       zoomer = d3.zoom().scaleExtent([min, max]).on("zoom", function () {
-        return zoom(1 / d3.event.transform.k);
+        return zoom(d3.event.transform.k);
       });
       d3.select(selection).select("#plus").call(zoomer).on("dblclick.zoom", null);
       return d3.select(selection).select("#minus").call(zoomer).on("dblclick.zoom", null);
