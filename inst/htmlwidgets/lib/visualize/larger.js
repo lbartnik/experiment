@@ -119,7 +119,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, options, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
+    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
     outer = null;
     canvas = null;
     linksG = null;
@@ -140,9 +140,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       current: 1,
       switch: 1.5
     };
-    options = {
-      restrictSize: false
-    };
     ui = function ui() {};
     ui.initialize = function () {
       outer = d3.select(selection).append("div").attr("class", "widget");
@@ -152,39 +149,19 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return namesG = canvas.append("g").attr("id", "names");
     };
     ui.setSize = function (width, height) {
-      var dim, el;
+      var el;
       sizes.ui.width = width;
       sizes.ui.height = height;
-      // 1) compare with parent size
-      // 2) reduce the size to make sure scrolls don't show right away
-      dim = {
-        width: Math.min($(selection).width(), width - 10),
-        height: Math.min($(selection).height(), height - 10)
-      };
-      el = $(outer.node());
-      if (options.restrictSize) {
-        console.log('size restricted');
-        console.log(dim);
-        return el.attr(dim).css(dim);
-      } else {
-        console.log('size not restricted');
-        return el.remove("width height").css({
-          width: "",
-          height: ""
-        });
-      }
+      return el = $(outer.node()).css({
+        width: width,
+        height: height
+      });
     };
     ui.setData = function (Data) {
       data = Data;
       recalculateCanvas(data);
       resetCanvasSize();
       return createGraphics(data);
-    };
-    ui.restrictSize = function (value) {
-      console.log("ui.restrictSize " + value);
-      options.restrictSize = Boolean.prototype.constructor(value);
-      console.log("after seeting " + options.restrictSize);
-      return ui.setSize(sizes.ui.width, sizes.ui.height);
     };
 
     // create all graphical elements on the canvas
@@ -737,10 +714,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     widget.setOption = function (what, value) {
       if (what in options) {
         value = options[what].constructor(value);
-        options[what] = value;
-        if (what === 'knitr') {
-          return ui.restrictSize(value);
-        }
+        return options[what] = value;
       }
     };
     // delegate zooming  

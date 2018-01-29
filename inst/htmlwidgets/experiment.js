@@ -9,15 +9,12 @@ HTMLWidgets.widget({
     var shiny = (typeof HTMLWidgets != 'undefined' && HTMLWidgets.shinyMode);
 
     el = $(el);
-    var mainContainer = $("<div>", {class: "main-container"})
-      .appendTo(el)
-      .width(el.width())
-      .height(el.height());
+    var mainContainer = $("<div>", {class: "main-container"}).appendTo(el);
     var mainContainerEl = mainContainer.get(0);
 
-//    var popup = PopUp(mainContainerEl);
     var controls = Controls(mainContainerEl, 1, 4);
     var visvis = Widget(mainContainerEl);
+    var popup = PopUp(mainContainerEl);
 
     visvis.setOption('shiny', shiny);
     visvis.setSize(mainContainer.width(), mainContainer.height());
@@ -29,10 +26,6 @@ HTMLWidgets.widget({
         visvis.setData(input.data);
         if (shiny && 'options' in input && 'welcome' in input.options) {
   //        popup.show(input.options.welcome);
-        }
-        if ('knitr' in input.options) {
-          visvis.setOption('knitr', input.options.knitr)
-          controls.setOption('knitr', input.options.knitr)
         }
       },
 

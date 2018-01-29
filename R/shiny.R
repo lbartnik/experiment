@@ -1,4 +1,4 @@
-experimentOutput <- function(outputId, width = 'auto', height = 'auto') {
+experimentOutput <- function(outputId, width = '100%', height = '100%') {
   htmlwidgets::shinyWidgetOutput(outputId, "experiment", width, height, package = "experiment")
 }
 

@@ -26,16 +26,6 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
     if event is 'zoom'
       callback = fn
  
-  controls.setOption = (what, value) ->
-    if what of options
-      value = (options[what].constructor)(value)
-      options[what] = value
-      updateOptions()
-
-  updateOptions = () ->
-    if options.knitr
-      outer.css({position: 'absolute'})
-
   zoom = (k) ->
     k = Math.max(min, Math.min(max, k))
     if k is current then return
