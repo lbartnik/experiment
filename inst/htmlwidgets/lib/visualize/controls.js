@@ -39,7 +39,7 @@
         return zoom(1 / d3.event.transform.k);
       });
       d3.select(selection).select("#plus").call(zoomer).on("dblclick.zoom", null);
-      return d3.select("#minus").call(zoomer).on("dblclick.zoom", null);
+      return d3.select(selection).select("#minus").call(zoomer).on("dblclick.zoom", null);
     };
     controls.on = function (event, fn) {
       if (event === 'zoom') {

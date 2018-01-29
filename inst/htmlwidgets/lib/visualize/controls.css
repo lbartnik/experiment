@@ -2,7 +2,7 @@
     border: 1px solid black;
     padding: 2pt;
     float: left;
-    position: fixed;
+    position: absolute;
     z-index: 1000;
 }
 

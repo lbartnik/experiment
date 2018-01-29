@@ -1,4 +1,9 @@
+.main-container {
+    position: relative;
+}
+
 .widget {
+    position: relative;
     display: block;
     overflow: auto;
 }

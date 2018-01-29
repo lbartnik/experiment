@@ -161,6 +161,7 @@ render_steps <- function (steps, options = list())
 
   processed <- plot_to_dependencies(steps$steps, is_knitr())
   steps$steps <- processed$steps
+  options$knitr <- is_knitr()
 
   # create the widget
   htmlwidgets::createWidget("experiment", list(data = steps, options = options),

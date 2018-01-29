@@ -19,7 +19,7 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
       .scaleExtent([min, max])
       .on("zoom", () -> zoom(1/d3.event.transform.k))
     d3.select(selection).select("#plus").call(zoomer).on("dblclick.zoom", null)
-    d3.select("#minus").call(zoomer).on("dblclick.zoom", null)
+    d3.select(selection).select("#minus").call(zoomer).on("dblclick.zoom", null)
 
   controls.on = (event, fn) ->
     if event is 'zoom'
