@@ -141,7 +141,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       switch: 1.5
     };
     options = {
-      knitr: false
+      restrictSize: false
     };
     ui = function ui() {};
     ui.initialize = function () {
@@ -152,17 +152,22 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return namesG = canvas.append("g").attr("id", "names");
     };
     ui.setSize = function (width, height) {
+      var dim, el;
       sizes.ui.width = width;
       sizes.ui.height = height;
       // 1) compare with parent size
       // 2) reduce the size to make sure scrolls don't show right away
-      width = Math.min($(selection).width(), width - 10);
-      height = Math.min($(selection).height(), height - 10);
-      if (options.knitr) {
-        outer.attr("width", width).attr("height", height);
-        return $(selection).find(".widget").css({
-          width: width,
-          height: height
+      dim = {
+        width: Math.min($(selection).width(), width - 10),
+        height: Math.min($(selection).height(), height - 10)
+      };
+      el = $(outer.node());
+      if (options.restrictSize) {
+        return el.attr(dim).css(dim);
+      } else {
+        return el.remove("width height").css({
+          width: "",
+          height: ""
         });
       }
     };
@@ -172,9 +177,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       resetCanvasSize();
       return createGraphics(data);
     };
-    ui.isKnitr = function (value) {
-      return options.knitr = Boolean.constructor(value);
+    ui.restrictSize = function (value) {
+      return options.restrictSize = Boolean.constructor(value);
     };
+
     // create all graphical elements on the canvas
     createGraphics = function createGraphics(data) {
       var enter, link, node;
@@ -727,7 +733,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         value = options[what].constructor(value);
         options[what] = value;
         if (what === 'knitr') {
-          return ui.isKnitr(value);
+          return ui.restrictSize(value);
         }
       }
     };

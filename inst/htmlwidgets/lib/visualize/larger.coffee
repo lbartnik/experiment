@@ -64,7 +64,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
   data   = null
   zoom   = { current: 1, switch: 1.5 }
-  options = { knitr: false }
+  options = { restrictSize: false }
 
   ui = () ->
 
@@ -82,11 +82,14 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     sizes.ui.height = height
     # 1) compare with parent size
     # 2) reduce the size to make sure scrolls don't show right away
-    width  = Math.min($(selection).width(), width - 10)
-    height = Math.min($(selection).height(), height - 10)
-    if options.knitr
-      outer.attr("width", width).attr("height", height)
-      $(selection).find(".widget").css({width: width, height: height})
+    dim =
+      width:  Math.min($(selection).width(), width - 10)
+      height: Math.min($(selection).height(), height - 10)
+    el = $(outer.node())
+    if options.restrictSize
+      el.attr(dim).css(dim)
+    else
+      el.remove("width height").css({width: "", height: ""})
 
   ui.setData = (Data) ->
     data = Data
@@ -94,9 +97,9 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     resetCanvasSize()
     createGraphics(data)
   
-  ui.isKnitr = (value) ->
-    options.knitr = (Boolean.constructor)(value)
-
+  ui.restrictSize = (value) ->
+    options.restrictSize = Boolean.constructor(value)
+  
   # create all graphical elements on the canvas
   createGraphics = (data) ->
     node = nodesG.selectAll("svg.variable")
@@ -523,7 +526,7 @@ Widget = (selection) ->
       value = (options[what].constructor)(value)
       options[what] = value
       if what is 'knitr'
-        ui.isKnitr(value)
+        ui.restrictSize(value)
 
   # delegate zooming  
   widget.zoom = ui.zoom
