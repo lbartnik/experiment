@@ -1,8 +1,20 @@
+# RStudio
 ^.*\.Rproj$
 ^\.Rproj\.user$
+
+# VS Code
 .vscode
+
+# CI
 .travis.yml
+^appveyor\.yml$
+
+# docs
 README.md
 TODO
-^appveyor\.yml$
+
+# JS
 .babelrc
+
+# other
+noninst

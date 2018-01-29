@@ -99,12 +99,12 @@ library(ggplot2)
 Now it is time to load the `experiment` package and turn on its tracing
 capability. `experiment` will register a callback using `addTaskCallback`
 and using that callback it will keep record of changes in the global
-environment of our R session[^1].
+environment of our R session[^hacks].
 
-[^1]: Actually, in order to prepare this vignette, a number of hacks
-needed to be implemented. Thus, as long as you can simply copy and run
-the code line by line in your R session, the actual source code of the
-*vignette* will reveal much more than that.
+[^hacks]: Of course, that's not how things work inside knitr. Thus, this
+vignette contains code *as it is supposed to look*, and you should be
+able to simply copy & paste it into R session. The actual source code of
+the *vignette* will reveal much more than that.
 
 
 ```{r tracking,eval=FALSE}
@@ -120,13 +120,13 @@ copy the R code, the promp remains hidden.
 
 Another important thing to notice is the warning *"creating a store
 named..."* which informs the user that all objects created in the current
-session will be stored in a newly created *object store*[^2]. Thus, it is
-perfectly possible to peform the exercise described in this vignette over
-a period of multiple days, while closing and reopening R session to pick
-up the work where it was previously left off.
+session will be stored in a newly created *object store*[^store]. Thus,
+it is perfectly possible to peform the exercise described in this
+vignette over a period of multiple days, while closing and reopening R
+session to pick up the work where it was previously left off.
 
-[^2]:  Object store is a persistent, filesystem-based repository of R
-artifacts (data sets, functions, plots, etc.) produced while working
+[^store]:  Object store is a persistent, filesystem-based repository of
+R artifacts (data sets, functions, plots, etc.) produced while working
 with R.
 
 
@@ -247,11 +247,26 @@ analysis.)
 # History recorded so far
 
 So what does the history look like so far? We can open an interactive
-viewer by plotting the history object as returned by `fullhistory()`.
-It is a `htmlwidget` so when you do it in actual R session in RStudio,
-it will open in the `viewer` pane.
+viewer by calling `experiment:::browserAddin()`. It is a `htmlwidget`
+so when you do it in actual R session in RStudio, it will open in an
+interactive window, overlying the main RStudio window[^gadget][^addins].
+In RStudio you will also have extra buttons and interactions, more about
+this in the next section.
 
-```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
+[^gadget]: The mechanics of that are not part of this vignette, however,
+in case this turns out to be helpful: in RStudio it is a gadget, created
+with `shiny::runGadget`, and displayed in a `shiny::dialogViewer`.
+
+[^addins]: Also, in RStudio, you can map this function under a key
+shortcut. `experiment` contains all the necessary configuration files.
+See [RStudio Addins](https://rstudio.github.io/rstudioaddins/#keyboard-shorcuts)
+for more details.
+
+
+```{r fake_history,eval=FALSE}
+experiment::browserAddin()
+```
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%',echo=FALSE}
 plot(fullhistory())
 ```
 
@@ -268,12 +283,20 @@ for a linear model.
 # Second meter
 
 Let's go back to the last step before narrowing down to just one meter.
-Clicking on the second `input` node in the history window copies this
-object's identifier, which we can then use to bring back the state of
-R session just after it was created.
+Clicking on the second `input` node in the history window selects that
+node (notice the green highlight on the border of the node). In RStudio,
+at this point you need to click on the *Done* button, but since this is
+a static HTML vignette, that button is not available. The *Done* button
+together with the whole window title bar looks as below:
 
+![](../noninst/bar.png){width=100%}
 
-```{r restore}
+Thus, highlighting the node and clicking on the *Done* button brings back
+the state of R session when that object was created - which we will assume
+happens at this point of our vignette. We restore state of the R session
+from the time when the second `input` node was created.
+
+```{r restore,include=FALSE}
 restore('40692a8b662cc0327e12076193c13a8b730d2fc0')
 ```
 
@@ -298,8 +321,11 @@ boxplot. Anything interesting here?
 The history looks different now, as there is a second branch reflecting
 the last three commands we have just issued.
 
-```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
+```{r fake_history,eval=FALSE}
 ```
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%',echo=FALSE}
+```
+
 
 
 # Third house
@@ -307,7 +333,7 @@ the last three commands we have just issued.
 OK, so how about the third house in the data set? We restore the same
 point in time again, and repeat the same sequence of commands.
 
-```{r restore}
+```{r restore,include=FALSE}
 ```
 
 ```{r}
@@ -323,7 +349,9 @@ input %<>% filter(meter == "MAC004391")
 As we can see, the history gets updated again to reflect the third
 branching on the third house in the data set.
 
-```{r fullhistory,fig.width=7,fig.height=5,out.width='100%'}
+```{r fake_history,eval=FALSE}
+```
+```{r fullhistory,fig.width=7,fig.height=5,out.width='100%',echo=FALSE}
 ```
 
 
