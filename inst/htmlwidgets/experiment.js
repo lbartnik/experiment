@@ -8,20 +8,24 @@ HTMLWidgets.widget({
 
     var shiny = (typeof HTMLWidgets != 'undefined' && HTMLWidgets.shinyMode);
 
-    // create our vis object and bind it to the element
-    var visvis = new Widget(el);
-    var popup = PopUp(el);
+    el = $(el);
+    var mainContainer = $("<div>", {class: "main-container"}).appendTo(el);
+    var mainContainerEl = mainContainer.get(0);
 
-    visvis.setSize($(el).width(), $(el).height());
+    var controls = Controls(mainContainerEl, 1, 4);
+    var visvis = Widget(mainContainerEl);
+
     visvis.setOption('shiny', shiny);
+    visvis.setSize(mainContainer.width(), mainContainer.height());
+    controls.on('zoom', visvis.zoom);
 
     // return widget instance
     return {
       renderValue: function(input) {
+        if ('knitr' in input.options) {
+          visvis.setOption('knitr', input.options.knitr)
+        }
         visvis.setData(input.data);
-        if (shiny && 'options' in input && 'welcome' in input.options) {
-          popup.show(input.options.welcome);
-        }  
       },
 
       resize: function(width, height) {

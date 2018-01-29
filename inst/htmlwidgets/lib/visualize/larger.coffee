@@ -60,8 +60,10 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   canvas = null
   linksG = null
   nodesG = null
+  namesG = null
   sizes  = { ui: { width: 500, height: 500}, canvas: {width: 500, height: 500}}
   data   = null
+  zoom   = { current: 1, switch: 1.5 }
 
   ui = () ->
 
@@ -72,19 +74,19 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     canvas = outer.append("svg")
     linksG = canvas.append("g").attr("id", "links")
     nodesG = canvas.append("g").attr("id", "nodes")
-  
+    namesG = canvas.append("g").attr("id", "names")
+
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
-    # reduce the size to make sure scrolls don't show right away
-    outer.style("width", width - 10)
-      .style("height", height - 10)
+    el = $(outer.node()).css({width: width, height: height})
 
   ui.setData = (Data) ->
     data = Data
     recalculateCanvas(data)
+    resetCanvasSize()
     createGraphics(data)
-
+    
   # create all graphical elements on the canvas
   createGraphics = (data) ->
     node = nodesG.selectAll("svg.variable")
@@ -133,6 +135,69 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     link.exit().remove()
   # --- createGraphics
 
+  # switch view between zoom-out and close-up
+  switchView = (which) ->
+    if which is "zoom-out"
+      nodesG.selectAll(".variable")
+        .interrupt("show-nodes")
+        .transition("hide-nodes")
+        .duration(500)
+        .style("opacity", "0")
+        .on("end", (d) -> d3.select(this).style("visibility", "hidden"))
+      linksG.selectAll("line.link")
+        .classed("thick", (d) -> d.source.group is d.target.group)
+        .style("opacity", "0")
+        .transition()
+        .duration(500)
+        .style("opacity", "1")
+      linksG.selectAll("line.thick")
+        .on("mouseover", showNames)
+        .on("mouseout", hideNames)
+    else # close-up
+      nodesG.selectAll(".variable")
+        .interrupt("hide-nodes")
+        .style("visibility", "visible")
+        .transition("show-nodes")
+        .duration(500)
+        .style("opacity", "1")
+      linksG.selectAll("line.link")
+        .classed("thick", (d) -> false)
+  # --- switchView
+
+  # create a polygon that follows rectangle `rect` and has its
+  # fifth vertex in point `point`
+  points = (point, rect) ->
+    x      = point.x
+    y      = point.y
+    left   = rect.x
+    top    = rect.y
+    right  = rect.x + rect.width + 2 * zoom.current
+    bottom = rect.y  + rect.height
+    "#{x},#{y} #{left},#{top} #{right},#{top} #{right},#{bottom} #{left},#{bottom}"
+
+  # show node names for a same-time group of nodes in the zoom-out mode
+  showNames = (d) ->
+    shift = 10 * zoom.current
+    subSteps = data.steps.filter (step) -> step.group is d.source.group and step.type is "object"
+    names = namesG.selectAll("g")
+      .data(subSteps, (d) -> "name_#{d.id}")
+      .enter().append("g")
+    polys = names.append("polygon")
+      .classed("bg", true)
+    names.append("text")
+      .text((d) -> if d.type is "object" then d.name else "plot")
+      .attr("font-size", 12 * zoom.current)
+      .attr("class", (d) -> d.type)
+      .attr("x", (d) -> d.x + shift)
+      .attr("y", (d) -> d.y)
+    namesG.selectAll("text").each (d, i) ->
+      d.bb = this.getBBox()
+    polys.attr("points", (d) -> points({x: d.x + 10, y: d.y}, d.bb))
+
+  hideNames = (d) ->
+    namesG.selectAll("g").remove()
+
+
   # make sure text fits inside the node icon
   scaleText = (text) ->
     textWidth = text.node().getBoundingClientRect().width
@@ -140,9 +205,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     fontSize  = Math.min(12, fontSize * (innerR*1.6/textWidth))
     "#{fontSize}px"
 
-  ui.updatePositions = () ->
-    recalculateCanvas(data)
-
+  ui.updateGraphicalElements = () ->
     nodesG.selectAll("svg.variable")
       .attr("x", (d) -> d.x - d.scale * nodeR)
       .attr("y", (d) -> d.y - d.scale * nodeR)
@@ -159,20 +222,26 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   recalculateCanvas = (data) ->
     x = (step.x for step in data.steps)
     y = (step.y for step in data.steps)
-    setCanvasSize(x.min()-nodeR, x.max()+nodeR, y.min()-nodeR, y.max()+nodeR)
-    # now sizes.canvas.* is updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width, sizes.canvas.height)
+    # calculate marginal positions
+    xMin = x.min()-nodeR
+    xMax = x.max()+nodeR
+    yMin = y.min()-nodeR
+    yMax = y.max()+nodeR
+    # if something went wrong, ignore altogether
+    if isNaN(xMin) or isNaN(xMax) or isNaN(yMin) or isNaN(yMax)
+      return
+    # new canvas dimensions
+    sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
+    sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
+    # sizes.canvas.* are updated an we can update nodes' coordinates
+    data.centralize(sizes.canvas.width * zoom.current, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
-  setCanvasSize = (xMin, xMax, yMin, yMax) ->
-    if isNaN(xMin) or isNaN(xMax) or isNaN(yMin) or isNaN(yMax)
-      return
-    sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
-    sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
-    
-    canvas.attr("width", sizes.canvas.width)
-      .attr("height", sizes.canvas.height)
+  resetCanvasSize = () ->
+    # update graphical elements
+    canvas.attr("width", sizes.canvas.width / zoom.current)
+      .attr("height", sizes.canvas.height / zoom.current)
       .attr("viewBox", "0 0 #{sizes.canvas.width} #{sizes.canvas.height}")
 
   # returns mouse position relatively to the SVG canvas
@@ -209,6 +278,13 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       nodesG.selectAll("#node_#{id}")
         .classed("selected", true)
 
+  # --- zooming ---
+  ui.zoom = (k) ->
+    if k < zoom.switch < zoom.current then switchView("close-up")
+    if k >= zoom.switch > zoom.current then switchView("zoom-out")
+    zoom.current = k
+    resetCanvasSize()
+
   ui.initialize()
   return ui
 # --- UI ---------------------------------------------------------------
@@ -218,7 +294,16 @@ Data = (data) ->
   resetScale = () ->
     data.steps.forEach (s) ->
       s.scale = 1
-  
+
+  stratified = () ->
+    parentsMap = d3.map()
+    data.links.forEach (l) ->
+      parentsMap.set(l.target.id, l.source.id)
+    stratify = d3.stratify()
+      .id((d) -> d.id)
+      .parentId((d) -> parentsMap.get(d.id))
+    stratify(data.steps)
+
   centralize = (width, height) ->
     x = (step.x for step in data.steps)
     y = (step.y for step in data.steps)
@@ -228,7 +313,28 @@ Data = (data) ->
       s.x -= dx
       s.y -= dy
 
-  data = {resetScale: resetScale, centralize: centralize, data...}
+  counter = (start = 1) ->
+    () -> start++
+
+  # assign nodes to groups based on the time threshold
+  groupData = (threshold) ->
+    s = stratified()
+
+    groupNo = counter()
+    s.group = groupNo()
+
+    assignGroup = (parent) ->
+      parent.children?.forEach (child) ->
+        dt = child.data.time - parent.data.time
+        child.group = if dt <= threshold then parent.group else groupNo()
+        assignGroup(child)
+    assignGroup(s)
+
+    stepsMap = d3.map()
+    data.steps.forEach (s) -> stepsMap.set(s.id, s)
+
+    s.descendants().forEach (d) ->
+      stepsMap.get(d.id).group = d.group
 
   # pre-process the input data
   setupData = () ->
@@ -243,6 +349,14 @@ Data = (data) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
 
+  # extend with methods
+  methods =
+    resetScale: resetScale
+    stratified: stratified
+    centralize: centralize
+    groupData: groupData
+  data = {methods..., data...}
+
   # initialize the object
   setupData()
   return data
@@ -252,15 +366,6 @@ Data = (data) ->
 Position = (nodeR) ->
   position = () ->
 
-  stratified = (data) ->
-    parentsMap = d3.map()
-    data.links.forEach (l) ->
-      parentsMap.set(l.target.id, l.source.id)
-    stratify = d3.stratify()
-      .id((d) -> d.id)
-      .parentId((d) -> parentsMap.get(d.id))
-    stratify(data.steps)
-
   treed = (data) ->
     data.sort()
     tree = d3.tree()
@@ -269,7 +374,7 @@ Position = (nodeR) ->
   
   position.calculate = (data) ->
     # use d3 to calculate positions for a tree
-    s = stratified(data)
+    s = data.stratified()
     t = treed(s)
     
     dx = t.descendants().map((n) -> n.x).min() - 2 * nodeR
@@ -383,36 +488,33 @@ Description = (element, step, outer, viewport, nodeR) ->
 
 # --- Widget -----------------------------------------------------------
 Widget = (selection) ->
-  options = { shiny: false }
-  nodeR   = 15
-  lenseR  = 30
-  ui      = UI(selection, nodeR, 15)
-  pos     = Position(nodeR)
-  data    = null
+  options  = { shiny: false, knitr: false }
+  nodeR    = 15
+  lenseR   = 30
+  ui       = UI(selection, nodeR, 15)
+  pos      = Position(nodeR)
+  data     = null
   
   widget = () ->
 
   widget.setData = (input) ->
     data = Data(input)
+    data.groupData(if options.knitr then 5 else 200)
+    pos.calculate(data)
     ui.setData(data)
-    updateCanvas()
+    ui.updateGraphicalElements()
     setEvents()
 
   widget.setSize = (width, height) ->
     ui.setSize(width,height)
-    pos = Position(nodeR)
-    updateCanvas()
 
   widget.setOption = (what, value) ->
     if what of options
       value = (options[what].constructor)(value)
       options[what] = value
 
-  updateCanvas = () ->
-    if data
-      pos.calculate(data)
-      ui.updatePositions()
-
+  # delegate zooming  
+  widget.zoom = ui.zoom
 
   setEvents = () ->
     ui.on('canvas:mousemove', moveLenses)
@@ -423,17 +525,17 @@ Widget = (selection) ->
 
   moveLenses = (d) ->
     data.resetScale()
-    mouse  = ui.mousePosition()
+    mouse = ui.mousePosition()
     nodes = ui.nodesNear(mouse, lenseR)
     nodes.forEach (n) ->
       datum = d3.select(n).datum()
       scale = euclidean(mouse, datum)/lenseR
       datum.scale = 1 + lenseR/nodeR * (1-scale)**3
-    ui.updatePositions()
+    ui.updateGraphicalElements()
   
   resetScale = (d) ->
     data.resetScale()
-    ui.updatePositions()
+    ui.updateGraphicalElements()
   
   showDialog = (d) ->
     this.description = Description(this, d, selection, Viewport(selection), nodeR)

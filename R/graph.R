@@ -161,6 +161,7 @@ render_steps <- function (steps, options = list())
 
   processed <- plot_to_dependencies(steps$steps, is_knitr())
   steps$steps <- processed$steps
+  options$knitr <- is_knitr()
 
   # create the widget
   htmlwidgets::createWidget("experiment", list(data = steps, options = options),
@@ -199,12 +200,13 @@ print.steps <- function(x, ...)
 commit_to_steps <- function (commit, objects)
 {
   # turns an object/plot into a step structure
-  generate_step <- function(name, id, object) {
+  generate_step <- function(name, id, object, tags) {
     ans <- list(
       id        = crc32(paste0(commit$id, id)),
       expr      = format_expression(commit$expr),
       commit_id = commit$id,
-      object_id = id
+      object_id = id,
+      time      = as.integer(tags$time)
     )
 
     if (identical(name, '.plot')) {
@@ -228,9 +230,10 @@ commit_to_steps <- function (commit, objects)
   names <- names(commit$objects)[filter]
   ids <- as.character(commit$object_ids)[filter]
   objects <- commit$objects[filter]
+  tags <- commit$tags[filter]
 
   # get all steps
-  steps <- mapply(generate_step, name = names, id = ids, object = objects,
+  steps <- mapply(generate_step, name = names, id = ids, object = objects, tags = tags,
                   SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
   # get links between these teps

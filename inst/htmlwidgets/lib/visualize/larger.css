@@ -1,10 +1,20 @@
-.widget {
+.main-container {
+    position: relative;
     width: 100%;
-    /*    overflow: auto;
-    overflow-y: auto;
-*/
-    /* visibility:  hidden; */
-  }
+    height: 100%;
+}
+
+.widget {
+    position: relative;
+    display: block;
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+}
+
+.widget > svg {
+    border: 1px solid black;
+}
 
 .lenses {
     fill: black;
@@ -16,18 +26,18 @@
     stroke: black;
 }
 
-.object {
+#nodes .object {
     fill: rgb(247, 247, 247);
     stroke: rgb(150, 150, 150);
 }
 
-.plot {
+#nodes .plot {
     fill: transparent;
     stroke: rgb(150, 150, 150);
     stroke-width: 2pt;
 }
 
-.selected {
+#nodes .selected {
     stroke: rgb(38, 177, 38);
 }
 
@@ -38,9 +48,29 @@
     font-size: 8pt;
 }
 
-.face {
+#nodes .face {
     fill: transparent;
     stroke: transparent;
+}
+
+.thick {
+    stroke-width: 5pt;
+}
+
+#names {
+}
+
+#names .object {
+}
+
+#names .plot {
+    font-style: italic;
+    fill: black;
+}
+
+#names .bg {
+    fill: grey;
+    opacity: .25;
 }
 
 .tooltip {
