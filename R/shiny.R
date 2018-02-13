@@ -176,17 +176,17 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
                            left  = miniUI::miniTitleBarCancelButton(),
                            right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
     miniUI::miniContentPanel(unittestOutput('unittest'),
-                             textOutput('closeWindow'),
+                             shiny::textOutput('closeWindow'),
                              padding = 15, scrollable = TRUE)
   ))
 
-  stopApp <- function (rc) {
-    if (!isTRUE(autoClose)) return()
-    output$closeWindow <- renderText('done')
-    shiny::stopApp(rc)
-  }
-
   server <- function(input, output) {
+    stopApp <- function (rc) {
+      if (!isTRUE(autoClose)) return()
+      output$closeWindow <- renderText('done')
+      shiny::stopApp(rc)
+    }
+
     output$unittest <- renderUnittest(htmlwidgets::createWidget("unittest", list(data = data)))
 
     shiny::observeEvent(input$done, { stopApp(TRUE) })
@@ -194,6 +194,5 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
   }
 
   viewer <- if (isTRUE(browser)) shiny::browserViewer() else shiny::dialogViewer("Interactive Browser")
-
   shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
