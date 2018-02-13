@@ -23,9 +23,9 @@ HTMLWidgets.widget({
         registerTests(input.data);
         var runner = mocha.run();
 
-        if (!shiny || ('autoClose' in input.options && !input.options.autoClose)) return;
-
-        Shiny.onInputChange(runner.failures > 0 ? 'cancel' : 'done', 'cancelled');
+        if (shiny) {
+          Shiny.onInputChange(runner.failures > 0 ? 'cancel' : 'done', 'cancelled');
+        }
       },
 
       resize: function(width, height) {

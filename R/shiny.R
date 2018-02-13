@@ -171,8 +171,6 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
     data <- jsonlite::fromJSON(data, simplifyVector = FALSE)
   }
 
-  options <- list(autoClose = autoClose)
-
   ui <- shiny::shinyUI(miniUI::miniPage(
     miniUI::gadgetTitleBar(title = "Interactive Object Browser",
                            left  = miniUI::miniTitleBarCancelButton(),
@@ -182,20 +180,17 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
                              padding = 15, scrollable = TRUE)
   ))
 
+  stopApp <- function (rc) {
+    if (!isTRUE(autoClose)) return()
+    output$closeWindow <- renderText('done')
+    shiny::stopApp(rc)
+  }
+
   server <- function(input, output) {
-    output$unittest <- renderUnittest(
-      htmlwidgets::createWidget("unittest", list(data = data, options = options))
-    )
+    output$unittest <- renderUnittest(htmlwidgets::createWidget("unittest", list(data = data)))
 
-    shiny::observeEvent(input$done, {
-      output$closeWindow <- renderText('done')
-      shiny::stopApp(TRUE)
-    })
-
-    shiny::observeEvent(input$cancel, {
-      output$closeWindow <- renderText('done')
-      shiny::stopApp(FALSE)
-    })
+    shiny::observeEvent(input$done, { stopApp(TRUE) })
+    shiny::observeEvent(input$cancel, { stopApp(FALSE) })
   }
 
   viewer <- if (isTRUE(browser)) shiny::browserViewer() else shiny::dialogViewer("Interactive Browser")
