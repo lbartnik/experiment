@@ -178,6 +178,7 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
                            left  = miniUI::miniTitleBarCancelButton(),
                            right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
     miniUI::miniContentPanel(unittestOutput('unittest'),
+                             textOutput('closeWindow'),
                              padding = 15, scrollable = TRUE)
   ))
 
@@ -187,12 +188,12 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
     )
 
     shiny::observeEvent(input$done, {
-      output$unittest <- renderText('done')
+      output$closeWindow <- renderText('done')
       shiny::stopApp(TRUE)
     })
 
     shiny::observeEvent(input$cancel, {
-      output$unittest <- renderText('done')
+      output$closeWindow <- renderText('done')
       shiny::stopApp(FALSE)
     })
   }

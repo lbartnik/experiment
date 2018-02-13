@@ -10,7 +10,7 @@ HTMLWidgets.widget({
 
     if (shiny) {
       $(document).on('shiny:value', function (e) {
-        if (e.name == 'unittest') {
+        if (e.name == 'closeWindow') {
           window.close();
         }
       });
