@@ -1,17 +1,7 @@
-registerTests = () ->
+registerTests = (sampleData) ->
   assert = chai.assert
   suite  = Mocha.suite
   test   = Mocha.test
-
-  sampleData = (path = 'data-1/data.json') ->
-    req = new XMLHttpRequest()
-    req.open("GET", path, false)
-    req.overrideMimeType('application/json')
-    req.send()
-    if req.status isnt 200
-      throw 'Cannot load sample data ' + path
-    JSON.parse(req.responseText)
-
 
   suite 'Data', () ->
     # helpers
@@ -23,7 +13,7 @@ registerTests = () ->
 
     # sample data
     setup () ->
-      this.data = sampleData()
+      this.data = JSON.parse(JSON.stringify(sampleData))
 
     # test cases
     suite 'Data construction', () ->

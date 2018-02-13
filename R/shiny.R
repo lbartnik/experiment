@@ -2,7 +2,6 @@ experimentOutput <- function(outputId, width = '100%', height = '100%') {
   htmlwidgets::shinyWidgetOutput(outputId, "experiment", width, height, package = "experiment")
 }
 
-
 renderExperiment <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   htmlwidgets::shinyRenderWidget(expr, experimentOutput, env, quoted = TRUE)
@@ -153,4 +152,47 @@ attachStore <- function (path = file.path(getwd(), "project-store"))
   reattach_to_store(internal_state, store, globalenv(), "overwrite")
   invisible()
 }
+
+
+# --- unit tests in browser --------------------------------------------
+
+unittestOutput <- function(outputId, width = '100%', height = '100%') {
+  htmlwidgets::shinyWidgetOutput(outputId, "unittest", width, height, package = "experiment")
+}
+
+renderUnittest <- function(expr, env = parent.frame(), quoted = FALSE) {
+  if (!quoted) { expr <- substitute(expr) }
+  htmlwidgets::shinyRenderWidget(expr, unittestOutput, env, quoted = TRUE)
+}
+
+unittestGadget <- function (data = list(), browser = FALSE)
+{
+  ui <- shiny::shinyUI(miniUI::miniPage(
+    miniUI::gadgetTitleBar(title = "Interactive Object Browser",
+                           left  = miniUI::miniTitleBarCancelButton(),
+                           right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
+    miniUI::miniContentPanel(unittestOutput('unittest'),
+                             padding = 15, scrollable = FALSE)
+  ))
+
+  server <- function(input, output) {
+    output$experiment <- renderUnittest(htmlwidgets::createWidget("unittest", list(data = data)))
+
+    shiny::observeEvent(input$done, {
+      shiny::stopApp()
+    })
+
+    shiny::observeEvent(input$cancel, {
+      shiny::stopApp()
+    })
+  }
+
+  viewer <- if (isTRUE(browser)) shiny::browserViewer() else shiny::dialogViewer("Interactive Browser")
+
+  shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+}
+
+
+
+
 

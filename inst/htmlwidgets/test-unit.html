@@ -41,7 +41,22 @@
 <!-- load your test files here -->
 <!--<script type="text/coffeescript" src="lib/visualize/tests.coffee"></script>-->
 <script src="lib/visualize/tests.js"></script>
-  
+<script type="text/javascript">
+sampleData = function (path = 'data-1/data.json') {
+    req = new XMLHttpRequest();
+    req.open("GET", path, false);
+    req.overrideMimeType('application/json');
+    req.send();
+    if (req.status !== 200) {
+        throw 'Cannot load sample data ' + path;
+    }
+    return JSON.parse(req.responseText);
+}
+
+registerTests(sampleData());
+</script>
+
+
 <script>
 mocha.run();
 </script>

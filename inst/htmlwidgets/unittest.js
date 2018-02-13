@@ -5,11 +5,14 @@ HTMLWidgets.widget({
 
   factory: function(el, width, height) {
 
+    var mochaDiv = $("<div>", {id: "mocha"}).appendTo($(el));
+    console.log(mochaDiv);
+
     // return widget instance
     return {
       renderValue: function(input) {
         mocha.setup('tdd');
-        registerTests();
+        registerTests(input.data);
         mocha.run();
       },
 

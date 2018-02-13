@@ -6,24 +6,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 (function () {
   var registerTests;
 
-  registerTests = function registerTests() {
-    var assert, sampleData, suite, test;
+  registerTests = function registerTests(sampleData) {
+    var assert, suite, test;
     assert = chai.assert;
     suite = Mocha.suite;
     test = Mocha.test;
-    sampleData = function sampleData() {
-      var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'data-1/data.json';
-
-      var req;
-      req = new XMLHttpRequest();
-      req.open("GET", path, false);
-      req.overrideMimeType('application/json');
-      req.send();
-      if (req.status !== 200) {
-        throw 'Cannot load sample data ' + path;
-      }
-      return JSON.parse(req.responseText);
-    };
     return suite('Data', function () {
       var extractScale, unique;
       // helpers
@@ -53,7 +40,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       };
       // sample data
       setup(function () {
-        return this.data = sampleData();
+        return this.data = JSON.parse(JSON.stringify(sampleData));
       });
       // test cases
       return suite('Data construction', function () {

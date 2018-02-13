@@ -26,4 +26,4 @@ dependencies:
     src: htmlwidgets/lib/visualize
     script:
       - larger.js
-      - test.js
+      - tests.js
