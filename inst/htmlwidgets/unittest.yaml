@@ -1,0 +1,29 @@
+dependencies:
+  - name: jquery
+    version: 3.2.1
+    src: htmlwidgets/lib/jquery-3.2.1
+    script:
+      - jquery.js
+  - name: d3
+    version: 4.11.0
+    src: htmlwidgets/lib/d3-4.11.0
+    script:
+      - d3.min.js
+  - name: mocha
+    version: 5.0.0
+    src: htmlwidgets/lib/mocha-5.0.0
+    script:
+      - mocha.js
+    stylesheet:
+      - mocha.css
+  - name: chai
+    version: 4.1.2
+    src: htmlwidgets/lib/chai-4.1.2
+    script:
+      - chai.js
+  - name: visualize
+    version: 0.1
+    src: htmlwidgets/lib/visualize
+    script:
+      - larger.js
+      - test.js
