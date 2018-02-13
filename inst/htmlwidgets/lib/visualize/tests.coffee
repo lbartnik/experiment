@@ -11,12 +11,12 @@ registerTests = (sampleData) ->
       (output[a[key].id ? a[key]] = a[key]) for key in [0...a.length]
       value for key, value of output
 
-    # sample data
-    setup () ->
-      this.data = JSON.parse(JSON.stringify(sampleData))
-
     # test cases
     suite 'Data construction', () ->
+      # sample data
+      setup () ->
+        this.data = JSON.parse(JSON.stringify(sampleData))
+
       test 'data sanity', () ->
         assert('links' of this.data)
         assert('steps' of this.data)
@@ -45,5 +45,7 @@ registerTests = (sampleData) ->
         sd.links.forEach (link) ->
           assert.hasAllKeys(link, ['target', 'source'])
           assert.includeDeepMembers(sd.steps, [link.target])
+  
+  return null
 
 window.registerTests = registerTests

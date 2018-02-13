@@ -11,7 +11,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     assert = chai.assert;
     suite = Mocha.suite;
     test = Mocha.test;
-    return suite('Data', function () {
+    suite('Data', function () {
       var extractScale, unique;
       // helpers
       extractScale = function extractScale(steps) {
@@ -38,12 +38,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
         return results;
       };
-      // sample data
-      setup(function () {
-        return this.data = JSON.parse(JSON.stringify(sampleData));
-      });
       // test cases
       return suite('Data construction', function () {
+        // sample data
+        setup(function () {
+          return this.data = JSON.parse(JSON.stringify(sampleData));
+        });
         test('data sanity', function () {
           var step;
           assert('links' in this.data);
@@ -108,6 +108,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
       });
     });
+    return null;
   };
 
   window.registerTests = registerTests;

@@ -165,25 +165,35 @@ renderUnittest <- function(expr, env = parent.frame(), quoted = FALSE) {
   htmlwidgets::shinyRenderWidget(expr, unittestOutput, env, quoted = TRUE)
 }
 
-unittestGadget <- function (data = list(), browser = FALSE)
+unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", package = 'experiment'), browser = FALSE, autoClose = TRUE)
 {
+  if (is.character(data)) {
+    data <- jsonlite::fromJSON(data, simplifyVector = FALSE)
+  }
+
+  options <- list(autoClose = autoClose)
+
   ui <- shiny::shinyUI(miniUI::miniPage(
     miniUI::gadgetTitleBar(title = "Interactive Object Browser",
                            left  = miniUI::miniTitleBarCancelButton(),
                            right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
     miniUI::miniContentPanel(unittestOutput('unittest'),
-                             padding = 15, scrollable = FALSE)
+                             padding = 15, scrollable = TRUE)
   ))
 
   server <- function(input, output) {
-    output$experiment <- renderUnittest(htmlwidgets::createWidget("unittest", list(data = data)))
+    output$unittest <- renderUnittest(
+      htmlwidgets::createWidget("unittest", list(data = data, options = options))
+    )
 
     shiny::observeEvent(input$done, {
-      shiny::stopApp()
+      output$unittest <- renderText('done')
+      shiny::stopApp(TRUE)
     })
 
     shiny::observeEvent(input$cancel, {
-      shiny::stopApp()
+      output$unittest <- renderText('done')
+      shiny::stopApp(FALSE)
     })
   }
 
@@ -191,8 +201,3 @@ unittestGadget <- function (data = list(), browser = FALSE)
 
   shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
-
-
-
-
-
