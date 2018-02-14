@@ -291,6 +291,19 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
 Data = (data) ->
 
+  # pre-process the input data
+  setupData = () ->
+    data.resetScale()
+    # pre-process nodes
+    data.steps.forEach (s) ->
+      if s.expr.constructor is Array
+        s.expr = s.expr.join('\n')
+    # replace target/source references in links with actual objects
+    stepsMap = mapNodes(data.steps)
+    data.links.forEach (l) ->
+      l.source = stepsMap.get(l.source)
+      l.target = stepsMap.get(l.target)
+
   resetScale = () ->
     data.steps.forEach (s) ->
       s.scale = 1
@@ -335,19 +348,6 @@ Data = (data) ->
 
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
-
-  # pre-process the input data
-  setupData = () ->
-    data.resetScale()
-    # pre-process nodes
-    data.steps.forEach (s) ->
-      if s.expr.constructor is Array
-        s.expr = s.expr.join('\n')
-    # replace target/source references in links with actual objects
-    stepsMap = mapNodes(data.steps)
-    data.links.forEach (l) ->
-      l.source = stepsMap.get(l.source)
-      l.target = stepsMap.get(l.target)
 
   # extend with methods
   methods =
@@ -556,3 +556,4 @@ Widget = (selection) ->
 
 # export the Widget
 window.Widget = Widget
+window.Data = Data

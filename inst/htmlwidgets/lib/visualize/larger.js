@@ -418,6 +418,23 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
     var centralize, counter, groupData, methods, resetScale, setupData, stratified;
+    // pre-process the input data
+    setupData = function setupData() {
+      var stepsMap;
+      data.resetScale();
+      // pre-process nodes
+      data.steps.forEach(function (s) {
+        if (s.expr.constructor === Array) {
+          return s.expr = s.expr.join('\n');
+        }
+      });
+      // replace target/source references in links with actual objects
+      stepsMap = mapNodes(data.steps);
+      return data.links.forEach(function (l) {
+        l.source = stepsMap.get(l.source);
+        return l.target = stepsMap.get(l.target);
+      });
+    };
     resetScale = function resetScale() {
       return data.steps.forEach(function (s) {
         return s.scale = 1;
@@ -494,23 +511,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       });
       return s.descendants().forEach(function (d) {
         return stepsMap.get(d.id).group = d.group;
-      });
-    };
-    // pre-process the input data
-    setupData = function setupData() {
-      var stepsMap;
-      data.resetScale();
-      // pre-process nodes
-      data.steps.forEach(function (s) {
-        if (s.expr.constructor === Array) {
-          return s.expr = s.expr.join('\n');
-        }
-      });
-      // replace target/source references in links with actual objects
-      stepsMap = mapNodes(data.steps);
-      return data.links.forEach(function (l) {
-        l.source = stepsMap.get(l.source);
-        return l.target = stepsMap.get(l.target);
       });
     };
     // extend with methods
@@ -764,4 +764,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // export the Widget
   window.Widget = Widget;
+
+  window.Data = Data;
 }).call(undefined);

@@ -2,7 +2,6 @@ experimentOutput <- function(outputId, width = '100%', height = '100%') {
   htmlwidgets::shinyWidgetOutput(outputId, "experiment", width, height, package = "experiment")
 }
 
-
 renderExperiment <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   htmlwidgets::shinyRenderWidget(expr, experimentOutput, env, quoted = TRUE)
@@ -154,3 +153,47 @@ attachStore <- function (path = file.path(getwd(), "project-store"))
   invisible()
 }
 
+
+# --- unit tests in browser --------------------------------------------
+
+unittestOutput <- function(outputId, width = '100%', height = '100%') {
+  htmlwidgets::shinyWidgetOutput(outputId, "unittest", width, height, package = "experiment")
+}
+
+renderUnittest <- function(expr, env = parent.frame(), quoted = FALSE) {
+  if (!quoted) { expr <- substitute(expr) }
+  htmlwidgets::shinyRenderWidget(expr, unittestOutput, env, quoted = TRUE)
+}
+
+unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", package = 'experiment'),
+                            browser = FALSE, autoClose = TRUE, port = NULL)
+{
+  if (is.character(data)) {
+    data <- jsonlite::fromJSON(data, simplifyVector = FALSE)
+  }
+
+  ui <- shiny::shinyUI(miniUI::miniPage(
+    miniUI::gadgetTitleBar(title = "Interactive Object Browser",
+                           left  = miniUI::miniTitleBarCancelButton(),
+                           right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
+    miniUI::miniContentPanel(unittestOutput('unittest'),
+                             shiny::textOutput('closeWindow'),
+                             padding = 15, scrollable = TRUE)
+  ))
+
+  server <- function(input, output) {
+    stopApp <- function (rc) {
+      if (!isTRUE(autoClose)) return()
+      output$closeWindow <- renderText('done')
+      shiny::stopApp(rc)
+    }
+
+    output$unittest <- renderUnittest(htmlwidgets::createWidget("unittest", list(data = data)))
+
+    shiny::observeEvent(input$done, { stopApp(TRUE) })
+    shiny::observeEvent(input$cancel, { stopApp(FALSE) })
+  }
+
+  viewer <- if (isTRUE(browser)) shiny::browserViewer() else shiny::dialogViewer("Interactive Browser")
+  shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE, port = port)
+}
