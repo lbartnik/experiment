@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+
+<script src="lib/jquery-3.2.1/jquery.js" type="text/javascript"></script>
+<script src="lib/d3-4.11.0/d3.min.js" type="text/javascript"></script>
+<script src="lib/coffeescript-2.0/coffeescript.js" type="text/javascript"></script>
+<script src="lib/highlight-9.12.0/highlight.js" type="text/javascript"></script>
+<link rel = "stylesheet" type = "text/css" href = "lib/highlight-9.12.0/styles/zenburn.css">
+<script src="lib/mocha-5.0.0/mocha.js" type="text/javascript"></script>
+<link href="lib/mocha-5.0.0/mocha.css" rel="stylesheet" />
+<script src="lib/chai-4.1.2/chai.js" type="text/javascript"></script>
+
+<script type="text/coffeescript" src="lib/visualize/larger.coffee"></script>
+<script type="text/javascript" src="lib/visualize/tests.js"></script>
+
+<script  type="application/json" id="data">
+{
+  "steps": [
+    {
+      "id": "5e464a9",
+      "expr": ["", ""],
+      "commit_id": "a",
+      "object_id": "p",
+      "time": 1518590449,
+      "type": "object",
+      "name": "x",
+      "desc": "numeric"
+    },
+    {
+      "id": "59ce07fc",
+      "expr": "",
+      "commit_id": "b",
+      "object_id": "q",
+      "time": 1518590449,
+      "type": "object",
+      "name": "y",
+      "desc": "integer"
+    },
+    {
+      "id": "d9dc6707",
+      "expr": "",
+      "commit_id": "c",
+      "object_id": "r",
+      "time": 1518590449,
+      "type": "object",
+      "name": "x",
+      "desc": "character"
+    },
+    {
+      "id": "e19ac156",
+      "expr": "",
+      "commit_id": "d",
+      "object_id": "s",
+      "time": 1518590449,
+      "type": "object",
+      "name": "z",
+      "desc": "numeric"
+    }
+  ],
+  "links": [
+    {
+      "source": "5e464a9",
+      "target": "59ce07fc"
+    },
+    {
+      "source": "59ce07fc",
+      "target": "d9dc6707"
+    },
+    {
+      "source": "d9dc6707",
+      "target": "e19ac156"
+    }
+  ]
+}
+</script>
+
+</head>
+<body style="background-color:white;">
+
+<div id="mocha"></div>
+
+<script type="text/javascript">
+mocha.setup('tdd')
+registerTests(JSON.parse($("#data").html()));
+mocha.run();
+</script>
+
+</body>
+</html>

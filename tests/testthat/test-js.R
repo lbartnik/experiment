@@ -2,10 +2,17 @@ context("JS")
 
 test_that("JS tests pass", {
   skip("fix: browser does not exit")
-  expect_true(unittestGadget(browser = TRUE, port = shinyPort))
+
+  expect_true(unittestGadget(sample_steps(), browser = TRUE, port = shinyPort))
 })
 
-#   webdriver::install_phantomjs()
+
+
+# This could work if webdriver had asynchronous operations. At this point
+# ses$go() is synchronous and the code deadlocks.
+#
+#
+# webdriver::install_phantomjs()
 # pjs <- webdriver::run_phantomjs()
 # ses <- webdriver::Session$new(port = pjs$port)
 #

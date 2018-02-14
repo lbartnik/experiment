@@ -48,7 +48,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           var step;
           assert('links' in this.data);
           assert('steps' in this.data);
-          assert.lengthOf(this.data.steps, 16);
+          assert.lengthOf(this.data.steps, 4);
           assert.lengthOf(extractScale(this.data.steps), 0);
           assert.sameMembers(unique(function () {
             var i, len, ref, results;
@@ -80,8 +80,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         test('sets scale', function () {
           var sd;
           sd = Data(this.data);
-          assert.lengthOf(sd.steps, 16);
-          assert.lengthOf(extractScale(sd.steps), 16);
+          assert.lengthOf(sd.steps, this.data.steps.length);
+          assert.lengthOf(extractScale(sd.steps), this.data.steps.length);
           return assert.sameMembers(unique(extractScale(sd.steps)), [1]);
         });
         test('concat expression', function () {

@@ -20,7 +20,7 @@ registerTests = (sampleData) ->
       test 'data sanity', () ->
         assert('links' of this.data)
         assert('steps' of this.data)
-        assert.lengthOf(this.data.steps, 16)
+        assert.lengthOf(this.data.steps, 4)
         assert.lengthOf(extractScale(this.data.steps), 0)
         assert.sameMembers(unique(step.id isnt undefined for step in this.data.steps), [true])
         assert.sameMembers(unique(typeof step.expr for step in this.data.steps), ['object', 'string'])
@@ -32,8 +32,8 @@ registerTests = (sampleData) ->
 
       test 'sets scale', () ->
         sd = Data(this.data)
-        assert.lengthOf(sd.steps, 16)
-        assert.lengthOf(extractScale(sd.steps), 16)
+        assert.lengthOf(sd.steps, this.data.steps.length)
+        assert.lengthOf(extractScale(sd.steps), this.data.steps.length)
         assert.sameMembers(unique(extractScale(sd.steps)), [1])
 
       test 'concat expression', () ->
