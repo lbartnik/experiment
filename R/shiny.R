@@ -165,7 +165,8 @@ renderUnittest <- function(expr, env = parent.frame(), quoted = FALSE) {
   htmlwidgets::shinyRenderWidget(expr, unittestOutput, env, quoted = TRUE)
 }
 
-unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", package = 'experiment'), browser = FALSE, autoClose = TRUE)
+unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", package = 'experiment'),
+                            browser = FALSE, autoClose = TRUE, port = NULL)
 {
   if (is.character(data)) {
     data <- jsonlite::fromJSON(data, simplifyVector = FALSE)
@@ -194,5 +195,5 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
   }
 
   viewer <- if (isTRUE(browser)) shiny::browserViewer() else shiny::dialogViewer("Interactive Browser")
-  shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+  shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE, port = port)
 }
