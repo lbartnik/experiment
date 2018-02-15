@@ -185,7 +185,8 @@ print.commit <- function (x, simple = FALSE, header = TRUE, ..., store)
   if (missing(store)) store <- internal_state$stash
   if (isTRUE(simple))
   {
-    cat(substr(x$id, 1, 8), ': ', names(x$objects), '\n')
+    cat(crayon::green(storage::shorten(x$id)), ' : ',
+        toString(x, simple = simple, store = store), '\n')
   }
   else
   {
@@ -197,7 +198,7 @@ print.commit <- function (x, simple = FALSE, header = TRUE, ..., store)
 
     # header
     if (isTRUE(header))
-      cat('Commit : ', ifelse(is.na(x$id), '<no id>', x$id), '\n')
+      cat('Commit : ', crayon::green(ifelse(is.na(x$id), '<no id>', x$id)), '\n')
 
     # contents
     obj <- x$objects
@@ -210,7 +211,7 @@ print.commit <- function (x, simple = FALSE, header = TRUE, ..., store)
 
     cat('objects :\n')
     mapply(function (name, id) {
-        cat('  ', name, ': ')
+        cat('  ', crayon::yellow(name), ': ')
         print_tags(storage::os_read_tags(store, id))
         cat('\n')
       },
@@ -225,6 +226,14 @@ print.commit <- function (x, simple = FALSE, header = TRUE, ..., store)
       print_tags(tags)
     }
   }
+}
+
+
+toString.commit <- function (x, simple = FALSE, ..., store)
+{
+  if (missing(store)) store <- internal_state$stash
+
+  paste(paste(names(x$objects), collapse = ', '), 'created on', commit_timestamp(x, store))
 }
 
 

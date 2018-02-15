@@ -22,6 +22,7 @@ Imports:
     jsonlite,
     lazyeval,
     miniUI,
+    rstudioapi,
     rsvg,
     shiny,
     storage,
@@ -42,6 +43,7 @@ Collate:
   'compare.R'
   'data.R'
   'debug.R'
+  'dialogs.R'
   'examples.R'
   'graph.R'
   'package.R'

@@ -24,18 +24,6 @@ Error: global environment is not empty, cannot restore commit, aborting
     programmatic (non-interactive) API
 
 * Widget:
-  - show dialog with information about clicking on node when opening in shiny
-  
-  - maximize tooltip/plot towards the center of the canvas
-    add onmouseout to tooltip/plot in case it covers the node/miniature;
-    Hide with a delay to give a chance to hover over the tooltip
-    
-  - calculate size so that the tooltip does not cover the node it belongs to
-
-  - make tooltip the size of the node and transparent, and then maximize
-    it similarly to plots - the mouse cursor will stay "mouseover" throught
-    the interaction
-    
   - use RStudio addins to browse history with keyboard (up/down),
     similarly to Ctrl+R in regular R console
 
@@ -46,7 +34,6 @@ Error: global environment is not empty, cannot restore commit, aborting
     a valid commit/object id, and if so, restore it
 
 * explain: find a full sequence of calls leading to a given object
-  - option to plot explanation as a graph with vis.js
 
 * UI:
   - show history of commits
@@ -55,8 +42,6 @@ Error: global environment is not empty, cannot restore commit, aborting
   - list branches
   - name branches
   - clean the stash
-  - questions as Shiny Widget (popup) !!!
-
 
 * move plot.result to compare - plot.result should show something
   similar to plot.graph - a graph of inter-related objects
