@@ -423,29 +423,26 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
   }
 
   if (length(lv) > 1) {
-    if (!interactive()) {
+    if (isTRUE(.silent)) {
       stop("more than one commit could be restored but running in ",
-           "non-interactive mode; aborting", call. = FALSE)
+           "silent mode; aborting", call. = FALSE)
     }
 
-    if (isFALSE(.silent)) {
-      times <- lapply(lv, function (x) as.character(commit_timestamp(x, store)))
-      message("there are ", length(lv), " commit(s) that we can attach to ",
-              "at this point:\n  ",
-              paste(names(lv), " created on ", as.character(times), collapse = "\n  ")
-      )
-      lapply(lv, function (lf) print(lf, simple = TRUE, store = store))
+    choices <- lapply(lv, toString, simple = TRUE, store = store)
+    names(choices) <- storage::shorten(names(choices))
+
+    ans <- showChoiceDialog(
+      "Restore R session",
+      paste("There are", length(lv), "branches in the history tree. Choose the one",
+            "to be restored."),
+      choices
+    )
+
+    if (is.null(ans)) {
+      stop("No choice has been made, aborting", call. = FALSE)
     }
 
-    repeat {
-      ans <- readline("1-based index or id: ")
-      if (!is.na(i <- match(ans, names(lv)))) ans <- i
-      ans <- tryCatch(as.integer(ans), warning = function (e) NULL)
-      if (!is.null(ans) && between(ans, 1, length(lv))) break
-      message("could not recognize that choice...")
-    }
-
-    ct <- nth(lv, ans)
+    ct <- nth(lv, match(ans, names(choices)))
   }
   else {
     ct <- first(lv)
@@ -474,10 +471,13 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
 
   # overwrite - clean globalenv and load commit instead
   if (identical(.global, "overwrite")) {
-    warning('global environment is not empty, "overwrite" chosen, replacing ',
-            "globalenv with the historical commit", call. = FALSE)
+    message <- 'global environment is not empty, "overwrite" chosen, replacing globalenv with the historical commit'
 
-    if (isFALSE(.silent)) print(ct, store = store)
+    if (isTRUE(.silent)) warning(message, call. = FALSE)
+    else {
+      cat(crayon::red(message), '\n\n')
+      print(ct, store = store)
+    }
 
     rm(list = ls(envir = env, all.names = TRUE), envir = env)
     state$stash <- store
@@ -487,8 +487,7 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
   # merge the commit with the current globalenv; create a new commit
   # and write it back to the store
   if (identical(.global, "merge")) {
-    warning('global environment is not empty, "merge" chosen, merging ',
-            'globalenv with the historical commit', call. = FALSE)
+    message <- 'global environment is not empty, "merge" chosen, merging globalenv with the historical commit'
 
     ct <- commit_restore_data(ct, store)
     merged_contents <- as.environment(c(ct$objects, as.list(env, all.names = TRUE)))
@@ -497,7 +496,11 @@ reattach_to_store <- function (state, store, env, .global, .silent = !interactiv
     state$stash <- store
     ct <- update_current_commit(state, merged_contents, NULL, bquote())
 
-    if (isFALSE(.silent)) print(ct, store = store)
+    if (isTRUE(.silent)) warning(message, call. = FALSE)
+    else {
+      cat(crayon::red(message))
+      print(ct, store = store)
+    }
 
     rm(list = ls(envir = env, all.names = TRUE), envir = env)
     mapply(function (name, value) assign(name, value, envir = env),
