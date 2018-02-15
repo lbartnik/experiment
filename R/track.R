@@ -455,7 +455,7 @@ reattach_to_store <- function (state, store, env, .global = "abort", .silent = !
     restore_commit(state, ct$id, env)
 
     if (isFALSE(.silent)) {
-      message('Attached to a new object store. R session reset to commit "', ct$id, '"')
+      cat('Attached to a new object store. R session reset to commit "', ct$id, '"\n')
       print(ct, store = store)
     }
 
