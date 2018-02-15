@@ -377,8 +377,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       // new canvas dimensions
       sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
       sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
-      // sizes.canvas.* are updated an we can update nodes' coordinates
-      return data.centralize(sizes.canvas.width, sizes.canvas.height);
+      // sizes.canvas.* are updated and we can update nodes' coordinates
+      return data.center(sizes.canvas.width, sizes.canvas.height);
     };
     // canvas size is set independently, and canvas might need to be
     // scrolled within the outer div element
@@ -473,7 +473,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var centralize, childrenOf, counter, groupData, methods, parentOf, resetScale, selected, setupData, stratified;
+    var center, childrenOf, counter, groupData, methods, parentOf, resetScale, selected, setupData, stratified;
     // pre-process the input data
     setupData = function setupData() {
       var stepsMap;
@@ -509,7 +509,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       });
       return stratify(data.steps);
     };
-    centralize = function centralize(width, height) {
+    center = function center(width, height) {
       var dx, dy, step, x, y;
       x = function () {
         var j, len, ref, results;
@@ -603,7 +603,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     methods = {
       resetScale: resetScale,
       stratified: stratified,
-      centralize: centralize,
+      center: center,
       groupData: groupData,
       selected: selected,
       parentOf: parentOf,

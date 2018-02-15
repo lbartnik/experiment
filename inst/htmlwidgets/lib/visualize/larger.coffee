@@ -264,8 +264,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     # new canvas dimensions
     sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
     sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
-    # sizes.canvas.* are updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width, sizes.canvas.height)
+    # sizes.canvas.* are updated and we can update nodes' coordinates
+    data.center(sizes.canvas.width, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
@@ -353,7 +353,7 @@ Data = (data) ->
       .parentId((d) -> parentsMap.get(d.id))
     stratify(data.steps)
 
-  centralize = (width, height) ->
+  center = (width, height) ->
     x = (step.x for step in data.steps)
     y = (step.y for step in data.steps)
     dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2
@@ -403,7 +403,7 @@ Data = (data) ->
   methods =
     resetScale: resetScale
     stratified: stratified
-    centralize: centralize
+    center:     center
     groupData:  groupData
     selected:   selected
     parentOf:   parentOf
