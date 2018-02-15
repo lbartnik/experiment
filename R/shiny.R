@@ -21,8 +21,11 @@ gui_state <- as.environment(list(
 #' @param steps A `steps` data structure, see [fullhistory] for an example.
 #'
 #' @export
+#' @import miniUI
+#' @importFrom shiny dialogViewer observeEvent runGadget shinyUI stopApp
 browserAddin <- function (steps = fullhistory())
 {
+  # error checking
   stopifnot(is_steps(steps))
   if (!count(steps)) {
     stop('history is empty, not showing the browser', call. = FALSE)
@@ -32,32 +35,32 @@ browserAddin <- function (steps = fullhistory())
          call. = FALSE)
   }
 
+  # instructions on what to do with this widget
   if (!isTRUE(gui_state$popup_clicked)) {
-    rstudioapi::showDialog("Information",
-                           paste('In the Interactive History browser, choose a node (an object or a plot)',
-                                 'on the graph. When the choice is made, click on the "Done" button and',
-                                 'this will restore the state of R session when that object or plot was created.'),
-                           url = ''
+    showDialog("Information",
+       'In the Interactive History browser, choose a node (an object or a plot)',
+       'on the graph. When the choice is made, click on the "Done" button and',
+       'this will restore the state of R session when that object or plot was created.'
     )
     gui_state$popup_clicked <- TRUE
   }
 
+  # --- the actual widget ---
 
-  # the definition of the UI
-  ui <- shiny::shinyUI(miniUI::miniPage(
-    miniUI::gadgetTitleBar(title = "Interactive Object Browser",
-                           left  = miniUI::miniTitleBarCancelButton(),
-                           right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
-    miniUI::miniContentPanel(experimentOutput('experiment'),
-                             padding = 15, scrollable = FALSE)
+  ui <- shinyUI(miniPage(
+    gadgetTitleBar(title = "Interactive Object Browser",
+                   left  = miniTitleBarCancelButton(),
+                   right = miniTitleBarButton("done", "Done", primary = TRUE)),
+    miniContentPanel(experimentOutput('experiment'),
+                     padding = 15, scrollable = FALSE)
   ))
 
   server <- function(input, output) {
     output$experiment <- renderExperiment(render_steps(steps))
 
-    shiny::observeEvent(input$done, {
-      # we can safely assume that tracking is turned on, otherwise there
-      # would be no history to look at
+    # we can safely assume that tracking is turned on, otherwise there
+    # would be no history to look at
+    observeEvent(input$done, {
       if (is_empty(input$object_selected)) {
         cat('\nSelection empty, R session left unchanged.\n')
         hline()
@@ -66,29 +69,24 @@ browserAddin <- function (steps = fullhistory())
         onRestore(st$commit_id)
       }
 
-      shiny::stopApp()
+      stopApp(invisible(TRUE))
     })
 
-    shiny::observe({
+    observeEvent(input$cancel, {
+      cat('\nUser cancel, commit will not be restored.\n')
+      hline()
+      stopApp(invisible(FALSE))
+    })
+
+    observe({
       if (!is_empty(input$object_selected))
         onClick(steps, input$object_selected)
     })
-
-    shiny::observe({
-      if (isTRUE(input$popup_clicked))
-        gui_state$popup_clicked <- TRUE
-    })
   }
 
-  tryCatch({
-    suppressMessages({
-      shiny::runGadget(ui, server, viewer = shiny::dialogViewer("Interactive Browser", width = 750))
-    })
-  }, error = function (e) {
-    if (identical(e$message, 'User cancel'))
-      onCancel()
-    else
-      stop(e$message, call. = TRUE)
+  suppressMessages({
+    runGadget(ui, server, viewer = dialogViewer("Interactive Browser", width = 750),
+              stopOnCancel = FALSE)
   })
 }
 
@@ -119,11 +117,6 @@ onRestore <- function (commit_id)
 }
 
 
-onCancel <- function ()
-{
-  cat('\nUser cancel, commit will not be restored.\n')
-  hline()
-}
 
 
 
@@ -148,6 +141,9 @@ renderUnittest <- function(expr, env = parent.frame(), quoted = FALSE) {
   htmlwidgets::shinyRenderWidget(expr, unittestOutput, env, quoted = TRUE)
 }
 
+
+#' @import miniUI
+#' @importFrom shiny browserViewer dialogViewer observeEvent runGadget shinyUI stopApp textOutput
 unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", package = 'experiment'),
                             browser = FALSE, autoClose = TRUE, port = NULL)
 {
@@ -155,13 +151,13 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
     data <- jsonlite::fromJSON(data, simplifyVector = FALSE)
   }
 
-  ui <- shiny::shinyUI(miniUI::miniPage(
-    miniUI::gadgetTitleBar(title = "Interactive Object Browser",
-                           left  = miniUI::miniTitleBarCancelButton(),
-                           right = miniUI::miniTitleBarButton("done", "Done", primary = TRUE)),
-    miniUI::miniContentPanel(unittestOutput('unittest'),
-                             shiny::textOutput('closeWindow'),
-                             padding = 15, scrollable = TRUE)
+  ui <- shinyUI(miniPage(
+    gadgetTitleBar(title = "Interactive Object Browser",
+                   left  = miniTitleBarCancelButton(),
+                   right = miniTitleBarButton("done", "Done", primary = TRUE)),
+    miniContentPanel(unittestOutput('unittest'),
+                     textOutput('closeWindow'),
+                     padding = 15, scrollable = TRUE)
   ))
 
   server <- function(input, output) {
@@ -173,10 +169,10 @@ unittestGadget <- function (data = system.file("htmlwidgets/data-1/data.json", p
 
     output$unittest <- renderUnittest(htmlwidgets::createWidget("unittest", list(data = data)))
 
-    shiny::observeEvent(input$done, { stopApp(TRUE) })
-    shiny::observeEvent(input$cancel, { stopApp(FALSE) })
+    observeEvent(input$done, { stopApp(TRUE) })
+    observeEvent(input$cancel, { stopApp(FALSE) })
   }
 
-  viewer <- if (isTRUE(browser)) shiny::browserViewer() else shiny::dialogViewer("Interactive Browser")
-  shiny::runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE, port = port)
+  viewer <- if (isTRUE(browser)) browserViewer() else dialogViewer("Interactive Browser")
+  runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE, port = port)
 }
