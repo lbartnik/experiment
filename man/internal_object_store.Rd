@@ -14,7 +14,8 @@ prepare_object_store(path, .silent = !interactive())
 
 create_stash(path = file.path(tempdir(), "experiment-stash"))
 
-reattach_to_store(state, store, env, .global, .silent = !interactive())
+reattach_to_store(state, store, env, .global = "abort",
+  .silent = !interactive())
 }
 \arguments{
 \item{path}{Path to be examined.}

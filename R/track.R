@@ -402,7 +402,7 @@ choose_store <- function (path, .create = FALSE)
 #' @param env The [globalenv] or testing mock environment.
 #' @param .global Action to take when reading the [commit] into `env`.
 #'
-reattach_to_store <- function (state, store, env, .global, .silent = !interactive())
+reattach_to_store <- function (state, store, env, .global = "abort", .silent = !interactive())
 {
   # TODO add "ask" in interactive mode
   stopifnot(.global %in% c("abort", "overwrite", "merge"))
