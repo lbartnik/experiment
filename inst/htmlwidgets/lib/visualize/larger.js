@@ -987,15 +987,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
     $(window).on('keydown', keyDown);
-    $(selection).on('keydown', keyDown);
     $('iframe', parent.document).on('keydown', keyDown);
     return widget;
   };
 
   // export the Widget
   window.Widget = Widget;
-
-  log.enable(true);
 
   window.Data = Data;
 

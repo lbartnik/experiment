@@ -696,15 +696,12 @@ Widget = (selection) ->
         ui.clickOn(siblings[me-1])
 
   $(window).on 'keydown', keyDown
-  $(selection).on 'keydown', keyDown
   $('iframe', parent.document).on 'keydown', keyDown
 
   return widget
 
 # export the Widget
 window.Widget = Widget
-
-log.enable(true)
 
 window.Data = Data
 window.log = log
