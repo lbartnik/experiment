@@ -152,10 +152,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       var el;
       sizes.ui.width = width;
       sizes.ui.height = height;
-      return el = $(outer.node()).css({
+      return el = $(outer.node()).animate({
         width: width,
         height: height
-      });
+      }, 'fast');
     };
     ui.setData = function (Data) {
       data = Data;

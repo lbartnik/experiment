@@ -79,7 +79,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
-    el = $(outer.node()).css({width: width, height: height})
+    el = $(outer.node()).animate({width: width, height: height}, 'fast')
 
   ui.setData = (Data) ->
     data = Data
