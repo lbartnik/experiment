@@ -79,7 +79,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
-    el = $(outer.node()).animate({width: width, height: height}, 'fast')
+    $(outer.node()).css({width: width, height: height})
 
   ui.setData = (Data) ->
     data = Data
@@ -286,12 +286,12 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     resetCanvasSize()
 
   # --- details on selected node ---
-  ui.scrollTo = (id) ->
+  ui.scrollTo = (id, queue = true) ->
     node = nodesG.select("#node_#{id}")
     scroll =
       scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height/2) + nodeR
       scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width/2) + nodeR
-    $(outer.node()).animate(scroll)
+    $(outer.node()).animate(scroll, {queue: queue})
 
   ui.initialize()
   return ui
@@ -400,7 +400,7 @@ Position = (nodeR) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step, outer, viewport, nodeR) ->
+FloatingDescription = (element, step, outer, viewport, nodeR) ->
 
   description = () ->
   description.show = () ->
@@ -491,7 +491,41 @@ Description = (element, step, outer, viewport, nodeR) ->
 
 
   return description
+# --- FloatingDescription ---
 
+
+# --- Details ----------------------------------------------------------
+
+Details = (selection, data, id, width, height) ->
+  outer = null
+
+  details = () ->
+  initialize = () ->
+    outer = $("<div>", {class: "details"}).width(width).height(height).appendTo(selection)
+
+    step = (data.steps.filter (step) -> step.id is id)[0]
+    tooltip = $("<div>", {class: "tooltip"})
+      .css({opacity: 1, visibility: 'visible', position: 'inherit'})
+      .appendTo(outer)
+    
+    if step.type is "object"
+      $("<span>").addClass("name").appendTo(tooltip).text(step.name)
+      $("<span>").appendTo(tooltip).text(" ")
+      $("<span>").addClass("description").appendTo(tooltip).text(step.desc)
+    else
+      $("<img>", { src: plotHref(step), width: width }).appendTo(tooltip)
+
+    # add code describing this step
+    $("<pre>").css({'white-space': 'pre-wrap'}).appendTo(tooltip).append $("<code>").addClass("R").text(step.expr)
+    tooltip.find("pre code").each (i, block) -> hljs.highlightBlock(block)
+
+  details.setSize = (width, height, queue = true) ->
+    outer.animate({width: width, height: height}, {duration: 'fast', queue: queue})
+
+  details.remove = () -> outer.remove()
+
+  initialize()
+  return details
 
 
 # --- Widget -----------------------------------------------------------
@@ -501,6 +535,7 @@ Widget = (selection) ->
   lenseR   = 30
   ui       = UI(selection, nodeR, 15)
   pos      = Position(nodeR)
+  details  = null
   data     = null
   size     = { width: 500, height: 500 }
   
@@ -548,7 +583,7 @@ Widget = (selection) ->
     ui.updateGraphicalElements()
   
   showDialog = (d) ->
-    this.description = Description(this, d, selection, Viewport(selection), nodeR)
+    this.description = FloatingDescription(this, d, selection, Viewport(selection), nodeR)
     this.description.show()
   
   hideDialog = (d) ->
@@ -562,12 +597,14 @@ Widget = (selection) ->
     if options.shiny
       Shiny.onInputChange("object_selected", id)
     
+    details?.remove()
     if this.selected
-      ui.setSize(size.width/3, size.height)
-      ui.scrollTo(id)
+      ui.setSize(size.width/3, size.height, false)
+      ui.scrollTo(id, false)
+      details = Details(selection, data, id, size.width*2/3, size.height)
     else
-      ui.setSize(size.width, size.height)
-
+      ui.setSize(size.width, size.height, false)
+ 
   return widget
 
 # export the Widget

@@ -6,7 +6,6 @@
 
 .widget {
     position: relative;
-    display: block;
     overflow: auto;
     width: 100%;
     height: 100%;
@@ -78,7 +77,6 @@
     pointer-events: none;
     opacity: 0;
     position: fixed;
-    display: block;
     font-size: 9pt;
     padding: 1px;
     border: 1px solid black;
@@ -104,4 +102,12 @@
 .tooltip code {
     pointer-events: none;
     font-size: 8pt;
+}
+
+.details {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    border: 1px solid black;
+    overflow: auto;
 }
