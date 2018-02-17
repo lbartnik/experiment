@@ -14,14 +14,6 @@ if Math.sign is undefined
 else
   sign = Math.sign
 
-log = (message) ->
-  re = /([^(]+)@|at ([^(]+) \(/gm
-  st = new Error().stack
-  re.exec(st)
-  res = re.exec(st)
-  callerName = res[1] || res[2]
-  console.log("#{callerName}: #{message}")
-
 # Helper function to map node id's to node objects.
 # Returns d3.map of ids -> nodes
 mapNodes = (nodes) ->
@@ -60,6 +52,35 @@ plotHref = (step) ->
     return from_id
   return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII="
 
+
+# --- simple logger ----------------------------------------------------
+Log = () ->
+  enabled = false
+
+  callerName = () ->
+    re = /([^(]+)@|at ([^(]+) \(/gm
+    st = new Error().stack
+    re.exec(st) # skip 1st line
+    re.exec(st) # skip 2nd line
+    re.exec(st) # skip 3rd line
+    res = re.exec(st)
+    return res[1] || res[2]
+  
+  showMessage = (level, message) ->
+    if not enabled then return
+    caller = callerName()
+    console.log("#{level} #{caller}: #{message}")
+
+  log = () ->
+  log.debug = (message) -> showMessage("DEBUG", message)
+  log.info  = (message) -> showMessage("INFO ", message)
+
+  log.enable = (onoff) ->
+    enabled = onoff
+
+  return log
+
+log = Log()
 
 # --- Utils ------------------------------------------------------------
 
@@ -300,7 +321,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
   # --- trigger click event ---
   ui.clickOn = (id) ->
-    log(id)
+    log.debug(id)
     nodesG.selectAll("#node_#{id} .face").dispatch("click")
 
   ui.initialize()
@@ -620,7 +641,7 @@ Widget = (selection) ->
     this.description?.hide()
 
   clickNode = (d) ->
-    log("id: #{d.id}, selected: #{d.selected}")
+    log.debug("id: #{d.id}, selected: #{d.selected}")
     this.description?.hide()
 
     id = if not d.selected then d.id
@@ -642,7 +663,7 @@ Widget = (selection) ->
  
   keyDown = (e) ->
     if not details then return
-    log(e.key)
+    log.debug(e.key)
     if e.key is "ArrowUp"
       e.preventDefault()
       ui.clickOn(data.parentOf(details.getId()))
@@ -666,4 +687,6 @@ Widget = (selection) ->
 
 # export the Widget
 window.Widget = Widget
+
 window.Data = Data
+window.log = log

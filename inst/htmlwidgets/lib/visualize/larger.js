@@ -7,6 +7,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   var Data,
       Details,
       FloatingDescription,
+      Log,
       Position,
       UI,
       Viewport,
@@ -64,16 +65,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     sign = Math.sign;
   }
 
-  log = function log(message) {
-    var callerName, re, res, st;
-    re = /([^(]+)@|at ([^(]+) \(/gm;
-    st = new Error().stack;
-    re.exec(st);
-    res = re.exec(st);
-    callerName = res[1] || res[2];
-    return console.log(callerName + ": " + message);
-  };
-
   // Helper function to map node id's to node objects.
   // Returns d3.map of ids -> nodes
   mapNodes = function mapNodes(nodes) {
@@ -125,6 +116,43 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     }
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII=";
   };
+
+  // --- simple logger ----------------------------------------------------
+  Log = function Log() {
+    var callerName, enabled, log, showMessage;
+    enabled = false;
+    callerName = function callerName() {
+      var re, res, st;
+      re = /([^(]+)@|at ([^(]+) \(/gm;
+      st = new Error().stack;
+      re.exec(st); // skip 1st line
+      re.exec(st); // skip 2nd line
+      re.exec(st); // skip 3rd line
+      res = re.exec(st);
+      return res[1] || res[2];
+    };
+    showMessage = function showMessage(level, message) {
+      var caller;
+      if (!enabled) {
+        return;
+      }
+      caller = callerName();
+      return console.log(level + " " + caller + ": " + message);
+    };
+    log = function log() {};
+    log.debug = function (message) {
+      return showMessage("DEBUG", message);
+    };
+    log.info = function (message) {
+      return showMessage("INFO ", message);
+    };
+    log.enable = function (onoff) {
+      return enabled = onoff;
+    };
+    return log;
+  };
+
+  log = Log();
 
   // --- Utils ------------------------------------------------------------
   UI = function UI(selection) {
@@ -437,7 +465,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     // --- trigger click event ---
     ui.clickOn = function (id) {
-      log(id);
+      log.debug(id);
       return nodesG.selectAll("#node_" + id + " .face").dispatch("click");
     };
     ui.initialize();
@@ -886,7 +914,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     clickNode = function clickNode(d) {
       var id, ref;
-      log("id: " + d.id + ", selected: " + d.selected);
+      log.debug("id: " + d.id + ", selected: " + d.selected);
       if ((ref = this.description) != null) {
         ref.hide();
       }
@@ -913,7 +941,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (!details) {
         return;
       }
-      log(e.key);
+      log.debug(e.key);
       if (e.key === "ArrowUp") {
         e.preventDefault();
         ui.clickOn(data.parentOf(details.getId()));
@@ -945,4 +973,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   window.Widget = Widget;
 
   window.Data = Data;
+
+  window.log = log;
 }).call(undefined);
