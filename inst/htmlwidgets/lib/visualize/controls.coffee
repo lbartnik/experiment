@@ -2,6 +2,7 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
   outer    = null
   plus     = null
   minus    = null
+  search   = null
   current  = 1
   callback = null
   keys =
@@ -17,6 +18,7 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
     outer = $("<div>", {class: "controls"}).appendTo(selection)
     plus  = $("<div>", {class: "button", id: "plus"}).appendTo(outer).text("+")
     minus = $("<div>", {class: "button", id: "minus"}).appendTo(outer).text("-")
+    search = $("<input>", {id: "search", class: "search", type: "text"}).appendTo(outer)
 
     plus.on('click', () -> zoom(current / step))
     minus.on('click', () -> zoom(current * step))

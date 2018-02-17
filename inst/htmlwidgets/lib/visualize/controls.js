@@ -9,10 +9,11 @@
     var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
     var step = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1.1;
 
-    var callback, controls, current, keyDown, keys, minus, outer, plus, translateKey, zoom;
+    var callback, controls, current, keyDown, keys, minus, outer, plus, search, translateKey, zoom;
     outer = null;
     plus = null;
     minus = null;
+    search = null;
     current = 1;
     callback = null;
     keys = {
@@ -36,6 +37,11 @@
         class: "button",
         id: "minus"
       }).appendTo(outer).text("-");
+      search = $("<input>", {
+        id: "search",
+        class: "search",
+        type: "text"
+      }).appendTo(outer);
       plus.on('click', function () {
         return zoom(current / step);
       });
