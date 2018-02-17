@@ -12,6 +12,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       Viewport,
       Widget,
       euclidean,
+      log,
       mapNodes,
       plotHref,
       sign,
@@ -62,6 +63,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   } else {
     sign = Math.sign;
   }
+
+  log = function log(message) {
+    var callerName, re, res, st;
+    re = /([^(]+)@|at ([^(]+) \(/gm;
+    st = new Error().stack;
+    re.exec(st);
+    res = re.exec(st);
+    callerName = res[1] || res[2];
+    return console.log(callerName + ": " + message);
+  };
 
   // Helper function to map node id's to node objects.
   // Returns d3.map of ids -> nodes
@@ -393,11 +404,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
 
     // --- graphical node selection ---
-    ui.select = function (id) {
-      nodesG.selectAll(".variable").classed("selected", false);
-      if (id) {
-        return nodesG.selectAll("#node_" + id).classed("selected", true);
-      }
+    ui.updateSelected = function () {
+      return nodesG.selectAll(".variable").classed("selected", function (d) {
+        return d.selected;
+      });
     };
     // --- zooming ---
     ui.zoom = function (k) {
@@ -427,6 +437,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     // --- trigger click event ---
     ui.clickOn = function (id) {
+      log(id);
       return nodesG.selectAll("#node_" + id + " .face").dispatch("click");
     };
     ui.initialize();
@@ -435,7 +446,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var centralize, counter, groupData, methods, parentOf, resetScale, setupData, stratified;
+    var centralize, childrenOf, counter, groupData, methods, parentOf, resetScale, selected, setupData, stratified;
     // pre-process the input data
     setupData = function setupData() {
       var stepsMap;
@@ -531,6 +542,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return stepsMap.get(d.id).group = d.group;
       });
     };
+    // set node that is selected
+    selected = function selected(id) {
+      return data.steps.forEach(function (step) {
+        return step.selected = step.id === id;
+      });
+    };
     parentOf = function parentOf(id) {
       var parent;
       parent = data.links.filter(function (link) {
@@ -541,13 +558,29 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
       return parent[0].source.id;
     };
+    childrenOf = function childrenOf(id) {
+      var children;
+      children = data.links.filter(function (link) {
+        return link.source.id === id;
+      });
+      if (!children.length) {
+        return [];
+      }
+      return children.sort(function (a, b) {
+        return a.x < b.x;
+      }).map(function (link) {
+        return link.target.id;
+      });
+    };
     // extend with methods
     methods = {
       resetScale: resetScale,
       stratified: stratified,
       centralize: centralize,
       groupData: groupData,
-      parentOf: parentOf
+      selected: selected,
+      parentOf: parentOf,
+      childrenOf: childrenOf
     };
     data = _extends({}, methods, data);
     // initialize the object
@@ -780,7 +813,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var clickNode, data, details, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, ui, widget;
+    var clickNode, data, details, hideDialog, keyDown, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, ui, widget;
     options = {
       shiny: false,
       knitr: false
@@ -853,12 +886,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     };
     clickNode = function clickNode(d) {
       var id, ref;
-      this.selected = !this.selected;
+      log("id: " + d.id + ", selected: " + d.selected);
       if ((ref = this.description) != null) {
         ref.hide();
       }
-      id = this.selected ? d.id : null;
-      ui.select(id);
+      id = !d.selected ? d.id : void 0;
+      data.selected(id);
+      ui.updateSelected();
       if (options.shiny) {
         Shiny.onInputChange("object_selected", id);
       }
@@ -866,7 +900,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         details.remove();
       }
       details = null;
-      if (this.selected) {
+      if (d.selected) {
         ui.setSize(size.width / 3, size.height, false);
         ui.scrollTo(id, false);
         return details = Details(selection, data, id, size.width * 2 / 3, size.height);
@@ -874,15 +908,36 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return ui.setSize(size.width, size.height, false);
       }
     };
-    $(document).on('keydown', function (e) {
+    keyDown = function keyDown(e) {
+      var children, me, siblings;
       if (!details) {
         return;
       }
+      log(e.key);
       if (e.key === "ArrowUp") {
+        e.preventDefault();
         ui.clickOn(data.parentOf(details.getId()));
-        return e.preventDefault();
       }
-    });
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        children = data.childrenOf(details.getId());
+        if (children.length) {
+          ui.clickOn(children[0]);
+        }
+      }
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        siblings = data.childrenOf(data.parentOf(details.getId()));
+        me = siblings.indexOf(details.getId());
+        if (e.key === "ArrowRight" && me < siblings.length - 1) {
+          ui.clickOn(siblings[me + 1]);
+        }
+        if (e.key === "ArrowLeft" && me > 0) {
+          return ui.clickOn(siblings[me - 1]);
+        }
+      }
+    };
+    $(document).on('keydown', keyDown);
     return widget;
   };
 

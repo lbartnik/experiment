@@ -14,6 +14,14 @@ if Math.sign is undefined
 else
   sign = Math.sign
 
+log = (message) ->
+  re = /([^(]+)@|at ([^(]+) \(/gm
+  st = new Error().stack
+  re.exec(st)
+  res = re.exec(st)
+  callerName = res[1] || res[2]
+  console.log("#{callerName}: #{message}")
+
 # Helper function to map node id's to node objects.
 # Returns d3.map of ids -> nodes
 mapNodes = (nodes) ->
@@ -271,12 +279,9 @@ UI = (selection, nodeR = 25, innerR = 25) ->
         .on(event.substring(5), callback)
   
   # --- graphical node selection ---
-  ui.select = (id) ->
+  ui.updateSelected = () ->
     nodesG.selectAll(".variable")
-      .classed("selected", false)
-    if id
-      nodesG.selectAll("#node_#{id}")
-        .classed("selected", true)
+      .classed("selected", (d) -> d.selected)
 
   # --- zooming ---
   ui.zoom = (k) ->
@@ -295,6 +300,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
   # --- trigger click event ---
   ui.clickOn = (id) ->
+    log(id)
     nodesG.selectAll("#node_#{id} .face").dispatch("click")
 
   ui.initialize()
@@ -361,18 +367,29 @@ Data = (data) ->
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
 
+  # set node that is selected
+  selected = (id) ->
+    data.steps.forEach (step) -> step.selected = step.id is id
+
   parentOf = (id) ->
     parent = data.links.filter (link) -> link.target.id is id
     if not parent.length then return null
     parent[0].source.id
+  
+  childrenOf = (id) ->
+    children = data.links.filter (link) -> link.source.id is id
+    if not children.length then return []
+    (children.sort (a,b) -> a.x < b.x).map (link) -> link.target.id
 
   # extend with methods
   methods =
     resetScale: resetScale
     stratified: stratified
     centralize: centralize
-    groupData:    groupData
+    groupData:  groupData
+    selected:   selected
     parentOf:   parentOf
+    childrenOf: childrenOf
   data = {methods..., data...}
 
   # initialize the object
@@ -603,29 +620,47 @@ Widget = (selection) ->
     this.description?.hide()
 
   clickNode = (d) ->
-    this.selected = not this.selected
+    log("id: #{d.id}, selected: #{d.selected}")
     this.description?.hide()
-    id = if this.selected then d.id else null
 
-    ui.select(id)
+    id = if not d.selected then d.id
+    data.selected(id)
+
+    ui.updateSelected()
     if options.shiny
       Shiny.onInputChange("object_selected", id)
     
     details?.remove()
     details = null
 
-    if this.selected
+    if d.selected
       ui.setSize(size.width/3, size.height, false)
       ui.scrollTo(id, false)
       details = Details(selection, data, id, size.width*2/3, size.height)
     else
       ui.setSize(size.width, size.height, false)
  
-  $(document).on 'keydown', (e) ->
+  keyDown = (e) ->
     if not details then return
+    log(e.key)
     if e.key is "ArrowUp"
-      ui.clickOn(data.parentOf(details.getId()))
       e.preventDefault()
+      ui.clickOn(data.parentOf(details.getId()))
+    if e.key is "ArrowDown"
+      e.preventDefault()
+      children = data.childrenOf(details.getId())
+      if children.length
+        ui.clickOn(children[0])
+    if e.key is "ArrowRight" or e.key is "ArrowLeft"
+      e.preventDefault()
+      siblings = data.childrenOf(data.parentOf(details.getId()))
+      me = siblings.indexOf(details.getId())
+      if e.key is "ArrowRight" and me < siblings.length-1
+        ui.clickOn(siblings[me+1])
+      if e.key is "ArrowLeft" and me > 0
+        ui.clickOn(siblings[me-1])
+
+  $(document).on 'keydown', keyDown
 
   return widget
 
