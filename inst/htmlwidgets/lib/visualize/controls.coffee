@@ -62,10 +62,9 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
       39: "right",
       40: "down"
     keyCode = e.originalEvent?.keyCode
+    if keyCode of Codes then return Codes[keyCode]
 
-    if keyCode not of Codes
-      throw "cannot recognize key"
-    return Codes[keyCode]
+    return null
   # --------------------------------------------------------------------
 
   controls.initialize()

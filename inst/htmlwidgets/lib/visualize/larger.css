@@ -104,6 +104,10 @@
     font-size: 8pt;
 }
 
+.tooltip .comment {
+    width: 100%;
+}
+
 .details {
     position: absolute;
     top: 0px;

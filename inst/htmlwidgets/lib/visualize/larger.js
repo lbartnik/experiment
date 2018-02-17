@@ -813,9 +813,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       $("<pre>").css({
         'white-space': 'pre-wrap'
       }).appendTo(tooltip).append($("<code>").addClass("R").text(step.expr));
-      return tooltip.find("pre code").each(function (i, block) {
+      tooltip.find("pre code").each(function (i, block) {
         return hljs.highlightBlock(block);
       });
+      // add comment text area
+      return $("<textarea>", {
+        class: 'comment'
+      }).css({
+        'pointer-events': 'auto'
+      }).appendTo(tooltip);
     };
     details.setSize = function (width, height) {
       var queue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;

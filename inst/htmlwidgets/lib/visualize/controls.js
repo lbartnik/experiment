@@ -90,10 +90,10 @@
         40: "down"
       };
       keyCode = (ref = e.originalEvent) != null ? ref.keyCode : void 0;
-      if (!(keyCode in Codes)) {
-        throw "cannot recognize key";
+      if (keyCode in Codes) {
+        return Codes[keyCode];
       }
-      return Codes[keyCode];
+      return null;
     };
     // --------------------------------------------------------------------
     controls.initialize();

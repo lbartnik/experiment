@@ -565,6 +565,9 @@ Details = (selection, data, id, width, height) ->
     $("<pre>").css({'white-space': 'pre-wrap'}).appendTo(tooltip).append $("<code>").addClass("R").text(step.expr)
     tooltip.find("pre code").each (i, block) -> hljs.highlightBlock(block)
 
+    # add comment text area
+    $("<textarea>", {class: 'comment'}).css({'pointer-events': 'auto'}).appendTo(tooltip)
+
   details.setSize = (width, height, queue = true) ->
     outer.animate({width: width, height: height}, {duration: 'fast', queue: queue})
 
