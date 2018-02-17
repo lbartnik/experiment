@@ -241,6 +241,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .attr("y", (d) -> d.y - d.scale * nodeR)
       .attr("width", (d) -> d.scale * 2*nodeR)
       .attr("height", (d) -> d.scale * 2*nodeR)
+      .classed("selected", (d) -> d.selected)
 
     link = linksG.selectAll("line.link")
       .attr("x1", (d) -> d.source.x)
@@ -300,11 +301,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       nodesG.selectAll(".face")
         .on(event.substring(5), callback)
   
-  # --- graphical node selection ---
-  ui.updateSelected = () ->
-    nodesG.selectAll(".variable")
-      .classed("selected", (d) -> d.selected)
-
   # --- zooming ---
   ui.zoom = (k) ->
     if k < zoom.switch < zoom.current then switchView("close-up")
@@ -647,8 +643,9 @@ Widget = (selection) ->
 
     id = if not d.selected then d.id
     data.selected(id)
+    data.resetScale()
 
-    ui.updateSelected()
+    ui.updateGraphicalElements()
     if options.shiny
       Shiny.onInputChange("object_selected", id)
     

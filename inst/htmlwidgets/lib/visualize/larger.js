@@ -329,6 +329,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return d.scale * 2 * nodeR;
       }).attr("height", function (d) {
         return d.scale * 2 * nodeR;
+      }).classed("selected", function (d) {
+        return d.selected;
       });
       return link = linksG.selectAll("line.link").attr("x1", function (d) {
         return d.source.x;
@@ -434,12 +436,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
 
-    // --- graphical node selection ---
-    ui.updateSelected = function () {
-      return nodesG.selectAll(".variable").classed("selected", function (d) {
-        return d.selected;
-      });
-    };
     // --- zooming ---
     ui.zoom = function (k) {
       var ref, ref1;
@@ -923,7 +919,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
       id = !d.selected ? d.id : void 0;
       data.selected(id);
-      ui.updateSelected();
+      data.resetScale();
+      ui.updateGraphicalElements();
       if (options.shiny) {
         Shiny.onInputChange("object_selected", id);
       }
