@@ -513,7 +513,8 @@ Details = (selection, data, id, width, height) ->
       $("<span>").appendTo(tooltip).text(" ")
       $("<span>").addClass("description").appendTo(tooltip).text(step.desc)
     else
-      $("<img>", { src: plotHref(step), width: width }).appendTo(tooltip)
+      $("<img>", { src: plotHref(step) }).appendTo(tooltip)
+        .on('load', () -> $(this).width(Math.min(width, this.width)))
 
     # add code describing this step
     $("<pre>").css({'white-space': 'pre-wrap'}).appendTo(tooltip).append $("<code>").addClass("R").text(step.expr)
@@ -591,6 +592,7 @@ Widget = (selection) ->
 
   clickNode = (d) ->
     this.selected = not this.selected
+    this.description.hide()
     id = if this.selected then d.id else null
 
     ui.select(id)

@@ -729,9 +729,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         $("<span>").addClass("description").appendTo(tooltip).text(step.desc);
       } else {
         $("<img>", {
-          src: plotHref(step),
-          width: width
-        }).appendTo(tooltip);
+          src: plotHref(step)
+        }).appendTo(tooltip).on('load', function () {
+          return $(this).width(Math.min(width, this.width));
+        });
       }
       // add code describing this step
       $("<pre>").css({
@@ -834,6 +835,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     clickNode = function clickNode(d) {
       var id;
       this.selected = !this.selected;
+      this.description.hide();
       id = this.selected ? d.id : null;
       ui.select(id);
       if (options.shiny) {
