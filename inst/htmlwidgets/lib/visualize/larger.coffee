@@ -234,7 +234,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
     sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
     # sizes.canvas.* are updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width * zoom.current, sizes.canvas.height)
+    data.centralize(sizes.canvas.width, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
@@ -284,6 +284,14 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     if k >= zoom.switch > zoom.current then switchView("zoom-out")
     zoom.current = k
     resetCanvasSize()
+
+  # --- details on selected node ---
+  ui.scrollTo = (id) ->
+    node = nodesG.select("#node_#{id}")
+    scroll =
+      scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height/2) + nodeR
+      scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width/2) + nodeR
+    $(outer.node()).animate(scroll)
 
   ui.initialize()
   return ui
@@ -494,6 +502,7 @@ Widget = (selection) ->
   ui       = UI(selection, nodeR, 15)
   pos      = Position(nodeR)
   data     = null
+  size     = { width: 500, height: 500 }
   
   widget = () ->
 
@@ -506,7 +515,8 @@ Widget = (selection) ->
     setEvents()
 
   widget.setSize = (width, height) ->
-    ui.setSize(width,height)
+    size = { width: width, height: height }
+    ui.setSize(size.width, size.height)
 
   widget.setOption = (what, value) ->
     if what of options
@@ -551,6 +561,12 @@ Widget = (selection) ->
     ui.select(id)
     if options.shiny
       Shiny.onInputChange("object_selected", id)
+    
+    if this.selected
+      ui.setSize(size.width/3, size.height)
+      ui.scrollTo(id)
+    else
+      ui.setSize(size.width, size.height)
 
   return widget
 

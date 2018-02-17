@@ -334,7 +334,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
       sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
       // sizes.canvas.* are updated an we can update nodes' coordinates
-      return data.centralize(sizes.canvas.width * zoom.current, sizes.canvas.height);
+      return data.centralize(sizes.canvas.width, sizes.canvas.height);
     };
     // canvas size is set independently, and canvas might need to be
     // scrolled within the outer div element
@@ -410,6 +410,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
       zoom.current = k;
       return resetCanvasSize();
+    };
+    // --- details on selected node ---
+    ui.scrollTo = function (id) {
+      var node, scroll;
+      node = nodesG.select("#node_" + id);
+      scroll = {
+        scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height / 2) + nodeR,
+        scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width / 2) + nodeR
+      };
+      return $(outer.node()).animate(scroll);
     };
     ui.initialize();
     return ui;
@@ -689,7 +699,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, ui, widget;
+    var clickNode, data, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, ui, widget;
     options = {
       shiny: false,
       knitr: false
@@ -699,6 +709,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     ui = UI(selection, nodeR, 15);
     pos = Position(nodeR);
     data = null;
+    size = {
+      width: 500,
+      height: 500
+    };
     widget = function widget() {};
     widget.setData = function (input) {
       data = Data(input);
@@ -709,7 +723,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return setEvents();
     };
     widget.setSize = function (width, height) {
-      return ui.setSize(width, height);
+      size = {
+        width: width,
+        height: height
+      };
+      return ui.setSize(size.width, size.height);
     };
     widget.setOption = function (what, value) {
       if (what in options) {
@@ -756,7 +774,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       id = this.selected ? d.id : null;
       ui.select(id);
       if (options.shiny) {
-        return Shiny.onInputChange("object_selected", id);
+        Shiny.onInputChange("object_selected", id);
+      }
+      if (this.selected) {
+        ui.setSize(size.width / 3, size.height);
+        return ui.scrollTo(id);
+      } else {
+        return ui.setSize(size.width, size.height);
       }
     };
     return widget;
