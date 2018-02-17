@@ -940,6 +940,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
     };
     Codes = {
+      13: "Enter",
       37: "ArrowLeft",
       38: "ArrowUp",
       39: "ArrowRight",
@@ -982,8 +983,11 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
           ui.clickOn(siblings[me + 1]);
         }
         if (key === "ArrowLeft" && me > 0) {
-          return ui.clickOn(siblings[me - 1]);
+          ui.clickOn(siblings[me - 1]);
         }
+      }
+      if (key === "Enter" && options.shiny) {
+        return Shiny.onInputChange('done', 'done');
       }
     };
     $(window).on('keydown', keyDown);
@@ -994,6 +998,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // export the Widget
   window.Widget = Widget;
 
+  //log.enable(true)
   window.Data = Data;
 
   window.log = log;

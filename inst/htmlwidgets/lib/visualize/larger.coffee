@@ -663,6 +663,7 @@ Widget = (selection) ->
       ui.setSize(size.width, size.height, false)
  
   Codes =
+    13: "Enter",
     37: "ArrowLeft",
     38: "ArrowUp",
     39: "ArrowRight",
@@ -694,6 +695,9 @@ Widget = (selection) ->
         ui.clickOn(siblings[me+1])
       if key is "ArrowLeft" and me > 0
         ui.clickOn(siblings[me-1])
+    if key is "Enter" and options.shiny
+      Shiny.onInputChange('done', 'done')
+
 
   $(window).on 'keydown', keyDown
   $('iframe', parent.document).on 'keydown', keyDown
@@ -702,6 +706,8 @@ Widget = (selection) ->
 
 # export the Widget
 window.Widget = Widget
+
+#log.enable(true)
 
 window.Data = Data
 window.log = log
