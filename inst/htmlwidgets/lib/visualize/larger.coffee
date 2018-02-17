@@ -285,13 +285,17 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     zoom.current = k
     resetCanvasSize()
 
-  # --- details on selected node ---
+  # --- scroll to selected node ---
   ui.scrollTo = (id, queue = true) ->
     node = nodesG.select("#node_#{id}")
     scroll =
       scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height/2) + nodeR
       scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width/2) + nodeR
     $(outer.node()).animate(scroll, {queue: queue})
+
+  # --- trigger click event ---
+  ui.clickOn = (id) ->
+    nodesG.selectAll("#node_#{id} .face").dispatch("click")
 
   ui.initialize()
   return ui
@@ -357,12 +361,18 @@ Data = (data) ->
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
 
+  parentOf = (id) ->
+    parent = data.links.filter (link) -> link.target.id is id
+    if not parent.length then return null
+    parent[0].source.id
+
   # extend with methods
   methods =
     resetScale: resetScale
     stratified: stratified
     centralize: centralize
-    groupData: groupData
+    groupData:    groupData
+    parentOf:   parentOf
   data = {methods..., data...}
 
   # initialize the object
@@ -525,6 +535,8 @@ Details = (selection, data, id, width, height) ->
 
   details.remove = () -> outer.remove()
 
+  details.getId = () -> id
+
   initialize()
   return details
 
@@ -588,11 +600,11 @@ Widget = (selection) ->
     this.description.show()
   
   hideDialog = (d) ->
-    this.description.hide()
+    this.description?.hide()
 
   clickNode = (d) ->
     this.selected = not this.selected
-    this.description.hide()
+    this.description?.hide()
     id = if this.selected then d.id else null
 
     ui.select(id)
@@ -600,6 +612,8 @@ Widget = (selection) ->
       Shiny.onInputChange("object_selected", id)
     
     details?.remove()
+    details = null
+
     if this.selected
       ui.setSize(size.width/3, size.height, false)
       ui.scrollTo(id, false)
@@ -607,6 +621,12 @@ Widget = (selection) ->
     else
       ui.setSize(size.width, size.height, false)
  
+  $(document).on 'keydown', (e) ->
+    if not details then return
+    if e.key is "ArrowUp"
+      ui.clickOn(data.parentOf(details.getId()))
+      e.preventDefault()
+
   return widget
 
 # export the Widget

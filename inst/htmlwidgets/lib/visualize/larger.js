@@ -411,7 +411,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       zoom.current = k;
       return resetCanvasSize();
     };
-    // --- details on selected node ---
+    // --- scroll to selected node ---
     ui.scrollTo = function (id) {
       var queue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
@@ -425,13 +425,17 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         queue: queue
       });
     };
+    // --- trigger click event ---
+    ui.clickOn = function (id) {
+      return nodesG.selectAll("#node_" + id + " .face").dispatch("click");
+    };
     ui.initialize();
     return ui;
   };
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var centralize, counter, groupData, methods, resetScale, setupData, stratified;
+    var centralize, counter, groupData, methods, parentOf, resetScale, setupData, stratified;
     // pre-process the input data
     setupData = function setupData() {
       var stepsMap;
@@ -527,12 +531,23 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return stepsMap.get(d.id).group = d.group;
       });
     };
+    parentOf = function parentOf(id) {
+      var parent;
+      parent = data.links.filter(function (link) {
+        return link.target.id === id;
+      });
+      if (!parent.length) {
+        return null;
+      }
+      return parent[0].source.id;
+    };
     // extend with methods
     methods = {
       resetScale: resetScale,
       stratified: stratified,
       centralize: centralize,
-      groupData: groupData
+      groupData: groupData,
+      parentOf: parentOf
     };
     data = _extends({}, methods, data);
     // initialize the object
@@ -756,6 +771,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     details.remove = function () {
       return outer.remove();
     };
+    details.getId = function () {
+      return id;
+    };
     initialize();
     return details;
   };
@@ -830,12 +848,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return this.description.show();
     };
     hideDialog = function hideDialog(d) {
-      return this.description.hide();
+      var ref;
+      return (ref = this.description) != null ? ref.hide() : void 0;
     };
     clickNode = function clickNode(d) {
-      var id;
+      var id, ref;
       this.selected = !this.selected;
-      this.description.hide();
+      if ((ref = this.description) != null) {
+        ref.hide();
+      }
       id = this.selected ? d.id : null;
       ui.select(id);
       if (options.shiny) {
@@ -844,6 +865,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (details != null) {
         details.remove();
       }
+      details = null;
       if (this.selected) {
         ui.setSize(size.width / 3, size.height, false);
         ui.scrollTo(id, false);
@@ -852,6 +874,15 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return ui.setSize(size.width, size.height, false);
       }
     };
+    $(document).on('keydown', function (e) {
+      if (!details) {
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        ui.clickOn(data.parentOf(details.getId()));
+        return e.preventDefault();
+      }
+    });
     return widget;
   };
 
