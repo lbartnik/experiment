@@ -64,6 +64,7 @@ Log = () ->
     re.exec(st) # skip 2nd line
     re.exec(st) # skip 3rd line
     res = re.exec(st)
+    if not res then return "unknown"
     return res[1] || res[2]
   
   showMessage = (level, message) ->
@@ -661,32 +662,49 @@ Widget = (selection) ->
     else
       ui.setSize(size.width, size.height, false)
  
+  Codes =
+    37: "ArrowLeft",
+    38: "ArrowUp",
+    39: "ArrowRight",
+    40: "ArrowDown"
+
+  translateKey = (e) ->
+    if e.key then return e.key
+    keyCode = e.originalEvent?.keyCode
+    if keyCode then return Codes[keyCode]
+    throw "cannot recognize key"
+
   keyDown = (e) ->
     if not details then return
-    log.debug(e.key)
-    if e.key is "ArrowUp"
+    key = translateKey(e)
+    log.debug("key: #{key}")
+    if key is "ArrowUp"
       e.preventDefault()
       ui.clickOn(data.parentOf(details.getId()))
-    if e.key is "ArrowDown"
+    if key is "ArrowDown"
       e.preventDefault()
       children = data.childrenOf(details.getId())
       if children.length
         ui.clickOn(children[0])
-    if e.key is "ArrowRight" or e.key is "ArrowLeft"
+    if key is "ArrowRight" or key is "ArrowLeft"
       e.preventDefault()
       siblings = data.childrenOf(data.parentOf(details.getId()))
       me = siblings.indexOf(details.getId())
-      if e.key is "ArrowRight" and me < siblings.length-1
+      if key is "ArrowRight" and me < siblings.length-1
         ui.clickOn(siblings[me+1])
-      if e.key is "ArrowLeft" and me > 0
+      if key is "ArrowLeft" and me > 0
         ui.clickOn(siblings[me-1])
 
-  $(document).on 'keydown', keyDown
+  $(window).on 'keydown', keyDown
+  $(selection).on 'keydown', keyDown
+  $('iframe', parent.document).on 'keydown', keyDown
 
   return widget
 
 # export the Widget
 window.Widget = Widget
+
+log.enable(true)
 
 window.Data = Data
 window.log = log
