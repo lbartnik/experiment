@@ -844,7 +844,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var Codes, clickNode, data, details, hideDialog, keyDown, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, translateKey, ui, widget;
+    var clickNode, data, details, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, ui, widget;
     options = {
       shiny: false,
       knitr: false
@@ -939,59 +939,44 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return ui.setSize(size.width, size.height, false);
       }
     };
-    Codes = {
-      13: "Enter",
-      37: "ArrowLeft",
-      38: "ArrowUp",
-      39: "ArrowRight",
-      40: "ArrowDown"
-    };
-    translateKey = function translateKey(e) {
-      var keyCode, ref;
-      if (e.key) {
-        return e.key;
-      }
-      keyCode = (ref = e.originalEvent) != null ? ref.keyCode : void 0;
-      if (keyCode) {
-        return Codes[keyCode];
-      }
-      throw "cannot recognize key";
-    };
-    keyDown = function keyDown(e) {
-      var children, key, me, siblings;
+    widget.selectParent = function () {
       if (!details) {
         return;
       }
-      key = translateKey(e);
-      log.debug("key: " + key);
-      if (key === "ArrowUp") {
-        e.preventDefault();
-        ui.clickOn(data.parentOf(details.getId()));
+      return ui.clickOn(data.parentOf(details.getId()));
+    };
+    widget.selectChild = function () {
+      var children;
+      if (!details) {
+        return;
       }
-      if (key === "ArrowDown") {
-        e.preventDefault();
-        children = data.childrenOf(details.getId());
-        if (children.length) {
-          ui.clickOn(children[0]);
-        }
+      children = data.childrenOf(details.getId());
+      if (children.length) {
+        return ui.clickOn(children[0]);
       }
-      if (key === "ArrowRight" || key === "ArrowLeft") {
-        e.preventDefault();
-        siblings = data.childrenOf(data.parentOf(details.getId()));
-        me = siblings.indexOf(details.getId());
-        if (key === "ArrowRight" && me < siblings.length - 1) {
-          ui.clickOn(siblings[me + 1]);
-        }
-        if (key === "ArrowLeft" && me > 0) {
-          ui.clickOn(siblings[me - 1]);
-        }
+    };
+    widget.selectSibling = function (key) {
+      var me, siblings;
+      if (!details) {
+        return;
       }
-      if (key === "Enter" && options.shiny) {
+      siblings = data.childrenOf(data.parentOf(details.getId()));
+      me = siblings.indexOf(details.getId());
+      if (key === "right" && me < siblings.length - 1) {
+        ui.clickOn(siblings[me + 1]);
+      }
+      if (key === "left" && me > 0) {
+        return ui.clickOn(siblings[me - 1]);
+      }
+    };
+    widget.confirmSelection = function () {
+      if (!details) {
+        return;
+      }
+      if (key === "enter" && options.shiny) {
         return Shiny.onInputChange('done', 'done');
       }
     };
-    $(window).on('keydown', keyDown);
-    $('iframe', parent.document).on('keydown', keyDown);
     return widget;
   };
 

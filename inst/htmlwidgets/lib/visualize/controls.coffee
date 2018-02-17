@@ -4,6 +4,12 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
   minus    = null
   current  = 1
   callback = null
+  keys =
+    enter: null
+    up:    null
+    down:  null
+    left:  null
+    right: null
 
   controls = () ->
 
@@ -21,16 +27,46 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
     d3.select(selection).select("#plus").call(zoomer).on("dblclick.zoom", null)
     d3.select(selection).select("#minus").call(zoomer).on("dblclick.zoom", null)
 
+    $(window).on 'keydown', keyDown
+    $('iframe', parent.document).on 'keydown', keyDown
+
+  # --- configure events -----------------------------------------------
   controls.on = (event, fn) ->
     if event is 'zoom'
       callback = fn
- 
+    if event.substring(0,3) is 'key'
+      keys[event.substring(4)] = fn
+
+  # --- zooming --------------------------------------------------------
   zoom = (k) ->
     k = Math.max(min, Math.min(max, k))
     if k is current then return
     current = k
     if callback
       callback(k)
+
+  # --- keyboard -------------------------------------------------------
+
+  keyDown = (e) ->
+    key = translateKey(e)
+    if key of keys and keys[key]
+      keys[key](key)
+      e.preventDefault()
+
+  # --- translate key to its name ---
+  translateKey = (e) ->
+    Codes =
+      13: "enter",
+      37: "left",
+      38: "up",
+      39: "right",
+      40: "down"
+    keyCode = e.originalEvent?.keyCode
+
+    if keyCode not of Codes
+      throw "cannot recognize key"
+    return Codes[keyCode]
+  # --------------------------------------------------------------------
 
   controls.initialize()
   return controls
