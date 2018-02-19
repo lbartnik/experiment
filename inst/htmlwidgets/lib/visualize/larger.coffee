@@ -9,6 +9,9 @@ Array::min = () ->
 Array::max = () ->
   @.reduce((a,b) -> Math.max(a, b))
 
+Array::remove = (e) ->
+  @filter (el) -> el isnt e
+
 if Math.sign is undefined
   sign = (x) -> if x < 0 then -1 else 1
 else
@@ -329,30 +332,41 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 Data = (data) ->
 
   dataObject = () ->
-
-  dataObject.steps = data.steps
-  dataObject.links = data.links
+  head = { id: 'head', expr: "" }
 
   # pre-process the input data
   setupData = () ->
+    # add head to the main data set
+    root = findRoot(data)
+    data.steps.push head
+    data.links.push {source: head.id, target: root.id}
+    # copy over to dataObject
+    dataObject.steps = data.steps
+    dataObject.links = data.links
+    # make sure each node has the scale attribute
     dataObject.resetScale()
     # pre-process nodes
-    data.steps.forEach (s) ->
-      if s.expr.constructor is Array
+    dataObject.steps.forEach (s) ->
+      if s.expr?.constructor is Array
         s.expr = s.expr.join('\n')
     # replace target/source references in links with actual objects
-    stepsMap = mapNodes(data.steps)
-    data.links.forEach (l) ->
+    stepsMap = mapNodes(dataObject.steps)
+    dataObject.links.forEach (l) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
 
+  findRoot = (data) ->
+    linksSet = d3.set()
+    data.links.forEach (l) -> linksSet.add(l.target)
+    (data.steps.filter (s) -> not linksSet.has(s.id))[0]
+
   dataObject.resetScale = () ->
-    data.steps.forEach (s) ->
+    dataObject.steps.forEach (s) ->
       s.scale = 1
 
   dataObject.stratified = () ->
     parentsMap = d3.map()
-    data.links.forEach (l) ->
+    dataObject.links.forEach (l) ->
       parentsMap.set(l.target.id, l.source.id)
     stratify = d3.stratify()
       .id((d) -> d.id)
@@ -360,11 +374,11 @@ Data = (data) ->
     stratify(data.steps)
 
   dataObject.center = (width, height) ->
-    x = (step.x for step in data.steps)
-    y = (step.y for step in data.steps)
+    x = (step.x for step in dataObject.steps)
+    y = (step.y for step in dataObject.steps)
     dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2
     dy = y.min() - Math.max(height - (y.max() - y.min()), 0) / 2
-    data.steps.forEach (s) ->
+    dataObject.steps.forEach (s) ->
       s.x -= dx
       s.y -= dy
 
@@ -386,30 +400,42 @@ Data = (data) ->
     assignGroup(s)
 
     stepsMap = d3.map()
-    data.steps.forEach (s) -> stepsMap.set(s.id, s)
+    dataObject.steps.forEach (s) -> stepsMap.set(s.id, s)
 
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
 
   # --- set node that is selected ---
   dataObject.selected = (id) ->
-    data.steps.forEach (step) -> step.selected = step.id is id
+    dataObject.steps.forEach (step) -> step.selected = step.id is id
 
   dataObject.parentOf = (id) ->
-    parent = data.links.filter (link) -> link.target.id is id
+    parent = dataObject.links.filter (link) -> link.target.id is id
     if not parent.length then return null
     parent[0].source.id
   
   dataObject.childrenOf = (id) ->
-    children = data.links.filter (link) -> link.source.id is id
+    children = dataObject.links.filter (link) -> link.source.id is id
     if not children.length then return []
     (children.sort (a,b) -> a.x < b.x).map (link) -> link.target.id
 
   # --- filtering ---
   dataObject.filter = (phrase) ->
-    data.steps.forEach (step) -> step.matched = if step.name then step.name.match(phrase) else true
-    dataObject.steps = data.steps.filter (step) -> step.matched
-    dataObject.links = data.links.filter (link) -> link.target.matched and link.source.matched
+    # a copy of links
+    links = data.links.map (l) -> {l...}
+    steps = data.steps.slice 0
+
+    dataObject.steps = data.steps.filter (step) ->
+      if step is head then return true
+      if not step.name or step.name.match(phrase) then return true
+      
+      parentLink    = (links.filter (l) -> l.target is step)[0]
+      childrenLinks = links.filter (l) -> l.source is step
+      childrenLinks.forEach (l) -> l.source = parentLink.source
+      links = links.remove(parentLink)
+      return false
+
+    dataObject.links = links
 
   # initialize the object
   setupData()
