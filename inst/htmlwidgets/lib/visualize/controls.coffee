@@ -23,7 +23,7 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
     plus.on 'click', () -> zoom(current / step)
     minus.on 'click', () -> zoom(current * step)
     search.on 'keyup', (e) ->
-      console.log(this.value)
+      callbacks.search?(this.value)
       e.stopPropagation()
 
     zoomer = d3.zoom()

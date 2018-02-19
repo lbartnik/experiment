@@ -52,7 +52,9 @@
         return zoom(current * step);
       });
       search.on('keyup', function (e) {
-        console.log(this.value);
+        if (typeof callbacks.search === "function") {
+          callbacks.search(this.value);
+        }
         return e.stopPropagation();
       });
       zoomer = d3.zoom().scaleExtent([min, max]).on("zoom", function () {

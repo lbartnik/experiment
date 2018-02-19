@@ -688,6 +688,7 @@ Widget = (selection) ->
       Shiny.onInputChange("object_selected", id)
       Shiny.onInputChange("comment", comment)
 
+  # --- keyboard selection ---
   widget.selectParent = () ->
     if not details then return
     ui.clickOn(data.parentOf(details.getId()))
@@ -711,6 +712,10 @@ Widget = (selection) ->
     if not details then return
     if options.shiny
       Shiny.onInputChange('done', 'done')
+
+  # --- search ---
+  widget.search = (phrase) ->
+    console.log(phrase)
 
   return widget
 

@@ -961,6 +961,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return Shiny.onInputChange("comment", comment);
       }
     };
+    // --- keyboard selection ---
     widget.selectParent = function () {
       if (!details) {
         return;
@@ -998,6 +999,10 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (options.shiny) {
         return Shiny.onInputChange('done', 'done');
       }
+    };
+    // --- search ---
+    widget.search = function (phrase) {
+      return console.log(phrase);
     };
     return widget;
   };

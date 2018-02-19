@@ -38,11 +38,12 @@ myWidget = Widget('#canvas')
 myWidget.setSize(500, 500)
 
 myControls.on('zoom', myWidget.zoom)
-myControls.on('key:up',    myWidget.selectParent);
-myControls.on('key:down',  myWidget.selectChild);
-myControls.on('key:left',  myWidget.selectSibling);
-myControls.on('key:right', myWidget.selectSibling);
-myControls.on('key:enter', myWidget.confirmSelection);
+myControls.on('search', myWidget.search)
+myControls.on('key:up',    myWidget.selectParent)
+myControls.on('key:down',  myWidget.selectChild)
+myControls.on('key:left',  myWidget.selectSibling)
+myControls.on('key:right', myWidget.selectSibling)
+myControls.on('key:enter', myWidget.confirmSelection)
 
 
 embedPlots = false
