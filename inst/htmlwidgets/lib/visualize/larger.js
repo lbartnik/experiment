@@ -779,19 +779,19 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // --- FloatingDescription ---
 
   // --- Details ----------------------------------------------------------
-  Details = function Details(selection, data, id, width, height) {
-    var details, initialize, outer;
+  Details = function Details(selection, data, id, width, height, commentCallback) {
+    var details, initialize, outer, step;
+    step = data.steps.filter(function (step) {
+      return step.id === id;
+    })[0];
     outer = $("<div>", {
       id: "details-container"
     }).load($("#visualize-1-attachment").attr("href"), null, function () {
       return initialize();
     });
     initialize = function initialize() {
-      var step;
+      var comment, initial;
       outer.width(width).height(height).appendTo(selection);
-      step = data.steps.filter(function (step) {
-        return step.id === id;
-      })[0];
       if (step.type === "object") {
         outer.find(".image").remove();
         outer.find(".name").text(step.name);
@@ -803,9 +803,35 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         });
       }
       // add code describing this step
-      return outer.find("code").text(step.expr).each(function (i, block) {
+      outer.find("code").text(step.expr).each(function (i, block) {
         return hljs.highlightBlock(block);
       });
+      // handle comment
+      comment = outer.find(".comment");
+      comment.on('keydown', function (e) {
+        return e.stopPropagation();
+      }).on('keyup', function (e) {
+        var cb;
+        step.comment = this.value;
+        clearTimeout(this.commentUpdate);
+        cb = function cb() {
+          return commentCallback(step.id, step.comment);
+        };
+        this.commentUpdate = setTimeout(cb, 3000);
+        return e.stopPropagation();
+      });
+      if (step.comment) {
+        return comment.text(step.comment).removeClass("empty");
+      } else {
+        initial = comment.attr("initial");
+        return outer.find(".comment").text(initial).focus(function () {
+          return $(this).text("").removeClass("empty");
+        }).focusout(function () {
+          if (!this.value) {
+            return $(this).addClass("empty").text(initial);
+          }
+        });
+      }
     };
     details = function details() {};
     details.setSize = function (width, height) {
@@ -830,7 +856,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- Widget -----------------------------------------------------------
   Widget = function Widget(selection) {
-    var clickNode, data, details, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, ui, widget;
+    var changeComment, clickNode, data, details, hideDialog, lenseR, moveLenses, nodeR, options, pos, resetScale, setEvents, showDialog, size, ui, widget;
     options = {
       shiny: false,
       knitr: false
@@ -921,9 +947,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (d.selected) {
         ui.setSize(size.width / 3, size.height, false);
         ui.scrollTo(id, false);
-        return details = Details(selection, data, id, size.width * 2 / 3, size.height);
+        return details = Details(selection, data, id, size.width * 2 / 3, size.height, changeComment);
       } else {
         return ui.setSize(size.width, size.height, false);
+      }
+    };
+    changeComment = function changeComment(id, comment) {
+      log.debug("id:" + id + " comment:" + comment);
+      if (options.shiny) {
+        Shiny.onInputChange("object_selected", id);
+        return Shiny.onInputChange("comment", comment);
       }
     };
     widget.selectParent = function () {
@@ -960,7 +993,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       if (!details) {
         return;
       }
-      if (key === "enter" && options.shiny) {
+      if (options.shiny) {
         return Shiny.onInputChange('done', 'done');
       }
     };

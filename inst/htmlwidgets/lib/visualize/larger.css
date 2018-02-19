@@ -137,4 +137,10 @@
 
 .details .comment {
     width: 98%;
+    font-family: sans-serif;
+}
+
+.details .empty {
+    font-style: italic;
+    color: grey;
 }

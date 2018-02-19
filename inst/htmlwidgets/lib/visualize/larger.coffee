@@ -541,7 +541,8 @@ FloatingDescription = (element, step, outer, viewport, nodeR) ->
 
 # --- Details ----------------------------------------------------------
 
-Details = (selection, data, id, width, height) ->
+Details = (selection, data, id, width, height, commentCallback) ->
+  step = (data.steps.filter (step) -> step.id is id)[0]
   outer = $("<div>", {id: "details-container"})
     .load $("#visualize-1-attachment").attr("href"), null, () ->
       initialize()
@@ -551,8 +552,6 @@ Details = (selection, data, id, width, height) ->
       .height(height)
       .appendTo(selection)
 
-    step = (data.steps.filter (step) -> step.id is id)[0]
-    
     if step.type is "object"
       outer.find(".image").remove()
       outer.find(".name").text(step.name)
@@ -567,6 +566,25 @@ Details = (selection, data, id, width, height) ->
     outer.find("code")
       .text(step.expr)
       .each (i, block) -> hljs.highlightBlock(block)
+
+    # handle comment
+    comment = outer.find(".comment")
+    comment.on 'keydown', (e) -> e.stopPropagation()
+      .on 'keyup', (e) ->
+        step.comment = this.value
+        clearTimeout(this.commentUpdate)
+        cb = () -> commentCallback(step.id, step.comment)
+        this.commentUpdate = setTimeout(cb, 3000)
+        e.stopPropagation()
+    
+    if step.comment
+      comment.text(step.comment).removeClass("empty")
+    else
+      initial = comment.attr("initial")
+      outer.find(".comment")
+        .text(initial)
+        .focus () -> $(this).text("").removeClass("empty")
+        .focusout () -> if not this.value then $(this).addClass("empty").text(initial)
 
   details = () ->
 
@@ -659,9 +677,15 @@ Widget = (selection) ->
     if d.selected
       ui.setSize(size.width/3, size.height, false)
       ui.scrollTo(id, false)
-      details = Details(selection, data, id, size.width*2/3, size.height)
+      details = Details(selection, data, id, size.width*2/3, size.height, changeComment)
     else
       ui.setSize(size.width, size.height, false)
+
+  changeComment = (id, comment) ->
+    log.debug("id:#{id} comment:#{comment}")
+    if options.shiny
+      Shiny.onInputChange("object_selected", id)
+      Shiny.onInputChange("comment", comment)
 
   widget.selectParent = () ->
     if not details then return
@@ -684,7 +708,7 @@ Widget = (selection) ->
     
   widget.confirmSelection = () ->
     if not details then return
-    if key is "enter" and options.shiny
+    if options.shiny
       Shiny.onInputChange('done', 'done')
 
   return widget

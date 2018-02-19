@@ -30,10 +30,13 @@
 <div id="canvas" class="main-container" style="border: 1px solid black; width: 500px;"></div>
 
 <script type="text/coffeescript">
+log.enable(true)
+
 myControls = Controls('#canvas', 1, 4)
 
 myWidget = Widget('#canvas')
 myWidget.setSize(500, 500)
+
 myControls.on('zoom', myWidget.zoom)
 myControls.on('key:up',    myWidget.selectParent);
 myControls.on('key:down',  myWidget.selectChild);
