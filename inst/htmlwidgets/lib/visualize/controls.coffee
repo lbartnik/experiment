@@ -1,10 +1,10 @@
 Controls = (selection, min = .5, max = 2, step = 1.1) ->
-  outer    = null
-  plus     = null
-  minus    = null
-  search   = null
-  current  = 1
-  callback = null
+  outer     = null
+  plus      = null
+  minus     = null
+  search    = null
+  current   = 1
+  callbacks = { zoom: null, search: null }
   keys =
     enter: null
     up:    null
@@ -20,8 +20,11 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
     minus = $("<div>", {class: "button", id: "minus"}).appendTo(outer).text("-")
     search = $("<input>", {id: "search", class: "search", type: "text"}).appendTo(outer)
 
-    plus.on('click', () -> zoom(current / step))
-    minus.on('click', () -> zoom(current * step))
+    plus.on 'click', () -> zoom(current / step)
+    minus.on 'click', () -> zoom(current * step)
+    search.on 'keyup', (e) ->
+      console.log(this.value)
+      e.stopPropagation()
 
     zoomer = d3.zoom()
       .scaleExtent([min, max])
@@ -34,18 +37,15 @@ Controls = (selection, min = .5, max = 2, step = 1.1) ->
 
   # --- configure events -----------------------------------------------
   controls.on = (event, fn) ->
-    if event is 'zoom'
-      callback = fn
+    if event in ['zoom', 'search']
+      callbacks[event] = fn
     if event.substring(0,3) is 'key'
       keys[event.substring(4)] = fn
 
   # --- zooming --------------------------------------------------------
   zoom = (k) ->
-    k = Math.max(min, Math.min(max, k))
-    if k is current then return
-    current = k
-    if callback
-      callback(k)
+    current = Math.max(min, Math.min(max, k))
+    callbacks.zoom?(current)
 
   # --- keyboard -------------------------------------------------------
 
