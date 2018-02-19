@@ -542,31 +542,33 @@ FloatingDescription = (element, step, outer, viewport, nodeR) ->
 # --- Details ----------------------------------------------------------
 
 Details = (selection, data, id, width, height) ->
-  outer = null
+  outer = $("<div>", {id: "details-container"})
+    .load $("#visualize-1-attachment").attr("href"), null, () ->
+      initialize()
 
-  details = () ->
   initialize = () ->
-    outer = $("<div>", {class: "details"}).width(width).height(height).appendTo(selection)
+    outer.width(width)
+      .height(height)
+      .appendTo(selection)
 
     step = (data.steps.filter (step) -> step.id is id)[0]
-    tooltip = $("<div>", {class: "tooltip"})
-      .css({opacity: 1, visibility: 'visible', position: 'inherit'})
-      .appendTo(outer)
     
     if step.type is "object"
-      $("<span>").addClass("name").appendTo(tooltip).text(step.name)
-      $("<span>").appendTo(tooltip).text(" ")
-      $("<span>").addClass("description").appendTo(tooltip).text(step.desc)
+      outer.find(".image").remove()
+      outer.find(".name").text(step.name)
+      outer.find(".description").text(step.desc)
     else
-      $("<img>", { src: plotHref(step) }).appendTo(tooltip)
+      outer.find(".object").remove()
+      outer.find(".image img")
+        .attr("src", plotHref(step))
         .on('load', () -> $(this).width(Math.min(width, this.width)))
 
     # add code describing this step
-    $("<pre>").css({'white-space': 'pre-wrap'}).appendTo(tooltip).append $("<code>").addClass("R").text(step.expr)
-    tooltip.find("pre code").each (i, block) -> hljs.highlightBlock(block)
+    outer.find("code")
+      .text(step.expr)
+      .each (i, block) -> hljs.highlightBlock(block)
 
-    # add comment text area
-    $("<textarea>", {class: 'comment'}).css({'pointer-events': 'auto'}).appendTo(tooltip)
+  details = () ->
 
   details.setSize = (width, height, queue = true) ->
     outer.animate({width: width, height: height}, {duration: 'fast', queue: queue})
@@ -575,7 +577,6 @@ Details = (selection, data, id, width, height) ->
 
   details.getId = () -> id
 
-  initialize()
   return details
 
 

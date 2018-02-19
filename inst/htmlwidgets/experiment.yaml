@@ -27,3 +27,5 @@ dependencies:
       - larger.css
       - popup.css
       - controls.css
+    attachment:
+      - html/details.html

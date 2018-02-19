@@ -104,14 +104,37 @@
     font-size: 8pt;
 }
 
-.tooltip .comment {
-    width: 100%;
-}
-
-.details {
+#details-container {
     position: absolute;
     top: 0px;
     right: 0px;
     border: 1px solid black;
     overflow: auto;
+}
+
+.details {
+    fill: whitesmoke;
+    padding: 2pt;
+}
+
+.details .name-label {
+    font-size: 12pt;
+    font-style: italic;
+}
+
+.details .name {
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+.details pre {
+    white-space: pre-wrap;
+}
+
+.details pre code {
+    font-size: 8pt;
+}
+
+.details .comment {
+    width: 98%;
 }

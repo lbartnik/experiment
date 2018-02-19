@@ -781,48 +781,33 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
   // --- Details ----------------------------------------------------------
   Details = function Details(selection, data, id, width, height) {
     var details, initialize, outer;
-    outer = null;
-    details = function details() {};
+    outer = $("<div>", {
+      id: "details-container"
+    }).load($("#visualize-1-attachment").attr("href"), null, function () {
+      return initialize();
+    });
     initialize = function initialize() {
-      var step, tooltip;
-      outer = $("<div>", {
-        class: "details"
-      }).width(width).height(height).appendTo(selection);
+      var step;
+      outer.width(width).height(height).appendTo(selection);
       step = data.steps.filter(function (step) {
         return step.id === id;
       })[0];
-      tooltip = $("<div>", {
-        class: "tooltip"
-      }).css({
-        opacity: 1,
-        visibility: 'visible',
-        position: 'inherit'
-      }).appendTo(outer);
       if (step.type === "object") {
-        $("<span>").addClass("name").appendTo(tooltip).text(step.name);
-        $("<span>").appendTo(tooltip).text(" ");
-        $("<span>").addClass("description").appendTo(tooltip).text(step.desc);
+        outer.find(".image").remove();
+        outer.find(".name").text(step.name);
+        outer.find(".description").text(step.desc);
       } else {
-        $("<img>", {
-          src: plotHref(step)
-        }).appendTo(tooltip).on('load', function () {
+        outer.find(".object").remove();
+        outer.find(".image img").attr("src", plotHref(step)).on('load', function () {
           return $(this).width(Math.min(width, this.width));
         });
       }
       // add code describing this step
-      $("<pre>").css({
-        'white-space': 'pre-wrap'
-      }).appendTo(tooltip).append($("<code>").addClass("R").text(step.expr));
-      tooltip.find("pre code").each(function (i, block) {
+      return outer.find("code").text(step.expr).each(function (i, block) {
         return hljs.highlightBlock(block);
       });
-      // add comment text area
-      return $("<textarea>", {
-        class: 'comment'
-      }).css({
-        'pointer-events': 'auto'
-      }).appendTo(tooltip);
     };
+    details = function details() {};
     details.setSize = function (width, height) {
       var queue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
@@ -840,7 +825,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     details.getId = function () {
       return id;
     };
-    initialize();
     return details;
   };
 
