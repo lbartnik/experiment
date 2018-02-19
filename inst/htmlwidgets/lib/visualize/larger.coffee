@@ -328,9 +328,14 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
 Data = (data) ->
 
+  dataObject = () ->
+
+  dataObject.steps = data.steps
+  dataObject.links = data.links
+
   # pre-process the input data
   setupData = () ->
-    data.resetScale()
+    dataObject.resetScale()
     # pre-process nodes
     data.steps.forEach (s) ->
       if s.expr.constructor is Array
@@ -341,11 +346,11 @@ Data = (data) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
 
-  resetScale = () ->
+  dataObject.resetScale = () ->
     data.steps.forEach (s) ->
       s.scale = 1
 
-  stratified = () ->
+  dataObject.stratified = () ->
     parentsMap = d3.map()
     data.links.forEach (l) ->
       parentsMap.set(l.target.id, l.source.id)
@@ -354,7 +359,7 @@ Data = (data) ->
       .parentId((d) -> parentsMap.get(d.id))
     stratify(data.steps)
 
-  center = (width, height) ->
+  dataObject.center = (width, height) ->
     x = (step.x for step in data.steps)
     y = (step.y for step in data.steps)
     dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2
@@ -367,8 +372,8 @@ Data = (data) ->
     () -> start++
 
   # assign nodes to groups based on the time threshold
-  groupData = (threshold) ->
-    s = stratified()
+  dataObject.groupData = (threshold) ->
+    s = dataObject.stratified()
 
     groupNo = counter()
     s.group = groupNo()
@@ -386,34 +391,29 @@ Data = (data) ->
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
 
-  # set node that is selected
-  selected = (id) ->
+  # --- set node that is selected ---
+  dataObject.selected = (id) ->
     data.steps.forEach (step) -> step.selected = step.id is id
 
-  parentOf = (id) ->
+  dataObject.parentOf = (id) ->
     parent = data.links.filter (link) -> link.target.id is id
     if not parent.length then return null
     parent[0].source.id
   
-  childrenOf = (id) ->
+  dataObject.childrenOf = (id) ->
     children = data.links.filter (link) -> link.source.id is id
     if not children.length then return []
     (children.sort (a,b) -> a.x < b.x).map (link) -> link.target.id
 
-  # extend with methods
-  methods =
-    resetScale: resetScale
-    stratified: stratified
-    center:     center
-    groupData:  groupData
-    selected:   selected
-    parentOf:   parentOf
-    childrenOf: childrenOf
-  data = {methods..., data...}
+  # --- filtering ---
+  dataObject.filter = (phrase) ->
+    data.steps.forEach (step) -> step.matched = if step.name then step.name.match(phrase) else true
+    dataObject.steps = data.steps.filter (step) -> step.matched
+    dataObject.links = data.links.filter (link) -> link.target.matched and link.source.matched
 
   # initialize the object
   setupData()
-  return data
+  return dataObject
 
 # --- Data -------------------------------------------------------------
 
@@ -715,7 +715,9 @@ Widget = (selection) ->
 
   # --- search ---
   widget.search = (phrase) ->
-    console.log(phrase)
+    data.filter(phrase)
+    ui.setData(data)
+    ui.updateGraphicalElements()
 
   return widget
 
