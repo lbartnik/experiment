@@ -109,7 +109,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
-    $(outer.node()).css({width: width, height: height})
+    jOuter = $(outer.node())
+    jOuter.css({width: width, height: height - parseInt(jOuter.css("top"), 10)})
 
   ui.setData = (Data) ->
     data = Data

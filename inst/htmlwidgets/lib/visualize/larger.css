@@ -5,8 +5,8 @@
 }
 
 .widget {
-    margin-top: 25pt;
     position: relative;
+    top: 25pt;
     overflow: auto;
     width: 100%;
     height: 100%;

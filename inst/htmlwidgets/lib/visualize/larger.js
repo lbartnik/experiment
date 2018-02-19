@@ -192,11 +192,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return namesG = canvas.append("g").attr("id", "names");
     };
     ui.setSize = function (width, height) {
+      var jOuter;
       sizes.ui.width = width;
       sizes.ui.height = height;
-      return $(outer.node()).css({
+      jOuter = $(outer.node());
+      return jOuter.css({
         width: width,
-        height: height
+        height: height - parseInt(jOuter.css("top"), 10)
       });
     };
     ui.setData = function (Data) {
