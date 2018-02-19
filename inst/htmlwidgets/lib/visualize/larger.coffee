@@ -312,8 +312,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.scrollTo = (id, queue = true) ->
     node = nodesG.select("#node_#{id}")
     scroll =
-      scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height/2) + nodeR
-      scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width/2) + nodeR
+      scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height/2 + nodeR)
+      scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width/2 + nodeR)
     $(outer.node()).animate(scroll, {queue: queue})
 
   # --- trigger click event ---

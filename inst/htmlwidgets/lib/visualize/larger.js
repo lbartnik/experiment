@@ -455,8 +455,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       var node, scroll;
       node = nodesG.select("#node_" + id);
       scroll = {
-        scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height / 2) + nodeR,
-        scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width / 2) + nodeR
+        scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height / 2 + nodeR),
+        scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width / 2 + nodeR)
       };
       return $(outer.node()).animate(scroll, {
         queue: queue
