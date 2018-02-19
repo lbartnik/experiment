@@ -9,12 +9,19 @@
     var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
     var step = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1.1;
 
-    var callback, controls, current, minus, outer, plus, zoom;
+    var callback, controls, current, keyDown, keys, minus, outer, plus, translateKey, zoom;
     outer = null;
     plus = null;
     minus = null;
     current = 1;
     callback = null;
+    keys = {
+      enter: null,
+      up: null,
+      down: null,
+      left: null,
+      right: null
+    };
     controls = function controls() {};
     controls.initialize = function () {
       var zoomer;
@@ -39,13 +46,20 @@
         return zoom(d3.event.transform.k);
       });
       d3.select(selection).select("#plus").call(zoomer).on("dblclick.zoom", null);
-      return d3.select(selection).select("#minus").call(zoomer).on("dblclick.zoom", null);
+      d3.select(selection).select("#minus").call(zoomer).on("dblclick.zoom", null);
+      $(window).on('keydown', keyDown);
+      return $('iframe', parent.document).on('keydown', keyDown);
     };
+    // --- configure events -----------------------------------------------
     controls.on = function (event, fn) {
       if (event === 'zoom') {
-        return callback = fn;
+        callback = fn;
+      }
+      if (event.substring(0, 3) === 'key') {
+        return keys[event.substring(4)] = fn;
       }
     };
+    // --- zooming --------------------------------------------------------
     zoom = function zoom(k) {
       k = Math.max(min, Math.min(max, k));
       if (k === current) {
@@ -56,6 +70,32 @@
         return callback(k);
       }
     };
+    // --- keyboard -------------------------------------------------------
+    keyDown = function keyDown(e) {
+      var key;
+      key = translateKey(e);
+      if (key in keys && keys[key]) {
+        keys[key](key);
+        return e.preventDefault();
+      }
+    };
+    // --- translate key to its name ---
+    translateKey = function translateKey(e) {
+      var Codes, keyCode, ref;
+      Codes = {
+        13: "enter",
+        37: "left",
+        38: "up",
+        39: "right",
+        40: "down"
+      };
+      keyCode = (ref = e.originalEvent) != null ? ref.keyCode : void 0;
+      if (keyCode in Codes) {
+        return Codes[keyCode];
+      }
+      return null;
+    };
+    // --------------------------------------------------------------------
     controls.initialize();
     return controls;
   };

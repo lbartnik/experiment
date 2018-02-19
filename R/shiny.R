@@ -82,6 +82,11 @@ browserAddin <- function (steps = fullhistory())
       if (!is_empty(input$object_selected))
         onClick(steps, input$object_selected)
     })
+
+    observe({
+      if (!is_empty(input$comment) && !is_empty(input$object_selected))
+        onCommentChange(steps, input$object_selected, input$comment)
+    })
   }
 
   suppressMessages({
@@ -106,6 +111,15 @@ onClick <- function (steps, id)
   cat0('\n')
 
   print(co, header = FALSE)
+}
+
+
+onCommentChange <- function (steps, id, comment)
+{
+  st <- step_by(steps, id = id)
+  tags <- storage::os_read_tags(internal_state$stash, st$object_id)
+  tags$comment <- comment
+  storage::os_update_tags(internal_state$stash, st$object_id, tags)
 }
 
 

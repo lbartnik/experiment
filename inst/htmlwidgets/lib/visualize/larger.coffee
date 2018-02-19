@@ -53,6 +53,36 @@ plotHref = (step) ->
   return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII="
 
 
+# --- simple logger ----------------------------------------------------
+Log = () ->
+  enabled = false
+
+  callerName = () ->
+    re = /([^(]+)@|at ([^(]+) \(/gm
+    st = new Error().stack
+    re.exec(st) # skip 1st line
+    re.exec(st) # skip 2nd line
+    re.exec(st) # skip 3rd line
+    res = re.exec(st)
+    if not res then return "unknown"
+    return res[1] || res[2]
+  
+  showMessage = (level, message) ->
+    if not enabled then return
+    caller = callerName()
+    console.log("#{level} #{caller}: #{message}")
+
+  log = () ->
+  log.debug = (message) -> showMessage("DEBUG", message)
+  log.info  = (message) -> showMessage("INFO ", message)
+
+  log.enable = (onoff) ->
+    enabled = onoff
+
+  return log
+
+log = Log()
+
 # --- Utils ------------------------------------------------------------
 
 UI = (selection, nodeR = 25, innerR = 25) ->
@@ -79,7 +109,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
-    el = $(outer.node()).css({width: width, height: height})
+    $(outer.node()).css({width: width, height: height})
 
   ui.setData = (Data) ->
     data = Data
@@ -211,6 +241,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       .attr("y", (d) -> d.y - d.scale * nodeR)
       .attr("width", (d) -> d.scale * 2*nodeR)
       .attr("height", (d) -> d.scale * 2*nodeR)
+      .classed("selected", (d) -> d.selected)
 
     link = linksG.selectAll("line.link")
       .attr("x1", (d) -> d.source.x)
@@ -234,7 +265,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
     sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
     # sizes.canvas.* are updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width * zoom.current, sizes.canvas.height)
+    data.centralize(sizes.canvas.width, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
@@ -270,20 +301,25 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       nodesG.selectAll(".face")
         .on(event.substring(5), callback)
   
-  # --- graphical node selection ---
-  ui.select = (id) ->
-    nodesG.selectAll(".variable")
-      .classed("selected", false)
-    if id
-      nodesG.selectAll("#node_#{id}")
-        .classed("selected", true)
-
   # --- zooming ---
   ui.zoom = (k) ->
     if k < zoom.switch < zoom.current then switchView("close-up")
     if k >= zoom.switch > zoom.current then switchView("zoom-out")
     zoom.current = k
     resetCanvasSize()
+
+  # --- scroll to selected node ---
+  ui.scrollTo = (id, queue = true) ->
+    node = nodesG.select("#node_#{id}")
+    scroll =
+      scrollTop: Math.max(0, node.attr("y") / zoom.current - sizes.ui.height/2 + nodeR)
+      scrollLeft: Math.max(0, node.attr("x") / zoom.current - sizes.ui.width/2 + nodeR)
+    $(outer.node()).animate(scroll, {queue: queue})
+
+  # --- trigger click event ---
+  ui.clickOn = (id) ->
+    log.debug(id)
+    nodesG.selectAll("#node_#{id} .face").dispatch("click")
 
   ui.initialize()
   return ui
@@ -349,12 +385,29 @@ Data = (data) ->
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
 
+  # set node that is selected
+  selected = (id) ->
+    data.steps.forEach (step) -> step.selected = step.id is id
+
+  parentOf = (id) ->
+    parent = data.links.filter (link) -> link.target.id is id
+    if not parent.length then return null
+    parent[0].source.id
+  
+  childrenOf = (id) ->
+    children = data.links.filter (link) -> link.source.id is id
+    if not children.length then return []
+    (children.sort (a,b) -> a.x < b.x).map (link) -> link.target.id
+
   # extend with methods
   methods =
     resetScale: resetScale
     stratified: stratified
     centralize: centralize
-    groupData: groupData
+    groupData:  groupData
+    selected:   selected
+    parentOf:   parentOf
+    childrenOf: childrenOf
   data = {methods..., data...}
 
   # initialize the object
@@ -392,7 +445,7 @@ Position = (nodeR) ->
   position
 # --- Position ---------------------------------------------------------
 
-Description = (element, step, outer, viewport, nodeR) ->
+FloatingDescription = (element, step, outer, viewport, nodeR) ->
 
   description = () ->
   description.show = () ->
@@ -483,7 +536,66 @@ Description = (element, step, outer, viewport, nodeR) ->
 
 
   return description
+# --- FloatingDescription ---
 
+
+# --- Details ----------------------------------------------------------
+
+Details = (selection, data, id, width, height, commentCallback) ->
+  step = (data.steps.filter (step) -> step.id is id)[0]
+  outer = $("<div>", {id: "details-container"})
+    .load $("#visualize-1-attachment").attr("href"), null, () ->
+      initialize()
+
+  initialize = () ->
+    outer.width(width)
+      .height(height)
+      .appendTo(selection)
+
+    if step.type is "object"
+      outer.find(".image").remove()
+      outer.find(".name").text(step.name)
+      outer.find(".description").text(step.desc)
+    else
+      outer.find(".object").remove()
+      outer.find(".image img")
+        .attr("src", plotHref(step))
+        .on('load', () -> $(this).width(Math.min(width, this.width)))
+
+    # add code describing this step
+    outer.find("code")
+      .text(step.expr)
+      .each (i, block) -> hljs.highlightBlock(block)
+
+    # handle comment
+    comment = outer.find(".comment")
+    comment.on 'keydown', (e) -> e.stopPropagation()
+      .on 'keyup', (e) ->
+        step.comment = this.value
+        clearTimeout(this.commentUpdate)
+        cb = () -> commentCallback(step.id, step.comment)
+        this.commentUpdate = setTimeout(cb, 3000)
+        e.stopPropagation()
+    
+    if step.comment
+      comment.text(step.comment).removeClass("empty")
+    else
+      initial = comment.attr("initial")
+      outer.find(".comment")
+        .text(initial)
+        .focus () -> $(this).text("").removeClass("empty")
+        .focusout () -> if not this.value then $(this).addClass("empty").text(initial)
+
+  details = () ->
+
+  details.setSize = (width, height, queue = true) ->
+    outer.animate({width: width, height: height}, {duration: 'fast', queue: queue})
+
+  details.remove = () -> outer.remove()
+
+  details.getId = () -> id
+
+  return details
 
 
 # --- Widget -----------------------------------------------------------
@@ -493,7 +605,9 @@ Widget = (selection) ->
   lenseR   = 30
   ui       = UI(selection, nodeR, 15)
   pos      = Position(nodeR)
+  details  = null
   data     = null
+  size     = { width: 500, height: 500 }
   
   widget = () ->
 
@@ -506,7 +620,8 @@ Widget = (selection) ->
     setEvents()
 
   widget.setSize = (width, height) ->
-    ui.setSize(width,height)
+    size = { width: width, height: height }
+    ui.setSize(size.width, size.height)
 
   widget.setOption = (what, value) ->
     if what of options
@@ -538,22 +653,70 @@ Widget = (selection) ->
     ui.updateGraphicalElements()
   
   showDialog = (d) ->
-    this.description = Description(this, d, selection, Viewport(selection), nodeR)
+    this.description = FloatingDescription(this, d, selection, Viewport(selection), nodeR)
     this.description.show()
   
   hideDialog = (d) ->
-    this.description.hide()
+    this.description?.hide()
 
   clickNode = (d) ->
-    this.selected = not this.selected
-    id = if this.selected then d.id else null
+    log.debug("id: #{d.id}, selected: #{d.selected}")
+    this.description?.hide()
 
-    ui.select(id)
+    id = if not d.selected then d.id
+    data.selected(id)
+    data.resetScale()
+
+    ui.updateGraphicalElements()
     if options.shiny
       Shiny.onInputChange("object_selected", id)
+    
+    details?.remove()
+    details = null
+
+    if d.selected
+      ui.setSize(size.width/3, size.height, false)
+      ui.scrollTo(id, false)
+      details = Details(selection, data, id, size.width*2/3, size.height, changeComment)
+    else
+      ui.setSize(size.width, size.height, false)
+
+  changeComment = (id, comment) ->
+    log.debug("id:#{id} comment:#{comment}")
+    if options.shiny
+      Shiny.onInputChange("object_selected", id)
+      Shiny.onInputChange("comment", comment)
+
+  widget.selectParent = () ->
+    if not details then return
+    ui.clickOn(data.parentOf(details.getId()))
+
+  widget.selectChild = () ->
+    if not details then return
+    children = data.childrenOf(details.getId())
+    if children.length
+      ui.clickOn(children[0])
+
+  widget.selectSibling = (key) ->
+    if not details then return
+    siblings = data.childrenOf(data.parentOf(details.getId()))
+    me = siblings.indexOf(details.getId())
+    if key is "right" and me < siblings.length-1
+      ui.clickOn(siblings[me+1])
+    if key is "left" and me > 0
+      ui.clickOn(siblings[me-1])
+    
+  widget.confirmSelection = () ->
+    if not details then return
+    if options.shiny
+      Shiny.onInputChange('done', 'done')
 
   return widget
 
 # export the Widget
 window.Widget = Widget
+
+#log.enable(true)
+
 window.Data = Data
+window.log = log

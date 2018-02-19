@@ -18,6 +18,11 @@ HTMLWidgets.widget({
     visvis.setOption('shiny', shiny);
     visvis.setSize(mainContainer.width(), mainContainer.height());
     controls.on('zoom', visvis.zoom);
+    controls.on('key:up',    visvis.selectParent);
+    controls.on('key:down',  visvis.selectChild);
+    controls.on('key:left',  visvis.selectSibling);
+    controls.on('key:right', visvis.selectSibling);
+    controls.on('key:enter', visvis.confirmSelection);
 
     // return widget instance
     return {

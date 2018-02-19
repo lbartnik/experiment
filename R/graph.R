@@ -206,7 +206,8 @@ commit_to_steps <- function (commit, objects)
       expr      = format_expression(commit$expr),
       commit_id = commit$id,
       object_id = id,
-      time      = as.integer(tags$time)
+      time      = as.integer(tags$time),
+      comment   = tags$comment
     )
 
     if (identical(name, '.plot')) {
