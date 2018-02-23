@@ -371,7 +371,7 @@ Data = (data) ->
     stratify = d3.stratify()
       .id((d) -> d.id)
       .parentId((d) -> parentsMap.get(d.id))
-    stratify(data.steps)
+    stratify(dataObject.steps)
 
   dataObject.center = (width, height) ->
     x = (step.x for step in dataObject.steps)
@@ -742,6 +742,7 @@ Widget = (selection) ->
   # --- search ---
   widget.search = (phrase) ->
     data.filter(phrase)
+    pos.calculate(data)
     ui.setData(data)
     ui.updateGraphicalElements()
 

@@ -542,7 +542,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }).parentId(function (d) {
         return parentsMap.get(d.id);
       });
-      return stratify(data.steps);
+      return stratify(dataObject.steps);
     };
     dataObject.center = function (width, height) {
       var dx, dy, step, x, y;
@@ -1055,6 +1055,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     // --- search ---
     widget.search = function (phrase) {
       data.filter(phrase);
+      pos.calculate(data);
       ui.setData(data);
       return ui.updateGraphicalElements();
     };

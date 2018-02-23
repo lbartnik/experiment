@@ -71,6 +71,11 @@ registerTests = (sampleData) ->
         sd.filter("")
         assert.deepEqual(sd.steps, this.data.steps)
         assert.deepEqual(sd.links, this.data.links)
+      
+      test 'd3.tree with filter', () ->
+        sd = Data(this.data)
+        sd.filter("x")
+        sd.stratified()
 
   return null
 

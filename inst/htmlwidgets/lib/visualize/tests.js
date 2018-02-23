@@ -142,13 +142,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           assert.lengthOf(sd.steps, 2); // two regular nodes + artificial head
           return assert.lengthOf(sd.links, 1);
         });
-        return test('remove filter', function () {
+        test('remove filter', function () {
           var sd;
           sd = Data(this.data);
           sd.filter("y");
           sd.filter("");
           assert.deepEqual(sd.steps, this.data.steps);
           return assert.deepEqual(sd.links, this.data.links);
+        });
+        return test('d3.tree with filter', function () {
+          var sd;
+          sd = Data(this.data);
+          sd.filter("x");
+          return sd.stratified();
         });
       });
     });
