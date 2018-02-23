@@ -1,0 +1,142 @@
+---
+title: "Supporting Data Processing with an Object Repository"
+author: "Lukasz A. Bartnik"
+date: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Supporting Data Processing with an Object Repository}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Abstract
+
+Processing data in R requires a certain level of diligence in tracking
+the progress of work, which is necessary for a number of reasons. For
+example, without some form of organizing principle, a body of work built
+over days or weeks can become unmanageable and thus thwart, or at least
+profoundly slow down, any further progress. Similarily, sharing source
+results with third parties, a foundational principle of _reproducible
+science_[^1], can be rendered virtually impossible if the relevant data
+set or code cannot be successfully identified. There is already a
+multitude of means and aids instrumental in achieving this goal, and
+users of R and other software packages tend to find their own, personal
+choice of such means. This paper proposes another tool, one that has the
+ambition, however, to fill certain gaps that seems to have been so far
+left unaddressed. This new tool is an interactive repository of objects,
+code and plots, which is built without any disturbance to the user along
+with his or her work with data, in R. Whenever a certain detail needs
+to be brought back from the past and consulted, the proposed repository
+delivers just that by the means of an elaborate search interface.
+Finally, user can choose to continue using their own specific set of
+tools and augment their work only when necessary.
+
+
+# Introduction
+
+extended abstract
+
+summary of sections that follow
+
+
+# Working with Data
+
+loop: generate hypothesis, verify hypothesis
+
+generates artifacts: data objects (data sets, models, summaries), code
+(ETL functions, model formulas) and plots (but also tables, and others
+visualizations, e.g. interactive)
+
+similar to dev loop: https://leankit.com/learn/agile/agile-software-development/
+
+generating and verifying is a high-intensity task, documenting the
+work becomes the dreaded but necessary overhead
+
+as with software, one needs to plan where they want to go and document
+the road so far, so that their deliverables constitue a body of work
+intelligible for themselves as well as for third parties; which include:
+peers (reviewers, scientific/academic papers), peers and superiors
+(business reports), general public (blog posts)
+
+without an adequate effort, the number of artifacts (and their versions)
+can grow and push the complexity of the project beyond the level of
+manageability
+
+it is when wrong versions of data sets or code are being delivered
+(sent over to production/implementation, reported to decision-makers,
+etc.), reused (for similar projects, or if a report is required in
+a cycle, e.g. monthly), or used a basis for further investigations
+(e.g. grouping model is used to segment data, and then regression
+models are built separately for each segment)
+
+such mistakes in the long run are inevitable but the person conducting
+the research should always strive to minimize the risk of making one
+
+classification of mistakes: data (model), code (controller), plot (view)
+
+data      | code      | plot      | example
+correct   | incorrect | -         | ETL procedure is applied to a sample and then to the whole set
+incorrect | correct   | -         | code is discarded, time is wasted
+correct   | correct   | incorrect | good reults are discarded, wrong ETL code is used
+... ... ...
+
+view - decide to keep or discard code/data
+data - report wrong results
+code - apply incorrect procedure to another data set; stop other from reproducing results
+
+
+
+
+# Popular R Packages and Extensions
+
+R Markdown - combine code, data and visualizations in order to produce
+a reproducible report; downside: a lot of effort, not so much in-line
+with interactive work typical for R
+
+archivist - store artifacts and use their checksums; preserves the
+actual data relevant to the decision (plot and data set itself), but
+does not preserve the relationships between objects, code and plots
+
+git - store and version code (and data); requires extra effort in order
+to verify whether the commit was in fact self-consistent, that is,
+whether data match the code; in retrospect, after a few weeks/months,
+if code does not reproduce data, there is always a suspicion the commit
+itself had been made erroneously
+
+
+# Repository - Model
+
+store data, code and plots, record state of R session after each command,
+together with all relevant details (e.g. packages and their versions, the
+command itself); a.k.a "commit"
+
+preserve the order of commits, effectively representing the whole history
+of one's work
+
+store objects under their SHA1, identify repetitions
+
+allow to "go back in time" (retrieve a historical commit) and branch off
+in that commit, thus preserving even more information about the
+relationships between artifacts in the repository
+
+
+
+# Search
+
+examples of questions that need to be answered and what kind of queries
+return the requested information
+
+
+# Browser
+
+when exploring (as opposed to "exploiting") the "search space", browser
+can help build a high-level "map" of work done so far, various branches
+in the timeline of the repository
+
+logical grouping of objects - user can assign names/groups/branches to
+subsets of the artifact tree and enrich the informations available to
+himself (at a later time) or to his collaborators
+
+
+
+# Summary
