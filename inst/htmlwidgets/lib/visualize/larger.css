@@ -107,7 +107,7 @@
 
 #details-container {
     position: absolute;
-    top: 0px;
+    top: 25pt;
     right: 0px;
     border: 1px solid black;
     overflow: auto;

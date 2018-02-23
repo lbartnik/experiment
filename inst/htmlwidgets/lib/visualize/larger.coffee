@@ -576,8 +576,8 @@ Details = (selection, data, id, width, height, commentCallback) ->
 
   initialize = () ->
     outer.width(width)
-      .height(height)
       .appendTo(selection)
+      .height(height - parseInt(outer.css("top")))
 
     if step.type is "object"
       outer.find(".image").remove()

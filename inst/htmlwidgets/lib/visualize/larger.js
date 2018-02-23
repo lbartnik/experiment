@@ -845,7 +845,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     });
     initialize = function initialize() {
       var comment, initial;
-      outer.width(width).height(height).appendTo(selection);
+      outer.width(width).appendTo(selection).height(height - parseInt(outer.css("top")));
       if (step.type === "object") {
         outer.find(".image").remove();
         outer.find(".name").text(step.name);
