@@ -31,6 +31,21 @@ initiate_state <- function ()
 }
 
 
+#' @export
+#' @rdname tracker
+tracker <- (function () {
+  structure(list(), class = "tracker")
+})()
+
+
+#' @export
+#' @rdname tracker
+print.tracker <- function (x, ...)
+{
+  cat("printing tracker!\n")
+}
+
+
 
 #' A callback run after each top-level expression is evaluated.
 #'
