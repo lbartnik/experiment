@@ -26,12 +26,14 @@
     stroke: black;
 }
 
-#nodes .object {
+#nodes .variable {
+    opacity: 1;
     fill: rgb(247, 247, 247);
     stroke: rgb(150, 150, 150);
 }
 
 #nodes .plot {
+    opacity: 1;
     fill: transparent;
     stroke: rgb(150, 150, 150);
     stroke-width: 2pt;

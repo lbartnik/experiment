@@ -168,7 +168,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
+    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, updateLinkPositions, updateNodePositions, zoom;
     outer = null;
     canvas = null;
     linksG = null;
@@ -216,15 +216,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     // create all graphical elements on the canvas
     createGraphics = function createGraphics(data) {
-      var enter, link, node;
+      var enter, node;
       node = nodesG.selectAll("svg.variable").data(data.steps, function (d) {
         return d.id;
       });
+      node.transition("ui").duration(750).call(updateNodePositions);
       enter = node.enter().append("svg").attr("class", function (d) {
         return "variable " + d.type;
       }).attr("id", function (d) {
         return "node_" + d.id;
-      }).attr("viewBox", "0 0 " + 2 * innerR + " " + 2 * innerR).attr("width", 2 * nodeR).attr("height", 2 * nodeR);
+      }).attr("viewBox", "0 0 " + 2 * innerR + " " + 2 * innerR).attr("width", 2 * nodeR).attr("height", 2 * nodeR).call(updateNodePositions).style("opacity", 0).transition("ui").style("opacity", 1);
       enter.each(function (d) {
         var element, text;
         element = d3.select(this);
@@ -242,15 +243,49 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
           return element.selectAll("image,rect").attr("width", 2 * innerR).attr("height", 2 * innerR);
         }
       });
-      node.exit().remove();
-      link = linksG.selectAll("line.link").data(data.links, function (d) {
-        return "link_" + d.source.id + "_" + d.target.id;
+      node.exit().transition("ui").style("opacity", 0).remove();
+      return d3.transition("ui").on("end", function () {
+        var link, reveal;
+        reveal = function reveal(links) {
+          return links.style("opacity", 0).transition("ui-links").delay(250).style("opacity", 1);
+        };
+        link = linksG.selectAll("line.link").data(data.links, function (d) {
+          return "link_" + d.source.id + "_" + d.target.id;
+        }).call(updateLinkPositions).call(reveal);
+        link.enter().append("line").attr("class", "link").attr("stroke", "#ddd").call(updateLinkPositions).call(reveal);
+        return link.exit().remove();
       });
-      link.enter().append("line").attr("class", "link").attr("stroke", "#ddd");
-      return link.exit().remove();
     };
     // --- createGraphics
-
+    updateNodePositions = function updateNodePositions(nodes) {
+      return nodes.attr("x", function (d) {
+        return d.x - d.scale * nodeR;
+      }).attr("y", function (d) {
+        return d.y - d.scale * nodeR;
+      }).attr("width", function (d) {
+        return d.scale * 2 * nodeR;
+      }).attr("height", function (d) {
+        return d.scale * 2 * nodeR;
+      });
+    };
+    updateLinkPositions = function updateLinkPositions(links) {
+      return links.attr("x1", function (d) {
+        return d.source.x;
+      }).attr("y1", function (d) {
+        return d.source.y;
+      }).attr("x2", function (d) {
+        return d.target.x;
+      }).attr("y2", function (d) {
+        return d.target.y;
+      });
+    };
+    ui.updateGraphicalElements = function (nodes) {
+      var link;
+      nodesG.selectAll("svg.variable").classed("selected", function (d) {
+        return d.selected;
+      }).call(updateNodePositions);
+      return link = linksG.selectAll("line.link").call(updateLinkPositions);
+    };
     // switch view between zoom-out and close-up
     switchView = function switchView(which) {
       if (which === "zoom-out") {
@@ -259,7 +294,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         });
         linksG.selectAll("line.link").classed("thick", function (d) {
           return d.source.group === d.target.group;
-        }).style("opacity", "0").transition().duration(500).style("opacity", "1");
+        }).style("opacity", "0").transition("hide-nodes").duration(500).style("opacity", "1");
         return linksG.selectAll("line.thick").on("mouseover", showNames).on("mouseout", hideNames); // close-up
       } else {
         nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
@@ -326,29 +361,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       fontSize = parseFloat(text.style('font-size'));
       fontSize = Math.min(12, fontSize * (innerR * 1.6 / textWidth));
       return fontSize + "px";
-    };
-    ui.updateGraphicalElements = function () {
-      var link;
-      nodesG.selectAll("svg.variable").attr("x", function (d) {
-        return d.x - d.scale * nodeR;
-      }).attr("y", function (d) {
-        return d.y - d.scale * nodeR;
-      }).attr("width", function (d) {
-        return d.scale * 2 * nodeR;
-      }).attr("height", function (d) {
-        return d.scale * 2 * nodeR;
-      }).classed("selected", function (d) {
-        return d.selected;
-      });
-      return link = linksG.selectAll("line.link").attr("x1", function (d) {
-        return d.source.x;
-      }).attr("y1", function (d) {
-        return d.source.y;
-      }).attr("x2", function (d) {
-        return d.target.x;
-      }).attr("y2", function (d) {
-        return d.target.y;
-      });
     };
     // compute canvas size from data
     recalculateCanvas = function recalculateCanvas(data) {
@@ -1056,9 +1068,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     widget.search = function (phrase) {
       data.filter(phrase);
       pos.calculate(data);
-      ui.setData(data);
-      return ui.updateGraphicalElements();
+      return ui.setData(data);
     };
+    //    ui.updateGraphicalElements()
     return widget;
   };
 

@@ -125,12 +125,19 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   createGraphics = (data) ->
     node = nodesG.selectAll("svg.variable")
       .data(data.steps, (d) -> d.id)
+    node.transition("ui")
+      .duration(750)
+      .call(updateNodePositions)
     enter = node.enter().append("svg")
       .attr("class", (d) -> "variable #{d.type}")
       .attr("id", (d) -> "node_#{d.id}")
       .attr("viewBox", "0 0 #{2*innerR} #{2*innerR}")
       .attr("width", 2*nodeR)
       .attr("height", 2*nodeR)
+      .call(updateNodePositions)
+      .style("opacity", 0)
+      .transition("ui")
+      .style("opacity", 1)
     enter.each (d) ->
       element = d3.select(this)
       if d.type is 'object'
@@ -159,15 +166,49 @@ UI = (selection, nodeR = 25, innerR = 25) ->
         element.selectAll("image,rect")
           .attr("width", 2*innerR)
           .attr("height", 2*innerR)
-    node.exit().remove()
-    
-    link = linksG.selectAll("line.link")
-      .data(data.links, (d) -> "link_#{d.source.id}_#{d.target.id}")
-    link.enter().append("line")
-      .attr("class", "link")
-      .attr("stroke", "#ddd")
-    link.exit().remove()
+
+    node.exit()
+      .transition("ui")
+      .style("opacity", 0)
+      .remove()
+
+    d3.transition("ui").on "end", () ->
+      reveal = (links) ->
+        links.style("opacity", 0)
+          .transition("ui-links")
+          .delay(250)
+          .style("opacity", 1)
+      link = linksG.selectAll("line.link")
+        .data(data.links, (d) -> "link_#{d.source.id}_#{d.target.id}")
+        .call(updateLinkPositions)
+        .call(reveal)
+      link.enter().append("line")
+        .attr("class", "link")
+        .attr("stroke", "#ddd")
+        .call(updateLinkPositions)
+        .call(reveal)
+      link.exit().remove()
   # --- createGraphics
+
+  updateNodePositions = (nodes) ->
+    nodes.attr("x", (d) -> d.x - d.scale * nodeR)
+      .attr("y", (d) -> d.y - d.scale * nodeR)
+      .attr("width", (d) -> d.scale * 2*nodeR)
+      .attr("height", (d) -> d.scale * 2*nodeR)
+
+  updateLinkPositions = (links) ->
+    links.attr("x1", (d) -> d.source.x)
+      .attr("y1", (d) -> d.source.y)
+      .attr("x2", (d) -> d.target.x)
+      .attr("y2", (d) -> d.target.y)
+
+  ui.updateGraphicalElements = (nodes) ->
+    nodesG.selectAll("svg.variable")
+      .classed("selected", (d) -> d.selected)
+      .call(updateNodePositions)
+
+    link = linksG.selectAll("line.link")
+      .call(updateLinkPositions)
 
   # switch view between zoom-out and close-up
   switchView = (which) ->
@@ -181,7 +222,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       linksG.selectAll("line.link")
         .classed("thick", (d) -> d.source.group is d.target.group)
         .style("opacity", "0")
-        .transition()
+        .transition("hide-nodes")
         .duration(500)
         .style("opacity", "1")
       linksG.selectAll("line.thick")
@@ -238,20 +279,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     fontSize  = parseFloat(text.style('font-size'))
     fontSize  = Math.min(12, fontSize * (innerR*1.6/textWidth))
     "#{fontSize}px"
-
-  ui.updateGraphicalElements = () ->
-    nodesG.selectAll("svg.variable")
-      .attr("x", (d) -> d.x - d.scale * nodeR)
-      .attr("y", (d) -> d.y - d.scale * nodeR)
-      .attr("width", (d) -> d.scale * 2*nodeR)
-      .attr("height", (d) -> d.scale * 2*nodeR)
-      .classed("selected", (d) -> d.selected)
-
-    link = linksG.selectAll("line.link")
-      .attr("x1", (d) -> d.source.x)
-      .attr("y1", (d) -> d.source.y)
-      .attr("x2", (d) -> d.target.x)
-      .attr("y2", (d) -> d.target.y)
 
   # compute canvas size from data
   recalculateCanvas = (data) ->
@@ -744,7 +771,7 @@ Widget = (selection) ->
     data.filter(phrase)
     pos.calculate(data)
     ui.setData(data)
-    ui.updateGraphicalElements()
+#    ui.updateGraphicalElements()
 
   return widget
 
