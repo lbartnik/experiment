@@ -9,12 +9,16 @@
     var max = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
     var step = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1.1;
 
-    var callback, controls, current, keyDown, keys, minus, outer, plus, translateKey, zoom;
+    var callbacks, controls, current, keyDown, keys, minus, outer, plus, search, translateKey, zoom;
     outer = null;
     plus = null;
     minus = null;
+    search = null;
     current = 1;
-    callback = null;
+    callbacks = {
+      zoom: null,
+      search: null
+    };
     keys = {
       enter: null,
       up: null,
@@ -36,11 +40,22 @@
         class: "button",
         id: "minus"
       }).appendTo(outer).text("-");
+      search = $("<input>", {
+        id: "search",
+        class: "search",
+        type: "text"
+      }).appendTo(outer);
       plus.on('click', function () {
         return zoom(current / step);
       });
       minus.on('click', function () {
         return zoom(current * step);
+      });
+      search.on('keyup', function (e) {
+        if (typeof callbacks.search === "function") {
+          callbacks.search(this.value);
+        }
+        return e.stopPropagation();
       });
       zoomer = d3.zoom().scaleExtent([min, max]).on("zoom", function () {
         return zoom(d3.event.transform.k);
@@ -52,8 +67,8 @@
     };
     // --- configure events -----------------------------------------------
     controls.on = function (event, fn) {
-      if (event === 'zoom') {
-        callback = fn;
+      if (event === 'zoom' || event === 'search') {
+        callbacks[event] = fn;
       }
       if (event.substring(0, 3) === 'key') {
         return keys[event.substring(4)] = fn;
@@ -61,14 +76,8 @@
     };
     // --- zooming --------------------------------------------------------
     zoom = function zoom(k) {
-      k = Math.max(min, Math.min(max, k));
-      if (k === current) {
-        return;
-      }
-      current = k;
-      if (callback) {
-        return callback(k);
-      }
+      current = Math.max(min, Math.min(max, k));
+      return typeof callbacks.zoom === "function" ? callbacks.zoom(current) : void 0;
     };
     // --- keyboard -------------------------------------------------------
     keyDown = function keyDown(e) {

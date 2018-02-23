@@ -17,7 +17,8 @@ HTMLWidgets.widget({
 
     visvis.setOption('shiny', shiny);
     visvis.setSize(mainContainer.width(), mainContainer.height());
-    controls.on('zoom', visvis.zoom);
+    controls.on('zoom',      visvis.zoom);
+    controls.on('search',    visvis.search)
     controls.on('key:up',    visvis.selectParent);
     controls.on('key:down',  visvis.selectChild);
     controls.on('key:left',  visvis.selectSibling);

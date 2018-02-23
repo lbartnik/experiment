@@ -53,6 +53,12 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     });
   };
 
+  Array.prototype.remove = function (e) {
+    return this.filter(function (el) {
+      return el !== e;
+    });
+  };
+
   if (Math.sign === void 0) {
     sign = function sign(x) {
       if (x < 0) {
@@ -162,7 +168,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     var nodeR = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 25;
     var innerR = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 25;
 
-    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, zoom;
+    var canvas, createGraphics, data, hideNames, linksG, namesG, nodesG, outer, points, recalculateCanvas, resetCanvasSize, scaleText, showNames, sizes, switchView, ui, updateLinkPositions, updateNodePositions, zoom;
     outer = null;
     canvas = null;
     linksG = null;
@@ -192,11 +198,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       return namesG = canvas.append("g").attr("id", "names");
     };
     ui.setSize = function (width, height) {
+      var jOuter;
       sizes.ui.width = width;
       sizes.ui.height = height;
-      return $(outer.node()).css({
+      jOuter = $(outer.node());
+      return jOuter.css({
         width: width,
-        height: height
+        height: height - parseInt(jOuter.css("top"), 10)
       });
     };
     ui.setData = function (Data) {
@@ -208,15 +216,16 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
     // create all graphical elements on the canvas
     createGraphics = function createGraphics(data) {
-      var enter, link, node;
+      var enter, node;
       node = nodesG.selectAll("svg.variable").data(data.steps, function (d) {
         return d.id;
       });
+      node.transition("ui").duration(750).call(updateNodePositions);
       enter = node.enter().append("svg").attr("class", function (d) {
         return "variable " + d.type;
       }).attr("id", function (d) {
         return "node_" + d.id;
-      }).attr("viewBox", "0 0 " + 2 * innerR + " " + 2 * innerR).attr("width", 2 * nodeR).attr("height", 2 * nodeR);
+      }).attr("viewBox", "0 0 " + 2 * innerR + " " + 2 * innerR).attr("width", 2 * nodeR).attr("height", 2 * nodeR).call(updateNodePositions).style("opacity", 0).transition("ui").style("opacity", 1);
       enter.each(function (d) {
         var element, text;
         element = d3.select(this);
@@ -234,15 +243,49 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
           return element.selectAll("image,rect").attr("width", 2 * innerR).attr("height", 2 * innerR);
         }
       });
-      node.exit().remove();
-      link = linksG.selectAll("line.link").data(data.links, function (d) {
-        return "link_" + d.source.id + "_" + d.target.id;
+      node.exit().transition("ui").style("opacity", 0).remove();
+      return d3.transition("ui").on("end", function () {
+        var link, reveal;
+        reveal = function reveal(links) {
+          return links.style("opacity", 0).transition("ui-links").delay(250).style("opacity", 1);
+        };
+        link = linksG.selectAll("line.link").data(data.links, function (d) {
+          return "link_" + d.source.id + "_" + d.target.id;
+        }).call(updateLinkPositions).call(reveal);
+        link.enter().append("line").attr("class", "link").attr("stroke", "#ddd").call(updateLinkPositions).call(reveal);
+        return link.exit().remove();
       });
-      link.enter().append("line").attr("class", "link").attr("stroke", "#ddd");
-      return link.exit().remove();
     };
     // --- createGraphics
-
+    updateNodePositions = function updateNodePositions(nodes) {
+      return nodes.attr("x", function (d) {
+        return d.x - d.scale * nodeR;
+      }).attr("y", function (d) {
+        return d.y - d.scale * nodeR;
+      }).attr("width", function (d) {
+        return d.scale * 2 * nodeR;
+      }).attr("height", function (d) {
+        return d.scale * 2 * nodeR;
+      });
+    };
+    updateLinkPositions = function updateLinkPositions(links) {
+      return links.attr("x1", function (d) {
+        return d.source.x;
+      }).attr("y1", function (d) {
+        return d.source.y;
+      }).attr("x2", function (d) {
+        return d.target.x;
+      }).attr("y2", function (d) {
+        return d.target.y;
+      });
+    };
+    ui.updateGraphicalElements = function (nodes) {
+      var link;
+      nodesG.selectAll("svg.variable").classed("selected", function (d) {
+        return d.selected;
+      }).call(updateNodePositions);
+      return link = linksG.selectAll("line.link").call(updateLinkPositions);
+    };
     // switch view between zoom-out and close-up
     switchView = function switchView(which) {
       if (which === "zoom-out") {
@@ -251,7 +294,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         });
         linksG.selectAll("line.link").classed("thick", function (d) {
           return d.source.group === d.target.group;
-        }).style("opacity", "0").transition().duration(500).style("opacity", "1");
+        }).style("opacity", "0").transition("hide-nodes").duration(500).style("opacity", "1");
         return linksG.selectAll("line.thick").on("mouseover", showNames).on("mouseout", hideNames); // close-up
       } else {
         nodesG.selectAll(".variable").interrupt("hide-nodes").style("visibility", "visible").transition("show-nodes").duration(500).style("opacity", "1");
@@ -319,29 +362,6 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       fontSize = Math.min(12, fontSize * (innerR * 1.6 / textWidth));
       return fontSize + "px";
     };
-    ui.updateGraphicalElements = function () {
-      var link;
-      nodesG.selectAll("svg.variable").attr("x", function (d) {
-        return d.x - d.scale * nodeR;
-      }).attr("y", function (d) {
-        return d.y - d.scale * nodeR;
-      }).attr("width", function (d) {
-        return d.scale * 2 * nodeR;
-      }).attr("height", function (d) {
-        return d.scale * 2 * nodeR;
-      }).classed("selected", function (d) {
-        return d.selected;
-      });
-      return link = linksG.selectAll("line.link").attr("x1", function (d) {
-        return d.source.x;
-      }).attr("y1", function (d) {
-        return d.source.y;
-      }).attr("x2", function (d) {
-        return d.target.x;
-      }).attr("y2", function (d) {
-        return d.target.y;
-      });
-    };
     // compute canvas size from data
     recalculateCanvas = function recalculateCanvas(data) {
       var step, x, xMax, xMin, y, yMax, yMin;
@@ -377,8 +397,8 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       // new canvas dimensions
       sizes.canvas.width = Math.max(sizes.ui.width, xMax - xMin);
       sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin);
-      // sizes.canvas.* are updated an we can update nodes' coordinates
-      return data.centralize(sizes.canvas.width, sizes.canvas.height);
+      // sizes.canvas.* are updated and we can update nodes' coordinates
+      return data.center(sizes.canvas.width, sizes.canvas.height);
     };
     // canvas size is set independently, and canvas might need to be
     // scrolled within the outer div element
@@ -473,33 +493,60 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
   // --- UI ---------------------------------------------------------------
   Data = function Data(data) {
-    var centralize, childrenOf, counter, groupData, methods, parentOf, resetScale, selected, setupData, stratified;
+    var counter, dataObject, findRoot, head, setupData;
+    dataObject = function dataObject() {};
+    head = {
+      id: 'head',
+      expr: ""
+    };
     // pre-process the input data
     setupData = function setupData() {
-      var stepsMap;
-      data.resetScale();
+      var root, stepsMap;
+      // add head to the main data set
+      root = findRoot(data);
+      data.steps.push(head);
+      data.links.push({
+        source: head.id,
+        target: root.id
+      });
+      // copy over to dataObject
+      dataObject.steps = data.steps;
+      dataObject.links = data.links;
+      // make sure each node has the scale attribute
+      dataObject.resetScale();
       // pre-process nodes
-      data.steps.forEach(function (s) {
-        if (s.expr.constructor === Array) {
+      dataObject.steps.forEach(function (s) {
+        var ref;
+        if (((ref = s.expr) != null ? ref.constructor : void 0) === Array) {
           return s.expr = s.expr.join('\n');
         }
       });
       // replace target/source references in links with actual objects
-      stepsMap = mapNodes(data.steps);
-      return data.links.forEach(function (l) {
+      stepsMap = mapNodes(dataObject.steps);
+      return dataObject.links.forEach(function (l) {
         l.source = stepsMap.get(l.source);
         return l.target = stepsMap.get(l.target);
       });
     };
-    resetScale = function resetScale() {
-      return data.steps.forEach(function (s) {
+    findRoot = function findRoot(data) {
+      var linksSet;
+      linksSet = d3.set();
+      data.links.forEach(function (l) {
+        return linksSet.add(l.target);
+      });
+      return data.steps.filter(function (s) {
+        return !linksSet.has(s.id);
+      })[0];
+    };
+    dataObject.resetScale = function () {
+      return dataObject.steps.forEach(function (s) {
         return s.scale = 1;
       });
     };
-    stratified = function stratified() {
+    dataObject.stratified = function () {
       var parentsMap, stratify;
       parentsMap = d3.map();
-      data.links.forEach(function (l) {
+      dataObject.links.forEach(function (l) {
         return parentsMap.set(l.target.id, l.source.id);
       });
       stratify = d3.stratify().id(function (d) {
@@ -507,13 +554,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }).parentId(function (d) {
         return parentsMap.get(d.id);
       });
-      return stratify(data.steps);
+      return stratify(dataObject.steps);
     };
-    centralize = function centralize(width, height) {
+    dataObject.center = function (width, height) {
       var dx, dy, step, x, y;
       x = function () {
         var j, len, ref, results;
-        ref = data.steps;
+        ref = dataObject.steps;
         results = [];
         for (j = 0, len = ref.length; j < len; j++) {
           step = ref[j];
@@ -523,7 +570,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }();
       y = function () {
         var j, len, ref, results;
-        ref = data.steps;
+        ref = dataObject.steps;
         results = [];
         for (j = 0, len = ref.length; j < len; j++) {
           step = ref[j];
@@ -533,7 +580,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }();
       dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2;
       dy = y.min() - Math.max(height - (y.max() - y.min()), 0) / 2;
-      return data.steps.forEach(function (s) {
+      return dataObject.steps.forEach(function (s) {
         s.x -= dx;
         return s.y -= dy;
       });
@@ -546,9 +593,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       };
     };
     // assign nodes to groups based on the time threshold
-    groupData = function groupData(threshold) {
+    dataObject.groupData = function (threshold) {
       var _assignGroup, groupNo, s, stepsMap;
-      s = stratified();
+      s = dataObject.stratified();
       groupNo = counter();
       s.group = groupNo();
       _assignGroup = function assignGroup(parent) {
@@ -562,22 +609,22 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       };
       _assignGroup(s);
       stepsMap = d3.map();
-      data.steps.forEach(function (s) {
+      dataObject.steps.forEach(function (s) {
         return stepsMap.set(s.id, s);
       });
       return s.descendants().forEach(function (d) {
         return stepsMap.get(d.id).group = d.group;
       });
     };
-    // set node that is selected
-    selected = function selected(id) {
-      return data.steps.forEach(function (step) {
+    // --- set node that is selected ---
+    dataObject.selected = function (id) {
+      return dataObject.steps.forEach(function (step) {
         return step.selected = step.id === id;
       });
     };
-    parentOf = function parentOf(id) {
+    dataObject.parentOf = function (id) {
       var parent;
-      parent = data.links.filter(function (link) {
+      parent = dataObject.links.filter(function (link) {
         return link.target.id === id;
       });
       if (!parent.length) {
@@ -585,9 +632,9 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
       }
       return parent[0].source.id;
     };
-    childrenOf = function childrenOf(id) {
+    dataObject.childrenOf = function (id) {
       var children;
-      children = data.links.filter(function (link) {
+      children = dataObject.links.filter(function (link) {
         return link.source.id === id;
       });
       if (!children.length) {
@@ -599,20 +646,39 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return link.target.id;
       });
     };
-    // extend with methods
-    methods = {
-      resetScale: resetScale,
-      stratified: stratified,
-      centralize: centralize,
-      groupData: groupData,
-      selected: selected,
-      parentOf: parentOf,
-      childrenOf: childrenOf
+    // --- filtering ---
+    dataObject.filter = function (phrase) {
+      var links, steps;
+      // a copy of links
+      links = data.links.map(function (l) {
+        return _extends({}, l);
+      });
+      steps = data.steps.slice(0);
+      dataObject.steps = data.steps.filter(function (step) {
+        var childrenLinks, parentLink;
+        if (step === head) {
+          return true;
+        }
+        if (!step.name || step.name.match(phrase)) {
+          return true;
+        }
+        parentLink = links.filter(function (l) {
+          return l.target === step;
+        })[0];
+        childrenLinks = links.filter(function (l) {
+          return l.source === step;
+        });
+        childrenLinks.forEach(function (l) {
+          return l.source = parentLink.source;
+        });
+        links = links.remove(parentLink);
+        return false;
+      });
+      return dataObject.links = links;
     };
-    data = _extends({}, methods, data);
     // initialize the object
     setupData();
-    return data;
+    return dataObject;
   };
 
   // --- Data -------------------------------------------------------------
@@ -791,7 +857,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
     });
     initialize = function initialize() {
       var comment, initial;
-      outer.width(width).height(height).appendTo(selection);
+      outer.width(width).appendTo(selection).height(height - parseInt(outer.css("top")));
       if (step.type === "object") {
         outer.find(".image").remove();
         outer.find(".name").text(step.name);
@@ -959,6 +1025,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return Shiny.onInputChange("comment", comment);
       }
     };
+    // --- keyboard selection ---
     widget.selectParent = function () {
       if (!details) {
         return;
@@ -997,6 +1064,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
         return Shiny.onInputChange('done', 'done');
       }
     };
+    // --- search ---
+    widget.search = function (phrase) {
+      data.filter(phrase);
+      pos.calculate(data);
+      return ui.setData(data);
+    };
+    //    ui.updateGraphicalElements()
     return widget;
   };
 

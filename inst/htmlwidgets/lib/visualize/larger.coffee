@@ -9,6 +9,9 @@ Array::min = () ->
 Array::max = () ->
   @.reduce((a,b) -> Math.max(a, b))
 
+Array::remove = (e) ->
+  @filter (el) -> el isnt e
+
 if Math.sign is undefined
   sign = (x) -> if x < 0 then -1 else 1
 else
@@ -109,7 +112,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   ui.setSize = (width, height) ->
     sizes.ui.width  = width
     sizes.ui.height = height
-    $(outer.node()).css({width: width, height: height})
+    jOuter = $(outer.node())
+    jOuter.css({width: width, height: height - parseInt(jOuter.css("top"), 10)})
 
   ui.setData = (Data) ->
     data = Data
@@ -121,12 +125,19 @@ UI = (selection, nodeR = 25, innerR = 25) ->
   createGraphics = (data) ->
     node = nodesG.selectAll("svg.variable")
       .data(data.steps, (d) -> d.id)
+    node.transition("ui")
+      .duration(750)
+      .call(updateNodePositions)
     enter = node.enter().append("svg")
       .attr("class", (d) -> "variable #{d.type}")
       .attr("id", (d) -> "node_#{d.id}")
       .attr("viewBox", "0 0 #{2*innerR} #{2*innerR}")
       .attr("width", 2*nodeR)
       .attr("height", 2*nodeR)
+      .call(updateNodePositions)
+      .style("opacity", 0)
+      .transition("ui")
+      .style("opacity", 1)
     enter.each (d) ->
       element = d3.select(this)
       if d.type is 'object'
@@ -155,15 +166,49 @@ UI = (selection, nodeR = 25, innerR = 25) ->
         element.selectAll("image,rect")
           .attr("width", 2*innerR)
           .attr("height", 2*innerR)
-    node.exit().remove()
-    
-    link = linksG.selectAll("line.link")
-      .data(data.links, (d) -> "link_#{d.source.id}_#{d.target.id}")
-    link.enter().append("line")
-      .attr("class", "link")
-      .attr("stroke", "#ddd")
-    link.exit().remove()
+
+    node.exit()
+      .transition("ui")
+      .style("opacity", 0)
+      .remove()
+
+    d3.transition("ui").on "end", () ->
+      reveal = (links) ->
+        links.style("opacity", 0)
+          .transition("ui-links")
+          .delay(250)
+          .style("opacity", 1)
+      link = linksG.selectAll("line.link")
+        .data(data.links, (d) -> "link_#{d.source.id}_#{d.target.id}")
+        .call(updateLinkPositions)
+        .call(reveal)
+      link.enter().append("line")
+        .attr("class", "link")
+        .attr("stroke", "#ddd")
+        .call(updateLinkPositions)
+        .call(reveal)
+      link.exit().remove()
   # --- createGraphics
+
+  updateNodePositions = (nodes) ->
+    nodes.attr("x", (d) -> d.x - d.scale * nodeR)
+      .attr("y", (d) -> d.y - d.scale * nodeR)
+      .attr("width", (d) -> d.scale * 2*nodeR)
+      .attr("height", (d) -> d.scale * 2*nodeR)
+
+  updateLinkPositions = (links) ->
+    links.attr("x1", (d) -> d.source.x)
+      .attr("y1", (d) -> d.source.y)
+      .attr("x2", (d) -> d.target.x)
+      .attr("y2", (d) -> d.target.y)
+
+  ui.updateGraphicalElements = (nodes) ->
+    nodesG.selectAll("svg.variable")
+      .classed("selected", (d) -> d.selected)
+      .call(updateNodePositions)
+
+    link = linksG.selectAll("line.link")
+      .call(updateLinkPositions)
 
   # switch view between zoom-out and close-up
   switchView = (which) ->
@@ -177,7 +222,7 @@ UI = (selection, nodeR = 25, innerR = 25) ->
       linksG.selectAll("line.link")
         .classed("thick", (d) -> d.source.group is d.target.group)
         .style("opacity", "0")
-        .transition()
+        .transition("hide-nodes")
         .duration(500)
         .style("opacity", "1")
       linksG.selectAll("line.thick")
@@ -235,20 +280,6 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     fontSize  = Math.min(12, fontSize * (innerR*1.6/textWidth))
     "#{fontSize}px"
 
-  ui.updateGraphicalElements = () ->
-    nodesG.selectAll("svg.variable")
-      .attr("x", (d) -> d.x - d.scale * nodeR)
-      .attr("y", (d) -> d.y - d.scale * nodeR)
-      .attr("width", (d) -> d.scale * 2*nodeR)
-      .attr("height", (d) -> d.scale * 2*nodeR)
-      .classed("selected", (d) -> d.selected)
-
-    link = linksG.selectAll("line.link")
-      .attr("x1", (d) -> d.source.x)
-      .attr("y1", (d) -> d.source.y)
-      .attr("x2", (d) -> d.target.x)
-      .attr("y2", (d) -> d.target.y)
-
   # compute canvas size from data
   recalculateCanvas = (data) ->
     x = (step.x for step in data.steps)
@@ -264,8 +295,8 @@ UI = (selection, nodeR = 25, innerR = 25) ->
     # new canvas dimensions
     sizes.canvas.width  = Math.max(sizes.ui.width, xMax - xMin)
     sizes.canvas.height = Math.max(sizes.ui.height, yMax - yMin)
-    # sizes.canvas.* are updated an we can update nodes' coordinates
-    data.centralize(sizes.canvas.width, sizes.canvas.height)
+    # sizes.canvas.* are updated and we can update nodes' coordinates
+    data.center(sizes.canvas.width, sizes.canvas.height)
 
   # canvas size is set independently, and canvas might need to be
   # scrolled within the outer div element
@@ -327,38 +358,54 @@ UI = (selection, nodeR = 25, innerR = 25) ->
 
 Data = (data) ->
 
+  dataObject = () ->
+  head = { id: 'head', expr: "" }
+
   # pre-process the input data
   setupData = () ->
-    data.resetScale()
+    # add head to the main data set
+    root = findRoot(data)
+    data.steps.push head
+    data.links.push {source: head.id, target: root.id}
+    # copy over to dataObject
+    dataObject.steps = data.steps
+    dataObject.links = data.links
+    # make sure each node has the scale attribute
+    dataObject.resetScale()
     # pre-process nodes
-    data.steps.forEach (s) ->
-      if s.expr.constructor is Array
+    dataObject.steps.forEach (s) ->
+      if s.expr?.constructor is Array
         s.expr = s.expr.join('\n')
     # replace target/source references in links with actual objects
-    stepsMap = mapNodes(data.steps)
-    data.links.forEach (l) ->
+    stepsMap = mapNodes(dataObject.steps)
+    dataObject.links.forEach (l) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
 
-  resetScale = () ->
-    data.steps.forEach (s) ->
+  findRoot = (data) ->
+    linksSet = d3.set()
+    data.links.forEach (l) -> linksSet.add(l.target)
+    (data.steps.filter (s) -> not linksSet.has(s.id))[0]
+
+  dataObject.resetScale = () ->
+    dataObject.steps.forEach (s) ->
       s.scale = 1
 
-  stratified = () ->
+  dataObject.stratified = () ->
     parentsMap = d3.map()
-    data.links.forEach (l) ->
+    dataObject.links.forEach (l) ->
       parentsMap.set(l.target.id, l.source.id)
     stratify = d3.stratify()
       .id((d) -> d.id)
       .parentId((d) -> parentsMap.get(d.id))
-    stratify(data.steps)
+    stratify(dataObject.steps)
 
-  centralize = (width, height) ->
-    x = (step.x for step in data.steps)
-    y = (step.y for step in data.steps)
+  dataObject.center = (width, height) ->
+    x = (step.x for step in dataObject.steps)
+    y = (step.y for step in dataObject.steps)
     dx = x.min() - Math.max(width - (x.max() - x.min()), 0) / 2
     dy = y.min() - Math.max(height - (y.max() - y.min()), 0) / 2
-    data.steps.forEach (s) ->
+    dataObject.steps.forEach (s) ->
       s.x -= dx
       s.y -= dy
 
@@ -366,8 +413,8 @@ Data = (data) ->
     () -> start++
 
   # assign nodes to groups based on the time threshold
-  groupData = (threshold) ->
-    s = stratified()
+  dataObject.groupData = (threshold) ->
+    s = dataObject.stratified()
 
     groupNo = counter()
     s.group = groupNo()
@@ -380,39 +427,46 @@ Data = (data) ->
     assignGroup(s)
 
     stepsMap = d3.map()
-    data.steps.forEach (s) -> stepsMap.set(s.id, s)
+    dataObject.steps.forEach (s) -> stepsMap.set(s.id, s)
 
     s.descendants().forEach (d) ->
       stepsMap.get(d.id).group = d.group
 
-  # set node that is selected
-  selected = (id) ->
-    data.steps.forEach (step) -> step.selected = step.id is id
+  # --- set node that is selected ---
+  dataObject.selected = (id) ->
+    dataObject.steps.forEach (step) -> step.selected = step.id is id
 
-  parentOf = (id) ->
-    parent = data.links.filter (link) -> link.target.id is id
+  dataObject.parentOf = (id) ->
+    parent = dataObject.links.filter (link) -> link.target.id is id
     if not parent.length then return null
     parent[0].source.id
   
-  childrenOf = (id) ->
-    children = data.links.filter (link) -> link.source.id is id
+  dataObject.childrenOf = (id) ->
+    children = dataObject.links.filter (link) -> link.source.id is id
     if not children.length then return []
     (children.sort (a,b) -> a.x < b.x).map (link) -> link.target.id
 
-  # extend with methods
-  methods =
-    resetScale: resetScale
-    stratified: stratified
-    centralize: centralize
-    groupData:  groupData
-    selected:   selected
-    parentOf:   parentOf
-    childrenOf: childrenOf
-  data = {methods..., data...}
+  # --- filtering ---
+  dataObject.filter = (phrase) ->
+    # a copy of links
+    links = data.links.map (l) -> {l...}
+    steps = data.steps.slice 0
+
+    dataObject.steps = data.steps.filter (step) ->
+      if step is head then return true
+      if not step.name or step.name.match(phrase) then return true
+      
+      parentLink    = (links.filter (l) -> l.target is step)[0]
+      childrenLinks = links.filter (l) -> l.source is step
+      childrenLinks.forEach (l) -> l.source = parentLink.source
+      links = links.remove(parentLink)
+      return false
+
+    dataObject.links = links
 
   # initialize the object
   setupData()
-  return data
+  return dataObject
 
 # --- Data -------------------------------------------------------------
 
@@ -549,8 +603,8 @@ Details = (selection, data, id, width, height, commentCallback) ->
 
   initialize = () ->
     outer.width(width)
-      .height(height)
       .appendTo(selection)
+      .height(height - parseInt(outer.css("top")))
 
     if step.type is "object"
       outer.find(".image").remove()
@@ -687,6 +741,7 @@ Widget = (selection) ->
       Shiny.onInputChange("object_selected", id)
       Shiny.onInputChange("comment", comment)
 
+  # --- keyboard selection ---
   widget.selectParent = () ->
     if not details then return
     ui.clickOn(data.parentOf(details.getId()))
@@ -710,6 +765,13 @@ Widget = (selection) ->
     if not details then return
     if options.shiny
       Shiny.onInputChange('done', 'done')
+
+  # --- search ---
+  widget.search = (phrase) ->
+    data.filter(phrase)
+    pos.calculate(data)
+    ui.setData(data)
+#    ui.updateGraphicalElements()
 
   return widget
 

@@ -3,6 +3,14 @@ registerTests = (sampleData) ->
   suite  = Mocha.suite
   test   = Mocha.test
 
+  suite 'Idioms', () ->
+    test 'clone array and elements', () ->
+    x = [{x: 1}, {x: 2}]
+    y = x.map (e) -> {e...}
+    y[0].x = 3
+    assert.equal(x[0].x, 1)
+
+
   suite 'Data', () ->
     # helpers
     extractScale = (steps) -> step.scale for step in steps when step.scale isnt undefined
@@ -45,7 +53,30 @@ registerTests = (sampleData) ->
         sd.links.forEach (link) ->
           assert.hasAllKeys(link, ['target', 'source'])
           assert.includeDeepMembers(sd.steps, [link.target])
-  
+      
+      test 'filter elements', () ->
+        sd = Data(this.data)
+        sd.filter("x")
+        assert.lengthOf(sd.steps, 3) # two regular nodes + artificial head
+
+      test 'filter head', () ->
+        sd = Data(this.data)
+        sd.filter("y")
+        assert.lengthOf(sd.steps, 2) # two regular nodes + artificial head
+        assert.lengthOf(sd.links, 1)
+
+      test 'remove filter', () ->
+        sd = Data(this.data)
+        sd.filter("y")
+        sd.filter("")
+        assert.deepEqual(sd.steps, this.data.steps)
+        assert.deepEqual(sd.links, this.data.links)
+      
+      test 'd3.tree with filter', () ->
+        sd = Data(this.data)
+        sd.filter("x")
+        sd.stratified()
+
   return null
 
 window.registerTests = registerTests

@@ -12,4 +12,5 @@
     width: 15pt;
     text-align: center;
     cursor: pointer;
+    display: inline-block;
 }

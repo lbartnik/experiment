@@ -6,6 +6,7 @@
 
 .widget {
     position: relative;
+    top: 25pt;
     overflow: auto;
     width: 100%;
     height: 100%;
@@ -25,12 +26,14 @@
     stroke: black;
 }
 
-#nodes .object {
+#nodes .variable {
+    opacity: 1;
     fill: rgb(247, 247, 247);
     stroke: rgb(150, 150, 150);
 }
 
 #nodes .plot {
+    opacity: 1;
     fill: transparent;
     stroke: rgb(150, 150, 150);
     stroke-width: 2pt;
@@ -106,7 +109,7 @@
 
 #details-container {
     position: absolute;
-    top: 0px;
+    top: 25pt;
     right: 0px;
     border: 1px solid black;
     overflow: auto;
