@@ -55,3 +55,9 @@ is_knitr <- function () getOption("knitr.in.progress", FALSE)
 
 
 cat0 <- function (..., sep = '') cat(..., sep = sep)
+
+ccat <- function (..., sep = ' ', color = 'reset') {
+  f <- get(color, asNamespace("crayon"))
+  cat(f(paste(..., sep = sep)))
+}
+

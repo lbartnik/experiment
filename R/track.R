@@ -1,4 +1,10 @@
+# ----------------------------------------------------------------------
+#
 # Track user's interactions with R session.
+#
+# ----------------------------------------------------------------------
+
+
 
 #' Global state of the tracker.
 #'
@@ -31,10 +37,38 @@ initiate_state <- function ()
 }
 
 
+# ----------------------------------------------------------------------
+
+#' R session tracker.
+#'
+#' @description The `tracker` object controls whether and how the history
+#' of R session is written to the object repository. The `tracker` object
+#' can be used in two ways:
+#'  * printing the object shows the status of the tracker
+#'  * the dollar sign `$` gives access to a number of methods and objects
+#'    that control specific aspects of `tracker`'s behavior
+#'
+#' Methods and objects exposed via `tracker`:
+#'  * `tracker$on()` enables history tracking in the current R session
+#'  * `tracker$off()` disables history tracking (reverts the `on()` method)
+#'  * `tracker$attach(path)` attaches
+#'
 #' @export
 #' @rdname tracker
 tracker <- (function () {
-  structure(list(), class = "tracker")
+  # tools::Rd2txt(utils:::.getHelpFile("/usr/lib/R/library/base/help/Control"))
+
+  t <- list(
+    methods = list(
+#      on  = tracker_on,
+#      off = tracker_off,
+#      attach = tracker_attach
+    ),
+    state = internal_state
+  )
+
+  class(t) <- "tracker"
+  t
 })()
 
 
@@ -42,9 +76,31 @@ tracker <- (function () {
 #' @rdname tracker
 print.tracker <- function (x, ...)
 {
-  cat("printing tracker!\n")
+  cat("tracking:    ")
+  if (isTRUE(x$state$enabled)) ccat("yes", color = "green") else ccat("no", color = "red")
+  cat("\ngroup:       ")
+  ccat("x$state$last_commit$group", color = "green")
+  cat("\nlast commit: ")
+  ccat(x$state$last_commit$id, color = "yellow")
+  cat("\n")
 }
 
+
+#' @export
+`.DollarNames.tracker` <- function (x, pattern = '')
+{
+  grep(pattern, names(x[["methods"]]), value = TRUE)
+}
+
+#' @export
+`$.tracker` <- function (x, i = "")
+{
+  if (identical(i, "methods") || identical(i, "state")) return(x[[i]])
+  invisible(TRUE)
+}
+
+
+# ----------------------------------------------------------------------
 
 
 #' A callback run after each top-level expression is evaluated.
