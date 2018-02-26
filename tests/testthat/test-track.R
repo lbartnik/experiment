@@ -235,3 +235,10 @@ test_that("commit restored correctly", {
   expect_equal(session$iris2, iris)
   expect_s3_class(session$x, 'lm')
 })
+
+
+test_that("method printing", {
+  # verify that the output contains a fragment from the actual help page
+  expect_output(print(tracker$on),
+                "Tracker method tracker_on.*available as methods of the tracker object.*For full help page see .tracker_on.*")
+})
