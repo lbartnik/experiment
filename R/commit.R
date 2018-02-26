@@ -9,19 +9,20 @@
 #'
 #' @rdname commit
 #'
-commit <- function (contents, expression, parent, id, object_ids)
+commit <- function (contents, expression, parent, id, object_ids, group)
 {
   objects <- as.list(contents)
   stopifnot(all_named(objects))
 
   if (missing(parent)) parent <- NA_character_
   if (missing(id)) id <- NA_character_
+  if (missing(group)) group <- default_group()
 
   if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
   tags <- lapply(contents, function (x) list())
 
   structure(list(id = id, objects = objects, object_ids = object_ids, tags = tags,
-                 expr = expression, parent = parent),
+                 expr = expression, parent = parent, group = group),
             class = 'commit')
 }
 
@@ -132,6 +133,21 @@ commit_timestamp <- function (co, store)
   }, integer(1)))
   as.POSIXct(time, tz = 'UTC', origin = '1970-01-01')
 }
+
+
+commit_group <- function (name, comment) {
+  structure(list(id = NA_character_, name = name, comment = comment),
+            class = "commit_group")
+}
+
+
+default_group <- function () {
+  commit_group("default", "")
+}
+
+
+
+
 
 
 # TODO could be turned into a S3 method
