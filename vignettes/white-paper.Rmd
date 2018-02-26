@@ -39,6 +39,28 @@ extended abstract
 summary of sections that follow
 
 
+## Popular R Packages and Extensions
+
+these serve as a form of cache memory - file-system-based, if needed;
+but it is always a working memory, one that is intensely used, re-written
+and changed - it is the state of the current research project
+
+
+R Markdown - combine code, data and visualizations in order to produce
+a reproducible report; downside: a lot of effort, not so much in-line
+with interactive work typical for R
+
+archivist - store artifacts and use their checksums; preserves the
+actual data relevant to the decision (plot and data set itself), but
+does not preserve the relationships between objects, code and plots
+
+git - store and version code (and data); requires extra effort in order
+to verify whether the commit was in fact self-consistent, that is,
+whether data match the code; in retrospect, after a few weeks/months,
+if code does not reproduce data, there is always a suspicion the commit
+itself had been made erroneously
+
+
 # Working with Data
 
 loop: generate hypothesis, verify hypothesis
@@ -58,9 +80,15 @@ intelligible for themselves as well as for third parties; which include:
 peers (reviewers, scientific/academic papers), peers and superiors
 (business reports), general public (blog posts)
 
+we need to run all of our work against a cache memory, where the state
+of the research is written to; it can be (as mentioned) a document,
+an actual object repository or a bunch of files
+
 without an adequate effort, the number of artifacts (and their versions)
 can grow and push the complexity of the project beyond the level of
-manageability
+manageability; so the cache memory needs to be not only written to,
+but also constantly re-organized, to constitute a representation of
+what we know and think about the project
 
 it is when wrong versions of data sets or code are being delivered
 (sent over to production/implementation, reported to decision-makers,
@@ -85,23 +113,43 @@ data - report wrong results
 code - apply incorrect procedure to another data set; stop other from reproducing results
 
 
+# Problems
+
+these problems are human-specific, that is, they stem from out limited human
+nature; there are various ways to classify them, but not really a formal way
+to define them
 
 
-# Popular R Packages and Extensions
+identifying a single object - we know it's there, but we cannot find it;
+maybe it was a part of a report (a few rows from a larger table), or there
+is a plot that points to it (a table or a model), maybe there is come
+characteristic of a model (AIC, R^2) but we cannot find the model that
+actually matches it; in all of these cases being able to look at *all*
+objects produced so far during the research project will give the definite
+answer;
+here we can be saving time (if the object is somewhere) or the reproducibility
+itself (if for some reason we don't have it anymore)
 
-R Markdown - combine code, data and visualizations in order to produce
-a reproducible report; downside: a lot of effort, not so much in-line
-with interactive work typical for R
 
-archivist - store artifacts and use their checksums; preserves the
-actual data relevant to the decision (plot and data set itself), but
-does not preserve the relationships between objects, code and plots
+verifying results so far - building a solution for a data-related problem
+sometimes requires a number of iterations where various models (structure=formula
+and kind lm vs. glm vs. tree) are generated, verified and finally compared;
+those models need to be stored somewhere, be it RData files, RMarkdown document
+or some other form of cache/storage;
+because keeping record of all of those artifact can be confusing (?how? which
+model did I write down, which are still in R's memory?) and introduce "a lot"
+of extra overhead, we tend to limit what we write down only what we think will
+be relevant in the end; having an intelligent cache that records everything
+and then lets us pick and choose what we want to see and compare can be time-saving;
+here we save time, most definitely, but also reduce the likelihood of errors
+of omission, e.g. when part of the work disappears from the final report
+because the user couldn't find it or forgot where it was stored
 
-git - store and version code (and data); requires extra effort in order
-to verify whether the commit was in fact self-consistent, that is,
-whether data match the code; in retrospect, after a few weeks/months,
-if code does not reproduce data, there is always a suspicion the commit
-itself had been made erroneously
+
+looking at the big picture - what have we learned so far, what do we think
+and what do we know about the research project; what do we know about the
+data, how do we want to approach the remainder of the work
+
 
 
 # Repository - Model
@@ -121,13 +169,61 @@ relationships between artifacts in the repository
 
 
 
-# Search
+# Repository vs. Problems
+
+## Search for a Single Object
 
 examples of questions that need to be answered and what kind of queries
-return the requested information
+return the requested information; a single object, a plot related to an
+object, etc.
+
+artifacts stored in R's global environment under the name of `m`
+
+```{r eval=FALSE}
+search(objects, named("m"))
+```
 
 
-# Browser
+artifacts that match some specific contents
+
+```{r eval=FALSE}
+search(objects, has_names("cylinder", "diameter"), has_rows(c(1, 5.5), c(10, 12.3)))
+```
+
+
+
+
+## Search for a Group of Objects
+
+objects related to some shared source - e.g. various models derived from
+the same original data set (directly or via other ETL-ed data sets); e.g.
+inheriting from a given class, etc.
+
+
+linear models built from input
+
+```{r eval=FALSE}
+search(objects, inherits("lm"), derived("input"))
+```
+
+
+any model derived from this specific data set
+
+```{r eval=FALSE}
+search(objects, is_model, derived(iris))
+```
+
+
+any model derived directly from this data set (no ETL expressions
+that produce intermediate data set, unless they are a part of the
+expression that produced that given model)
+
+```{r eval=FALSE}
+search(objects, inherits("lm"), derived(iris, direct = TRUE))
+```
+
+
+## Overview in Browser
 
 when exploring (as opposed to "exploiting") the "search space", browser
 can help build a high-level "map" of work done so far, various branches
@@ -140,3 +236,15 @@ himself (at a later time) or to his collaborators
 
 
 # Summary
+
+
+
+# References
+
+ * https://leankit.com/learn/agile/agile-software-development/
+ * https://www.jvcasillas.com/post/2015-05-18_data_pipelines/
+ * https://drsimonj.svbtle.com/a-tidy-model-pipeline-with-twidlr-and-broom
+ * https://www.rstudio.com/resources/webinars/pipelines-for-data-analysis-in-r/
+ * https://rstudio-pubs-static.s3.amazonaws.com/227736_57d977300b254865b95c256860d27209.html
+ * https://cran.r-project.org/web/packages/pipeliner/README.html
+ 
