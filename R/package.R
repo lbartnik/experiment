@@ -9,5 +9,5 @@ NULL
 
 .onUnload <- function (libpath)
 {
-  tracking_off()
+  tracker_off()
 }

@@ -54,6 +54,6 @@ given \code{path}.
 \code{reattach_to_store} makes \code{store} the current object
 store and determines which \code{commit} present in that store should
 become the current \emph{parent commit} (in \emph{git} known as \code{HEAD}). It
-is used only in \link{tracking_on} but it is separate from it for
+is used only in \link{tracker_on} but it is separate from it for
 testing purposes.
 }

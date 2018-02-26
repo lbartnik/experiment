@@ -23,7 +23,7 @@ parameters of the global \code{internal_state} object. By default it:
 \itemize{
 \item creates an anonymous \link[storage:object_store]{storage::object_store} which is removed
 when R session exits
-\item does not turn tracking on (see \link{tracking_on})
+\item does not turn tracking on (see \link{tracker_on})
 \item creates a "fake" parent commit which can become the root of a
 new history graph
 }

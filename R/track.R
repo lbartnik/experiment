@@ -22,7 +22,7 @@ internal_state <- new.env()
 #' parameters of the global `internal_state` object. By default it:
 #' * creates an anonymous [storage::object_store] which is removed
 #'   when R session exits
-#' * does not turn tracking on (see [tracking_on])
+#' * does not turn tracking on (see [tracker_on])
 #' * creates a "fake" parent commit which can become the root of a
 #'   new history graph
 #'
@@ -38,6 +38,104 @@ initiate_state <- function ()
 
 
 # ----------------------------------------------------------------------
+
+
+#' @rdname tracking
+#' @name tracker_attach
+#'
+#' @title Control object tracking in your R session.
+#'
+#' @description `tracker_on`, `tracker_off` and `tracker_attach` are
+#' also available as methods of the [tracker] object. `tracker_on` turns
+#' the tracking mode on, which is signaled by a new prompt, `[tracked] > `.
+#' `tracker_off` reverses that and turns the tracking mode off. They both
+#' need to be preceeded by a call to `tracker_attach` which controls with
+#' file-system object store (see: [storage::object_store]) is used for
+#' persistent storage.
+#'
+#' @details `tracker_attach` attaches to an [storage::object_store]) if
+#' one can be found under `path`. Otherwise, if `path` points to a
+#' non-existing directory whose parent directory does exist, then the
+#' top-level directory in `path` is created with a new object store in it.
+#'
+#' When an existing object store is found under `path` and it is not
+#' empty, that is, it contains artifacts and [commit]s from previous R
+#' sessions, the current R session is set as a continuation of one of those
+#' `commit`s. However, if the current *global environment* (see
+#' [globalenv]) is not empty, it needs to be replaced or merged with one
+#' of the `commit`s found in the object store. To that extent, the
+#' `.global` argument is consulted. It can take one of the following
+#' values:
+#' * `"ask"` - the default, shows the user a dialog with the three other
+#'   choices
+#' * `"abort"` - aborts the tracking if `globalenv` is not empty
+#' * `"replace"` - replace the contents of `globalenv` with the chosen
+#'   commit
+#' * `"merge"` - merge the contents of `globalenv` with the chosen commit;
+#'   this creates a new commit in the process, which is immediately written
+#'   back to the object store
+#'
+#' When tracking is enabled a task callback installed via
+#' [addTaskCallback]. It is used to examine the contents of the
+#' *global environment*  each time an R command is successfully executed.
+#'
+#'
+#' @param path Where to locate the object store (see [storage::object_store]).
+#' @param .global How to handle [globalenv] when it is not empty.
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' # if no object store exists, a new one is created under the
+#' # default "project-store" directory located in the current
+#' # working directory
+#' tracker_attach()
+#'
+#' # as above, but the new directory is "my-store"
+#' tracker_attach("my-store")
+#' }
+#'
+tracker_attach <- function (path = file.path(getwd(), "project-store"), .global = "abort")
+{
+  # first check if there is already an object store under the given path,
+  # and either choose the existing one or prepare a temporary stash
+  store <- prepare_object_store(path)
+
+  reattach_to_store(internal_state, store, globalenv(), .global)
+}
+
+
+#' @rdname tracking
+#' @export
+tracker_on <- function ()
+{
+  # make sure the callback is removed
+  if (!is.na(internal_state$task_callback_id)) {
+    removeTaskCallback(internal_state$task_callback_id)
+  }
+
+  internal_state$task_callback_id <- addTaskCallback(task_callback)
+  options(prompt = "[tracked] > ")
+}
+
+
+#' @rdname tracking
+#' @export
+tracker_off <- function ()
+{
+  if (!is.na(internal_state$task_callback_id)) {
+    removeTaskCallback(internal_state$task_callback_id)
+    internal_state$task_callback_id <- NA
+  }
+
+  if (!is.na(internal_state$old_prompt)) {
+    options(prompt = internal_state$old_prompt)
+    internal_state$old_prompt <- NA_character_
+  }
+
+  internal_state$stash <- create_stash()
+}
+
 
 #' R session tracker.
 #'
@@ -60,9 +158,9 @@ tracker <- (function () {
 
   t <- list(
     methods = list(
-#      on  = tracker_on,
-#      off = tracker_off,
-#      attach = tracker_attach
+      on     = tracker_on,
+      off    = tracker_off,
+      attach = tracker_attach
     ),
     state = internal_state
   )
@@ -95,8 +193,9 @@ print.tracker <- function (x, ...)
 #' @export
 `$.tracker` <- function (x, i = "")
 {
+  stopifnot(is.character(i))
   if (identical(i, "methods") || identical(i, "state")) return(x[[i]])
-  invisible(TRUE)
+  if (!is.null(k <- match(i, names(x$methods), nomatch = NULL))) return(x$methods[[i]])
 }
 
 
@@ -276,90 +375,6 @@ restore_commit <- function (state, id, env)
 
 
 
-#' @rdname tracking
-#' @title Turn tracking on or off
-#'
-#' @description `tracking_on` turns the tracking mode on, which is
-#' signaled by a new prompt, `[tracked] > `. It also attaches to an
-#' object store (see [storage::object_store]), if one can be found under
-#' `path`. If no object store can be found, and `path` points to a
-#' non-existing directory whose parent directory does exist, then that
-#' top-level directory is created and a new object store is created in
-#' it.
-#'
-#' @details When an existing object store is found, and it is not empty,
-#' that is, it contains artifacts and [commit]s from previous R sessions,
-#' the current R session is set as a continuation of one of those
-#' `commit`s. However, if the current *global environment* (see
-#' [globalenv]) is not empty, it needs to be replaced or merged with the
-#' chosen `commit`. To that extent, the `.global` argument is consulted.
-#' It can take one of the following values:
-#' * `"abort"` - the default, aborts the tracking of `globalenv` is not
-#'   empty
-#' * `"replace"` - replace the contents of `globalenv` with the chosen
-#'   commit
-#' * `"merge"` - merge the contents of `globalenv` with the chosen commit;
-#'   this creates a new commit in the process, which is immediately written
-#'   back to the object store
-#'
-#' When tracking is enabled a task callback installed via
-#' [addTaskCallback]. It is used to examine the contents of the
-#' *global environment*  each time an R command is successfully executed.
-#'
-#'
-#' @param path Where to locate the object store (see [storage::object_store]).
-#' @param .global How to handle [globalenv] when it is not empty.
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' # if no object store exists, a new one is created under the
-#' # default "project-store" directory located in the current
-#' # working directory
-#' tracking_on()
-#'
-#' # as above, but the new directory is "my-store"
-#' tracking_on("my-store")
-#' }
-#'
-tracking_on <- function (path = file.path(getwd(), "project-store"), .global = "abort")
-{
-  # first check if there is already an object store under the given path,
-  # and either choose the existing one or prepare a temporary stash
-  store <- prepare_object_store(path)
-
-  reattach_to_store(internal_state, store, globalenv(), .global)
-
-  # make sure the callback is removed
-  if (!is.na(internal_state$task_callback_id)) {
-    removeTaskCallback(internal_state$task_callback_id)
-  }
-
-  internal_state$task_callback_id <- addTaskCallback(task_callback)
-  options(prompt = "[tracked] > ")
-}
-
-
-#' @rdname tracking
-#' @description `tracking_off` reverses the effect of `tracking_on`. It
-#' removes the callback and brings back the original value of that R
-#' session's prompt.
-#'
-#' @export
-#'
-tracking_off <- function () {
-  if (!is.na(internal_state$task_callback_id)) {
-    removeTaskCallback(internal_state$task_callback_id)
-    internal_state$task_callback_id <- NA
-  }
-
-  if (!is.na(internal_state$old_prompt)) {
-    options(prompt = internal_state$old_prompt)
-    internal_state$old_prompt <- NA_character_
-  }
-
-  internal_state$stash <- create_stash()
-}
 
 
 # --- object store -----------------------------------------------------
@@ -465,7 +480,7 @@ choose_store <- function (path, .create = FALSE)
 #' @description `reattach_to_store` makes `store` the current object
 #' store and determines which `commit` present in that store should
 #' become the current *parent commit* (in *git* known as `HEAD`). It
-#' is used only in [tracking_on] but it is separate from it for
+#' is used only in [tracker_on] but it is separate from it for
 #' testing purposes.
 #'
 #' @param state The [internal_state] object or a testing mock object.
