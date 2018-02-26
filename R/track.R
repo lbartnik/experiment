@@ -154,13 +154,18 @@ tracker_off <- function ()
 #' @export
 #' @rdname tracker
 tracker <- (function () {
-  # tools::Rd2txt(utils:::.getHelpFile("/usr/lib/R/library/base/help/Control"))
+
+  wrap <- function (f) {
+    name <- deparse(substitute(f))
+    attributes(f) <- list(name = name, class = "tracker_method")
+    f
+  }
 
   t <- list(
     methods = list(
-      on     = tracker_on,
-      off    = tracker_off,
-      attach = tracker_attach
+      on     = wrap(tracker_on),
+      off    = wrap(tracker_off),
+      attach = wrap(tracker_attach)
     ),
     state = internal_state
   )
@@ -190,12 +195,33 @@ print.tracker <- function (x, ...)
   grep(pattern, names(x[["methods"]]), value = TRUE)
 }
 
+
 #' @export
 `$.tracker` <- function (x, i = "")
 {
   stopifnot(is.character(i))
   if (identical(i, "methods") || identical(i, "state")) return(x[[i]])
   if (!is.null(k <- match(i, names(x$methods), nomatch = NULL))) return(x$methods[[i]])
+}
+
+
+#' @export
+print.tracker_method <- function (x, ...)
+{
+  name <- attr(x, "name")
+  cat("Tracker method ")
+  ccat(name, color = "green")
+  cat(".\n\n")
+
+  try({
+    con <- textConnection("help", "w")
+    on.exit(close(con))
+    tools::Rd2txt(utils:::.getHelpFile(help(name)), out = con)
+
+    cat(paste(help[1:10], collapse = '\n'))
+  })
+
+  cat0("\n\n...\nFor full help page see ?", name, "\n")
 }
 
 
