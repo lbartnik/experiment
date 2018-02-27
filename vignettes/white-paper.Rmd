@@ -17,7 +17,7 @@ example, without some form of organizing principle, a body of work built
 over days or weeks can become unmanageable and thus thwart, or at least
 profoundly slow down, any further progress. Similarily, sharing source
 results with third parties, a foundational principle of _reproducible
-science_[^1], can be rendered virtually impossible if the relevant data
+science_[^reproducible-research], can be rendered virtually impossible if the relevant data
 set or code cannot be successfully identified. There is already a
 multitude of means and aids instrumental in achieving this goal, and
 users of R and other software packages tend to find their own, personal
@@ -34,9 +34,93 @@ tools and augment their work only when necessary.
 
 # Introduction
 
+R comes with a very straighforward computing model: the interactive R
+session which holds a number of data objects and code. Data objects
+are processed in an interative manner, leading from the original data
+set, to intermediate data objects and plots, to final deliverables,
+which typically are reports and models, predictive or descriptive.
+The R programming language and runtime are designed to streamline this
+process, and so are numerous R extension packages. There is also a variety
+of external tools and practices external to R meant to streamline data
+analysis in R, which itself consists of tasks that fall into one of the
+following categories.
+
+The first category is producing and keeping track of the research
+artifacts: data, code, models, plots, etc.
+
+saving data and code in the filesystem; git; `archivist`; other DBs
+
+
+The second category has to do with turning the research artifacts into
+deliverables: reports and models.
+
+`knitr`, `rmarkdown`, other doc formats; RData with the actual model
+
+
+
+The third category is organizing research artifacts and deliverables
+into _reproducible research_.
+
+again, `knitr`; `archivist`
+
+
+
+
+R combined with CRAN, its enormous library of extension packages, are
+an amazing tool for data analysis and research. Among them, there are
+a number of packages whose purpose is simplifying the general task of
+scientific research and organizing the knowledge collected in that
+research. The largest group of those implements certain aspects of
+_literate programming_, for example `knitr`, `rmarkdown`, `markdown`,
+the `Sweave` function in the base `utils`. Other packages implement
+format conversion (`pander`), object caching (`archivist` and `R.cache`)
+or package caching (`packrat`, `checkpoint`, `miniCRAN`). More categories
+and packages are listed in the _Reproducible Research_ view[^rr-view] on
+CRAN.
+
+[^rr-view]: https://CRAN.R-project.org/view=ReproducibleResearch
+
+Even though these package simplify a great deal of tasks caried out
+typically in R, they do not remove the overhead typical when working
+with R entirely.
+
+there is still a broad spectrum of work required in
+order to conduct successful research. These include 
+
+
+
+is done and knowledge 
+
+
+object browser - repository search - repository of objects - R session state - history of R session state 
+
+
+
+
+
 extended abstract
 
 summary of sections that follow
+
+
+
+About this course: This course focuses on the concepts and tools behind
+reporting modern data analyses in a reproducible manner. Reproducible
+research is the idea that data analyses, and more generally, scientific
+claims, are published with their data and software code so that others
+may verify the findings and build upon them.  The need for reproducibility
+is increasing dramatically as data analyses become more complex,
+involving larger datasets and more sophisticated computations.
+Reproducibility allows for people to focus on the actual content of a
+data analysis, rather than on superficial details reported in a written
+summary. In addition, reproducibility makes an analysis more useful to
+others because the data and code that actually conducted the analysis
+are available. This course will focus on literate statistical analysis
+tools which allow one to publish data analyses in a single document
+that allows others to easily execute the same analysis to obtain the
+same results.
+
+
 
 
 ## Popular R Packages and Extensions
@@ -234,6 +318,11 @@ subsets of the artifact tree and enrich the informations available to
 himself (at a later time) or to his collaborators
 
 
+also, when the id of the object is reported, and access to the object
+store (repository) is granted, other researchers can investigate the
+actual steps that led to creation of the said final result (object)
+
+
 
 # Summary
 
@@ -247,4 +336,7 @@ himself (at a later time) or to his collaborators
  * https://www.rstudio.com/resources/webinars/pipelines-for-data-analysis-in-r/
  * https://rstudio-pubs-static.s3.amazonaws.com/227736_57d977300b254865b95c256860d27209.html
  * https://cran.r-project.org/web/packages/pipeliner/README.html
- 
+ * https://cran.r-project.org/web/views/ReproducibleResearch.html
+ * https://www.coursera.org/learn/reproducible-research
+ * https://en.wikipedia.org/wiki/Reproducibility
+ * https://www.r-bloggers.com/what-is-reproducible-research/
