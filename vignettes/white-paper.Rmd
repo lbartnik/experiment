@@ -35,70 +35,69 @@ tools and augment their work only when necessary.
 # Introduction
 
 R comes with a very straighforward computing model: the interactive R
-session which holds a number of data objects and code. Data objects
-are processed in an interative manner, leading from the original data
-set, to intermediate data objects and plots, to final deliverables,
-which typically are reports and models, predictive or descriptive.
-The R programming language and runtime are designed to streamline this
-process, and so are numerous R extension packages. There is also a variety
-of external tools and practices external to R meant to streamline data
-analysis in R, which itself consists of tasks that fall into one of the
-following categories.
+session holds a number of data and code objects and its contents are
+itertively changed according to commands issued by the user. This is how
+the original data are transformed into intermediate data objects and
+plots, and then into final deliverables, which typically are reports
+and models. The R programming language and runtime are designed
+specifically to streamline this process, and so are numerous R extension
+packages available on CRAN and elsewhere. There is also a variety
+of tools external to R which combined constitute a _data science ecosystem_.
+The process of data analysis in this ecosystem can be characterized by
+the following three categories of activities and specific tools.
 
-The first category is producing and keeping track of the research
-artifacts: data, code, models, plots, etc.
+The first category encompasses means of maintaining the state of the project,
+that is, numerous artifacts like data, code, models, plots, which is
+different from the state of the current iteration held by the R session.
+Since this task bears some similarity to software developments, the
+available tools and conventions resemble those known from the world of
+software development. Typically, the state of the projects is represented
+in the filesystem and is organized and managed by:
+conventions like hierarchies of files in the filesystem (e.g. projects
+in `RStudio`), open and simple file formats (e.g. `Markdown` and `HTML`,
+`CSV` and `RData`), or tools like `git` and DBMSes.
 
-saving data and code in the filesystem; git; `archivist`; other DBs
 
 
 The second category has to do with turning the research artifacts into
 deliverables: reports and models.
-
 `knitr`, `rmarkdown`, other doc formats; RData with the actual model
 
-
-
 The third category is organizing research artifacts and deliverables
-into _reproducible research_.
+into _reproducible research_; again, `knitr`; also `archivist`
 
-again, `knitr`; `archivist`
-
-
-
-
-R combined with CRAN, its enormous library of extension packages, are
-an amazing tool for data analysis and research. Among them, there are
-a number of packages whose purpose is simplifying the general task of
-scientific research and organizing the knowledge collected in that
-research. The largest group of those implements certain aspects of
+Categories two and three:
+The largest group of those implements certain aspects of
 _literate programming_, for example `knitr`, `rmarkdown`, `markdown`,
-the `Sweave` function in the base `utils`. Other packages implement
-format conversion (`pander`), object caching (`archivist` and `R.cache`)
-or package caching (`packrat`, `checkpoint`, `miniCRAN`). More categories
+the `Sweave` function in the base `utils`.
+package caching (`packrat`, `checkpoint`, `miniCRAN`). More categories
 and packages are listed in the _Reproducible Research_ view[^rr-view] on
 CRAN.
 
 [^rr-view]: https://CRAN.R-project.org/view=ReproducibleResearch
 
-Even though these package simplify a great deal of tasks caried out
-typically in R, they do not remove the overhead typical when working
-with R entirely.
-
-there is still a broad spectrum of work required in
-order to conduct successful research. These include 
-
-
-
-is done and knowledge 
-
-
-object browser - repository search - repository of objects - R session state - history of R session state 
+maybe to section 2 (popular packages)?
 
 
 
 
+All of these tools aim at reducing the overhead of conducting research
+in R which is imminent in organizing and versioning the artifacts and
+reports, documenting the process and making it reproducible. Although
+over the years that overhead has been reduced to a large extent certain
+aspects remain present. And since it is typical to human nature to skip
+or avoid repetitive tasks, especially when they slow down the perceived
+progress (thus, overhead), that leads to certain errors of ommission and
+errors of commission. Examples are: mixing up the code and data (don't
+know which code produces data), losing access to artifacts (don't know
+where they are), entirely forgetting about artifacts (don't know that
+don't know where something is).
 
-extended abstract
+
+This paper describes a proposed extension to the current toolset: an
+interactive history of R session (not only commands) built on top of
+a repository of R objects.
+
 
 summary of sections that follow
 
@@ -198,6 +197,12 @@ code - apply incorrect procedure to another data set; stop other from reproducin
 
 
 # Problems
+
+data and code run out-of-sync; having the repo amends that as data and code
+for any given moment in history can be uniquely identified and retrieved from
+the repo and relationships between artifacts written there; NICE!
+
+
 
 these problems are human-specific, that is, they stem from out limited human
 nature; there are various ways to classify them, but not really a formal way
