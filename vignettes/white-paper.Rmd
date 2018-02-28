@@ -60,11 +60,25 @@ in `RStudio`), open and simple file formats (e.g. `Markdown` and `HTML`,
 
 
 The second category has to do with turning the research artifacts into
-deliverables: reports and models.
+deliverables: reports and models. Gauging the level of details reported
+is a task in itself, which leads to various versions of the same report
+aimed at differing audiences: for business stakeholders, for other
+researchers, for yourself to come back to an interrupted research project
+at a later time.
 `knitr`, `rmarkdown`, other doc formats; RData with the actual model
 
+
 The third category is organizing research artifacts and deliverables
-into _reproducible research_; again, `knitr`; also `archivist`
+into _reproducible research_ which means two things:
+
+  1. consistent results, that is, code and data match each other and
+     can be re-created
+  2. granting access to source data and code to others
+  
+again, `knitr`; also `archivist`.
+
+
+
 
 Categories two and three:
 The largest group of those implements certain aspects of
@@ -95,15 +109,42 @@ don't know where something is).
 
 
 This paper describes a proposed extension to the current toolset: an
-interactive history of R session (not only commands) built on top of
-a repository of R objects.
+implementation of history of multiple R sessions as executed during a
+research project. This particular implementation differs from the history
+mechanism already present in R in that it collects not only expressions
+(commands) issued by the user, but also:
+
+  * the artifacts (data, functions, plots) these expressions produce
+    with the ability to restore the state of R session at any point in
+    the history
+  * points in which a historical state is loaded into R session, which
+    leads to "branches" in the history that form a history "tree", rather
+    than the linear model of expressions present in R
+  * the relationships between those artifacts: object/plot `y` is produced
+    by function `f` which takes object `x` as its input
+
+The history recorded in this way can be browsed in a dedicated graphical
+tool implemented as a Shiny-based widget, or via a comprehensive
+command-line R API. The Shiny-based browser is also capable of turning
+a number of selected objects (data, code/functions and plots) into a
+RMarkdown report.
+
+The introductory section is followed by Section 2 with a short survey of
+software packages typically considered to be a part of toolsets for data
+science or reproducible research. Section 3 describes a general model of
+conducting data-related research in R, followed by Section 4 with a list
+of problems and challenges inherent in such research process. Section 5
+introduces a commit-based model of a history or objects generated in an
+interactive R session. Section 6 shows how such history can be an answer
+to problems and challenges described in Section 4. Finally Section 7
+presents further examples of the interactive, Shiny-based history browser
+and the programmatic search API. The paper closes with a brief discussion
+of the further work and outlook of the project.
 
 
-summary of sections that follow
 
 
-
-About this course: This course focuses on the concepts and tools behind
+From Coursera, "about this course": This course focuses on the concepts and tools behind
 reporting modern data analyses in a reproducible manner. Reproducible
 research is the idea that data analyses, and more generally, scientific
 claims, are published with their data and software code so that others
@@ -122,7 +163,11 @@ same results.
 
 
 
-## Popular R Packages and Extensions
+# Popular R Packages and Extensions
+
+three categories: literate programming, object cache, software development
+tools
+
 
 these serve as a form of cache memory - file-system-based, if needed;
 but it is always a working memory, one that is intensely used, re-written
@@ -242,6 +287,9 @@ data, how do we want to approach the remainder of the work
 
 
 # Repository - Model
+
+ built
+on top of a repository of R objects
 
 store data, code and plots, record state of R session after each command,
 together with all relevant details (e.g. packages and their versions, the
