@@ -191,16 +191,97 @@ itself had been made erroneously
 
 # Working with Data
 
+Introduce the broad term of data science here, as this is what we will
+refer to.
+
+
+On some general level conducting research in R can be viewed as a series
+of iterations in which a hypothesis is first formulated and then verified.
+The process starts with stating the expected final hypothesis, the
+end-goal of the research, typically expected to take the form of a
+numerical model or a report paper. This is followed by a series of
+attempts at getting closer to that final model or report by defining
+and then verifying a series of intermediate hypotheses. In practice,
+these hypotheses tend to take the form of informed guesses or open
+questions and are explored and verified through a complex and often
+messy process involing data summaries (aggregates), plots and also
+definining and evaluating various numerical models. In a sense, this
+kind of research can be likened to a search in the space of models where
+the objective function is based on some form of model error. What is
+important, working on each intermediate hypotheses results in creation
+of numerous artifacts: data sets and summaries, plots, models, partial
+reports, and other types of findings.
+
+Such process is often of high intensity, with numerous alternative
+questions that can be asked of the data, which potentially lead to
+differing directions of research. For that reason, documenting the work
+is both important and difficult. It is important because after exhausting
+one direction of research, for the sake of revealing important insights,
+one often decides to go back to the moment of fork and explore another
+direction which at the time was less compelling. Thus, having that fork
+well documented both in terms of data and code proves to be crucial.
+On the other hand, documenting that kind of work is difficult, because
+of the immense number of artifacts that need to be accounted for and
+often, due to similarities, are confused for one another. Picking up a
+trail left aside only temporarily can lead to a lot of wasted effort if
+said trail was not identified correctly, and thus ensued in exploring
+the wrong data or model.
+
+This process, to some extent, resembles software development, and it
+indeed includes software development as its part. The loop in which
+hypotheses are formulated and verified bears some similarity to so-called
+_"dev loop"_[^dev-loop] of writing actual code the test code, compiling
+and verifying the correctness in a test run. Thus, bugs from the field of
+software development have their counterpart in the field of data-related
+research which take the form of errors in both code _and_ data.
+The difference between these two processes, software development and
+data-related research, is that in software development the new version
+of the code replaces the old version and one rarely goes back to an old
+version of the project in order to develop it in a whole new direction.
+In data-related research, however, that happens farily often and thus
+multiple version of the same model-building code are not supposed to
+exclude but rather complement one another, as each highlights a different
+yet valuable and interesting facet of the research problem.
+
+[^dev-loop]: More about _dev loop_ here: https://leankit.com/learn/agile/agile-software-development/
+
+
+Let's talk about those practical challenges, what kind of forms they
+take, and how popular software packages tend to address them, and what
+seems to be still lacking in the data science toolset.
+
+
+
+
+
+Since it is challenges on that
+practical level that we seek to address with the solution described in
+this paper.
+
+
+
+As stated in Section 4, the three overarching goals for software packages
+aiding research are: maintaining the state of the project state (code,
+data, reports, findings) while in development, producing reports for
+consumers of the findings, making the research reproducible. Let's
+take a look at practical challenges related to this three goals.
+
+
+
+
+Recognizing how important it is not to disrupt the existing workflows
+
+
+
+
+
+
 loop: generate hypothesis, verify hypothesis
 
 generates artifacts: data objects (data sets, models, summaries), code
 (ETL functions, model formulas) and plots (but also tables, and others
 visualizations, e.g. interactive)
 
-similar to dev loop: https://leankit.com/learn/agile/agile-software-development/
-
-generating and verifying is a high-intensity task, documenting the
-work becomes the dreaded but necessary overhead
 
 as with software, one needs to plan where they want to go and document
 the road so far, so that their deliverables constitue a body of work
