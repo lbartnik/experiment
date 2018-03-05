@@ -246,12 +246,105 @@ yet valuable and interesting facet of the research problem.
 [^dev-loop]: More about _dev loop_ here: https://leankit.com/learn/agile/agile-software-development/
 
 
-Let's talk about those practical challenges, what kind of forms they
-take, and how popular software packages tend to address them, and what
-seems to be still lacking in the data science toolset.
+Because of the intensity of the research process, the bookkeeping comes
+with a considerable overhead and, thus, there is an incentive to limit
+it only to the most important findings. That, on the other hand,
+increases the risk of introducing mistakes into the process whenever
+a backtracking occurs in the project, in the form of retrieving faulty
+or sub-par model or model-building code or a malformed data set.
+Each such mistake costs time and effort so a balance between actual
+research work and the documentation-related overhead is eventually
+established. What follows, is a brief attempt at characterizing typical
+challenges related to documeting a research project and mistakes
+involved in it.
+
+## Maintaining the Data Pipeline
+
+The first challenge is maintaing what can be collectively viewed as the
+data pipeline designed and implemented during a data project. For the
+purpose of this discussion it will be defined as the code: related to
+extraction, transformation and loading (ETL) the data as well as
+building, testing and scoring models, and a variety of plots and reports
+which constitute the documentation. This part of a data project is the
+one that overlaps with software development the most.
+
+Its typical challenges are related to code development and refactoring
+which are error-prone and can lead to misrepresentations in data and
+erroneous decisions based on false reponses from ML models. Typically,
+the answers to this challenge are found in the world of software
+development: code versioning systems (CVS) are used to record chages in
+code and persist data objects, often in their binary form. The main
+disadvantage of that solution comes from the fact that CVS are designed
+to aid in persisting source code, not (binary) objects like data sets,
+and models, and thus lack in the area of discovering changes in those
+binary objects. Also, source code tend to go well with CVS which store
+their contents linearly, and analyze changes line-by-line. Data and
+models, on the other hand, have an intrinsic, non-linear structure that
+needs to be analyzed outside of a CVS.
+
+Another importatnt difficulty is the fact that CVS will not record the
+relationships between the data objects: for example, that a given model
+comes from a given data set, and was created with a given version of the
+source code. Software development is not troubled with information of
+that nature and researchers are left to deal with that part of knowledge
+building alone.
+
+
+## Retrieving Past Versions of Data and Code
+
+If the first challenge, described in the previous section, is related
+to maintaining the present, then the second is definitely about
+maintaining the past - or the history - of a data project. As it was
+said earlier, it is typicall to keep a running list of open questions,
+ordered according to their perceived importance to the project. Answering
+those questions often involves looking back at some past state of work,
+and retrieving an earlier version of data and code.
+
+Given that CVS are often used to maintain the source code and data
+objects (data sets and models), a natural first choice is to look at the
+history of CVS. There are two possible problems involved in this need.
+First is that the specific form of data or code had not been recorded as
+a separate commit and only a slightly earlier or slightly later version
+of said artifacts can be retrieved. Even if that is enough, and the
+requested artifact can be rebuild by working off of what is available in
+the history, there is still the need to invest extra effort and the risk
+of introducing errors.
+
+The second problem related to looking at the history in CVS is that the
+artifacts might be identified mistakenly, and the following work based on
+those artifacts might lead to false results, which is again a source of
+potential waste of time and false conclusions.
+
+
+## The third 
+
+challenge: make the research reproducible, which means both the golden
+path in the research, but also the broader question of explaining the
+process and ideas in the context of alternative branches that were not
+reported in the final report, e.g. branches that led to failed models
+but were still important in terms of understanding the problem
+
+------------
 
 
 
+challenge: storing artifacts together with their multiple versions,
+and figuring out the origin of any given artifact - is that plot related
+to this or that version of the data I'm working on?
+response: repository with the capability to mine expressions (commands)
+and detect the actual structure of origin
+
+challenge: making the research reproducible, which is derived from the
+first challenge: documenting the results together with their accompanying
+code and the actual source data; publishing enough details so that the
+results can be verified by independent parties
+response: include all relevant data and code in the research paper or
+report; if the size of the data/source code prevents that, provide unique
+identifiers (URLs) which grant access to relevant artifacts to parties
+who are interested
+
+challenge: turning artifacts into reports; this is a minor one, but can
+be annoying
 
 
 Since it is challenges on that
