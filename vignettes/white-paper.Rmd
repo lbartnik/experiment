@@ -192,7 +192,80 @@ itself had been made erroneously
 # Working with Data
 
 Introduce the broad term of data science here, as this is what we will
-refer to.
+refer to. Use the term "data project" as a general reference point and
+the point of focus; define the term "artifact" and then use it without
+enumerating what can be an artifact
+
+
+exploration (discovering) vs. exploitation (modelling)
+
+a data project starts with a goal: 
+Descriptive Analytics, which use data aggregation and data mining to provide insight into the past and answer: “What has happened?”
+Predictive Analytics, which use statistical models and forecasts techniques to understand the future and answer: “What could happen?”
+Prescriptive Analytics, which use optimization and simulation algorithms to advice on possible outcomes and answer: “What should we do?”
+
+build a descriptive model, a predictive one, or maybe even a prescriptive
+one; this leads to a number of iterations where we deepen our understanding
+of the data and build increasingly sophisticated and efficient models
+
+
+we start with a general overview of the data set: we clean the formats,
+work out the joins, assess the missing and uncertain data and decide on
+how to impute missing data and/or identify and correct uncertain (e.g
+anomalies in readings); finally, we arrive at a data set that is ready
+for introductory analysis; we might come back to verify the input some
+more in case we find more problems during exploration or modelling; we
+finish this by further exploration - obviously, to assess anomalies we
+needed to understand the data enough, so there was some exporation done,
+and now we finish it off by maybe choosing the subset of the data for
+the first modelling phase (step)
+
+during this work, we often generate a lot of plots, models, functions
+(artifacts) that somehow, gradually reveal the knowledge about the
+data set; this is when we compose a report of some kind that describes
+our initial findings and explains decisions that lead to the model that
+will be developed and validated during the exploitation phase
+(we could probably add something to the package that prints the id
+of each object generated in the RMarkdown report during its compilation);
+it's nice to have it all bookkept - even if stuff is in reports, not
+everything will be described accurately, esp. that building a good report
+is a task in itself and adds to the overhead; so we write down the most
+important things and rely on the data stored - somewhere; what if all of
+that data lands in the repo together with all of the relationships between
+objects and code? it's the ultimate backup
+
+
+
+now we start the exploitation - we build a model for that subset, either
+predictive (classifier, forecasting, regression) or descriptive
+
+we build models and generate the best answer to the current question;
+when we arrive at something satisfying, we move back to the bigger data
+set (not the subset anymore) and verify how well our local model does on
+that bigger data set; then we move back and forth, until we are satisfied
+with the model formula;
+during this phase we generate fewer artifacts, but more in terms of versions
+of a given artifact - e.g. a model - but characterized by plots or some
+concise error measure (so binary objects are good but not what we will be
+looking at when browsing the repo)
+
+
+
+
+now we can decide whether we learned something interesting about the data
+set that justifies changing the structure of the model (extra features or
+interactions) or trying an alternative model (NN instead of LM or ARIMA,
+a different classifier or a different regression method, SVM instead of LM)
+
+
+
+
+
+----
+
+
+
+
 
 
 On some general level conducting research in R can be viewed as a series
