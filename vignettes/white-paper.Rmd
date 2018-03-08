@@ -44,3 +44,28 @@ vignette: >
 
 # Abstract
 
+In recent years the notion of _reproducible science_ has gained a lot of
+well-deserved attention. Its most important tenant is reporting results
+of research projects in ways that enable independent verification. Of
+course, scientists have always strived to document their research and
+receive independent confirmation but the increase of data set sizes and
+the complexity of experiments conducted on those data sets have made
+reproducibility and confirmation more difficult, hence the counter
+measure of _reproducible science_. In the world of the R Project
+_reproducible science_ has taken many forms: from literate programming
+with _RMarkdown_ and _knitr_, to a plethora of interactive widgets based
+on _Shiny_, to object caches like _archivist_. This white paper proposes
+a new addition to the toolset of _reproducible science_ as implemented
+in _R_, an interactive history browser built on top of a repository of
+R objects. It quietly keeps track of all changes made to a R session and
+upon request provides means to browse the history of those changes:
+changes to data objects (data and models), function objects (code) and
+plots. Through this, verifying the exact origin, from the very first
+data load instruction, through its itermediate stages related to the ETL
+process, to the final model and prediction results becomes straightforward
+and reduces the work overhead. Information stored in the object repository
+can be browsed, loaded back to R session, or exported as binary and text
+files, including an automatically generated _RMarkdown_ report.
+
+
+
