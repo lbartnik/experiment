@@ -18,6 +18,11 @@ using an existing object store: "/Users/pchudzia/workspace/project-store"
 Error: global environment is not empty, cannot restore commit, aborting
 
 
+* Missing:
+  - what if a plot is sent to another device? e.g. png() or pdf()
+
+
+
 * General:
   - make the session env a part of the state object
   - add a `commit_id` argument to `tracking_on`; create a `tracking_on_`

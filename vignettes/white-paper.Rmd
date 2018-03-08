@@ -531,12 +531,120 @@ looking at the big picture - what have we learned so far, what do we think
 and what do we know about the research project; what do we know about the
 data, how do we want to approach the remainder of the work
 
-
+<!------------------------------------------------------------------------>
 
 # Repository - Model
 
- built
-on top of a repository of R objects
+
+Structure: commits that represent each atomic change in R session; the
+boundary of atomic change is defined by R's model of execution, where
+user-defined callback function is called after every command execution[^task-callback].
+
+[^task-callback]: Mention and describe the `addTaskCalback` API.
+
+Commit contains: a list of objects in R session, the expression which
+resulted in the most recent change in R session, the pointer to the parent
+commit, the current plot. This is not how the data is presented to the end
+user, however.
+
+Each object is additionally tagged with: its parent commit (the commit it
+has first appeared in), its parent objects (the data and functions involved
+in its creation), 
+
+
+This temporal representation of work - a tree of commits - can be transformed
+into the origin-based representation - a directed graph of objects. This is
+a structure much more useful to the end user, because it highlights the
+conceptual similarities between objects
+
+
+
+
+
+This is how the repository works: you conduct a part of research in R session,
+in the iterative manner, producing a number of artifacts along the way. Then
+you arrive at an object that captures that part's understanding of the problem,
+and decide this is something worth recording in the project's log. You point
+the research repository to that object by calling an API with that object as
+an argument. And here's where the magick happens: the repository already has
+the full history of that R session and its objects and their structure of
+origin written down in a per-session cache repository. It queries that cache
+for the object you pointed to and retrieves the whole line (or tree) of calls
+that lead to the creation your chosen object. It then copies all of those
+objects into the permanent cache and joins the branches into objects that are
+already there and that match the origins of your chosen object.
+
+REMARK: this will be a tree connected to a tree, it results in a directed
+graph of objects; presenting objects needs to show the graph unless we show
+only the most recent origin object - and assume that everything else is
+implied
+
+REMARK: however, what to do with data sets that are results of joins of other
+data sets? these are clear cases for a full graph in UI - there is no way to
+determine which of the initial data sets is the most important one and thus
+which to show as the only parent
+
+REMARK: if there is no overlap in origin, the new graph is rooted in the
+virtual global root - an empty commit
+
+
+What is the repo?
+
+It is a file-system based object store that preserves objects unchanged (no
+overwrite/update allowed) together with their structure of origin (other
+objects this particular object was created from, if any, together with code,
+that is, functions and the particular command-line expression that resulted
+in this object).
+
+Repository stores all objects generated throughout R session: data objects
+(data frames, lists, vectors, scalars, also environment-based objects e.g.
+R6); code (functions); plots (shown on any R device); execution context
+(list of packages loaded in R session at any point). This makes it possible
+to retrieve the full structure of origin, that is, which data and code
+objects were used to create any particular object. (The following diagram
+shows an example.)
+
+There are two ways objects can be turned into an ordered structure: according
+to their origin or according to their creation time.
+
+the graph of origin (a directed and acyclic graph) or the graph
+
+
+REMARK: when an object is retrieved from the repository, it overwrites or
+adds to the current R session; there is a possibility to retrieve the whole
+R session recorded at any point in time, but it's probably less favorable
+than retrieving just the objects of choice into the existing R session
+
+
+
+data objects and plots and first-class citizens, what about code?
+
+
+How do I use the repo?
+
+You can use the repository in any way you want, but there are a few
+recommended ways:
+
+  - record objects of interest together with their structure of origin,
+    paste them into the permanent storage from the per-session cache
+    whenever an interesting development in the data project occurs
+  - consult the repository for fast information retrieval; rather than
+    storing data in RData files and plots in PNG or PDF files, keep
+    everything in the repo and run quick searches according to the need
+    of the moment
+  - when taking a detour or returning to a paused research path, use
+    the repository and the browser to re-create the state of R session
+    at the moment of pausing
+  - use the browser to explain the advances in the project and generate
+    reports showcasing specific paths of thought
+
+
+REMARK: explain what a path in the research is, how it can be paused;
+what explortaion and exploitation are about and how the fit in the general
+model of data project; what a data project is
+
+
+
 
 store data, code and plots, record state of R session after each command,
 together with all relevant details (e.g. packages and their versions, the
