@@ -1,0 +1,46 @@
+---
+title: "Supporting Data Processing with an Object Repository"
+author: "Lukasz A. Bartnik"
+date: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Supporting Data Processing with an Object Repository}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<!--
+  To jest whitepaper, wiec wszystko wylozone musi byc prost i lopatologiczie.
+  Zaczynamy od "reproducibility": "na zewnątrz", jako możliwość udowodnienia
+  poprawności prezentowanych wyników oraz "do wewnątrz", jako możliwość
+  odtworzenia stanu pracy sprzed jakieś czasu albo potwierdzenia, że kontynuuje
+  się pracę od właściwego miejsca.
+  W tym drugim przypadku chodzi o zarządzanie wersjonowaniem kodu i danych
+  w ramach iteracyjnie rozwijanego projektu danych.
+
+  1. Potrzeba reproducibility i jej dwa rodzaje.
+
+  2. Repozytorium, które zapisuje zmiany w R session ale potrafi też śledzić
+     pochodzenie "wg danych", czyli które obiekty i kod posłużyły do utowrzenia
+     danego obiektu.
+  
+  3. Przykład: kilka poleceń, które odpowiadają jakiejś prostej analizie + dwa
+     widoki danych, "wg sesji" (temporalny) i "wg danych" (czyli wynikania w
+     ramach wydawanych poleceń R). Różnica musi być interesująca.
+  
+  4. Teraz tutaj może informacja o tym, że jest "local cache" i "permanent store"
+     i przykład, jak się przenosi dane pomiędzy nimi. Można tutaj wrócić do przykładu
+     z poprzedniego punktu (skopiować tylko jedną ścieżkę, a drugą określić jako
+     mało interesującą) albo wprowadzić kolejny przykład, tym razem prezentujący
+     iteracyjne zmiany w skrypcie R i jak generują one serię obiektów, z których
+     dopiero ostatni jest interesujący.
+  
+  5. Przykłady "biznesowe". Jak repozytorium wpisuje się w projekty danych:
+
+     - reproducibility
+     - wersjonowanie i bookkeeping w trakcie projektu
+     - raportowanie z RMarkdown
+-->
+
+# Abstract
+
