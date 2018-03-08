@@ -44,7 +44,7 @@ vignette: >
 
 # Abstract
 
-In recent years the notion of _reproducible science_ has gained a lot of
+In the recent years the notion of _reproducible science_ has gained a lot of
 well-deserved attention. Its most important tenant is reporting results
 of research projects in ways that enable independent verification. Of
 course, scientists have always strived to document their research and
@@ -68,4 +68,60 @@ can be browsed, loaded back to R session, or exported as binary and text
 files, including an automatically generated _RMarkdown_ report.
 
 
+# Introduction
 
+This paper focuses on a subarea of scientific research centered on
+exploring, understanding and modeling data. In that context, an
+intuitive notion of a _data project_ is any data-related research
+limited in time and scope, where code is shared and data is iteratively
+transformed. It is typically concluded in a form of scientific paper or
+a report consumed by a decision-maker.
+
+In the recent years we have observed a growth in both the size of data
+sets undergoing analysis and the complexity of said analyses. This in
+turn resulted in broad push for reproducibility, that is, documenting
+and publishing results in a manner that facilitates verification by
+peers and makes the research easier to build on.
+
+Within the R community, the need for reproducible research is well
+understood and accepted which is clearly demonstrated by a variety
+of related tools and packages[^reproducible-research-cran-view]. Most of
+these packages are aimed at the _external_ aspect of reproducibility,
+that is, publishing the results in a form that focuses on enabling
+_others_ to repeat the work. There is, however, also the _internal_
+aspect of reproducibility: reducing the overhead of documenting and
+organizing a data project without increasing the risk of errors.
+
+The object repository and interactive browser presented in this paper
+are aimed at exactly this: attaining reproducibility with less overhead
+and simplifying the task of tracking the progress and organizing
+artifacts (data, code and plots) of a data project.
+
+
+[^reproducible-research-cran-view]: xxx
+
+
+# History: Repository and Browser
+  2. Repozytorium, które zapisuje zmiany w R session ale potrafi też śledzić
+     pochodzenie "wg danych", czyli które obiekty i kod posłużyły do utowrzenia
+     danego obiektu.
+
+# Data Views
+  3. Przykład: kilka poleceń, które odpowiadają jakiejś prostej analizie + dwa
+     widoki danych, "wg sesji" (temporalny) i "wg danych" (czyli wynikania w
+     ramach wydawanych poleceń R). Różnica musi być interesująca.
+
+# Iterative Development in a Data Project
+  4. Teraz tutaj może informacja o tym, że jest "local cache" i "permanent store"
+     i przykład, jak się przenosi dane pomiędzy nimi. Można tutaj wrócić do przykładu
+     z poprzedniego punktu (skopiować tylko jedną ścieżkę, a drugą określić jako
+     mało interesującą) albo wprowadzić kolejny przykład, tym razem prezentujący
+     iteracyjne zmiany w skrypcie R i jak generują one serię obiektów, z których
+     dopiero ostatni jest interesujący.
+
+# Repository at Work
+  5. Przykłady "biznesowe". Jak repozytorium wpisuje się w projekty danych:
+
+     - reproducibility
+     - wersjonowanie i bookkeeping w trakcie projektu
+     - raportowanie z RMarkdown
