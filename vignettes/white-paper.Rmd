@@ -95,13 +95,65 @@ organizing a data project without increasing the risk of errors.
 The object repository and interactive browser presented in this paper
 are aimed at exactly this: attaining reproducibility with less overhead
 and simplifying the task of tracking the progress and organizing
-artifacts (data, code and plots) of a data project.
+artifacts (data, code and plots) of a data project. Thus, not only code
+but also data and plots can be stored and versioned automatically[^versioning].
 
 
 [^reproducible-research-cran-view]: xxx
 
+[^versioning]: Code versioning is a known and well-established concept
+in computer science. Versioning data and other reserach artifacts closes
+a certain gap in the conceptual approach to data research.
 
-# History: Repository and Browser
+
+# Repository and Browser
+
+The basic R execution model is twofold: either interactive, executed
+through _R console_ (and various wrappers built around it, for example
+_R Studio_) or batch-based, accessible via _R CMD BATCH_ and _Rscript_.
+In the batch mode, R expects a file with a sequence of commands written
+in the _R programming language_. This programming language, however,
+is designed specifically for interactive use, and it is the interactive
+mode where R shows the full extent of its capabilities. The two central
+elements of the interactive mode are the _command line_ which accepts R
+expressions and and the _global environment_ which stores the results of
+evaluating said expressions. Global environment is maintained throughout
+the life or _R session_ and can be stored in the filesystem upon exiting
+R, or otherwise is lost.
+
+The object repository described in this paper tracks changes made to R's
+global environment within a number of R sessions. Thus, it is capable of
+tracking research progress made during the whole lifecycle of a project.
+The history of work done in R is stored as a series of _commits_, where
+each commit represents the state of R session after the execution of a
+single command. Each commit contains:
+
+  * a list of pointers to objects
+  * a pointer to the parent commit
+  * a pointer to a plot, if one was made instead of changing the
+    contents of global environment
+  * the last R expression executed in the command line
+  * the time of creation
+
+Objects found in the global environment are stored separately from the
+commit itself, and are pointed to by their unique identifier, a hash key
+computed from their contents. Thus, even if a given object appears in
+more than one commit, it is still stored only once. Moreover, that
+multiple appearance can be easily spotted and exposed to the user,
+should that bear significance in the context of the research. Each
+object stored in the repository contains:
+
+  * the actual contents of the R object
+  * pointers to one or more _parent_ objects
+  * the creation time
+  * additional _tags_ provided by the user, for example, a text note
+
+
+
+
+__An example of a number of R expressions and what is stored in the repo__
+
+
   2. Repozytorium, które zapisuje zmiany w R session ale potrafi też śledzić
      pochodzenie "wg danych", czyli które obiekty i kod posłużyły do utowrzenia
      danego obiektu.
