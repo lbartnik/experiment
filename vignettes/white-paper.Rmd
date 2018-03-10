@@ -171,9 +171,51 @@ __An example of a number of R expressions and what is stored in the repo__
      iteracyjne zmiany w skrypcie R i jak generują one serię obiektów, z których
      dopiero ostatni jest interesujący.
 
-# Repository at Work
-  5. Przykłady "biznesowe". Jak repozytorium wpisuje się w projekty danych:
+iterating over code (data pipeline) until the end result is ready;
+then just one click to retrieve the full pipeline, clean and consistent
 
-     - reproducibility
-     - wersjonowanie i bookkeeping w trakcie projektu
-     - raportowanie z RMarkdown
+
+
+# How Can Repository Help in Your Work
+
+**Business value**
+
+## Verify Objects
+
+Simply look at objects, browse repository, see whether the object you
+put in your report is the one you wanted to put there. The simplest
+case for reproducibility.
+
+Implement smart views for certain classes of objects:
+  * data.frame - summary, info about columns, maybe differences
+    from the source data.frame or from siblings
+  * models - `residuals`, `forecast`/`prediction` on the training
+    data set / testing data set if available
+  * plots
+  * comparisons of multiple objects of the same class
+
+
+## Export selection to RMarkdown
+
+Selection from one object to its parent in a line. Always start with
+the last object is the selection, and then highlight only the straight
+line of parents.
+Once the selection is made, export to RMarkdown. Initial object(s) is
+loaded, code is defined, and the rest of the selection is constructed
+in RMarkdown.
+
+
+## Export selection to Defer
+
+Export selection to a `defer` package and run it on other data sets,
+assuming the current origin in the selection is a sample from a larger
+data set.
+
+
+
+## Other
+
+Sharing work via repository - reproducibility verified by other parties.
+Requires shared access, maybe via github? **Export to GitHub?...**
+
+
