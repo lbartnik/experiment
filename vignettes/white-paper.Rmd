@@ -180,7 +180,11 @@ then just one click to retrieve the full pipeline, clean and consistent
 
 **Business value**
 
-## Verify Objects
+## Version Everything
+
+Durin the development phase of the data project it's important to version
+not only the code but also all data objects, and even plots. This is what
+this package gives you.
 
 Simply look at objects, browse repository, see whether the object you
 put in your report is the one you wanted to put there. The simplest
@@ -195,7 +199,9 @@ Implement smart views for certain classes of objects:
   * comparisons of multiple objects of the same class
 
 
-## Export selection to RMarkdown
+## Easy Reporting
+
+Export selection to RMarkdown
 
 Selection from one object to its parent in a line. Always start with
 the last object is the selection, and then highlight only the straight
@@ -205,17 +211,47 @@ loaded, code is defined, and the rest of the selection is constructed
 in RMarkdown.
 
 
-## Export selection to Defer
+## Sample to Full Data
+
+Export selection to Defer
 
 Export selection to a `defer` package and run it on other data sets,
 assuming the current origin in the selection is a sample from a larger
 data set.
 
 
+## Abstract and Automate
 
-## Other
+Simplified packaging for data workflows. If it runs in your R session,
+it can run in everyone else's, on similarly defined data sets.
+
+Scale out the research - apply the automation package to a number
+of data sets.
+
+Choose more than a single data pipe - choose a "star" of data pipes
+originating in the same data set, deliver a complex data analysis
+automation to your fellow researchers, customers, decision makers.
+Define the base workflow, comment on steps and results, describe
+the expected outcomes and the meaning of plots, and the order of
+looking at the partial results, and let others take it from there.
+
+
+
+## Reproducibility
 
 Sharing work via repository - reproducibility verified by other parties.
+Enable shared access, provide object/plot/model/result `id` in your paper,
+let others poke around your project, verify and learn from your work.
+Knowledge sharing can be further amplified when packaging, reporting and
+re-runing of your code is fully automated.
 Requires shared access, maybe via github? **Export to GitHub?...**
+
+
+## Is it possible to do more?
+
+Hints? Suggestions? Based on other projects, similar data sets, similar
+workflows... Can neural networks be trained on projects graphs? Can we
+share project graphs and tell why we did what we did? And maybe if there
+is enough data, a DNN could learn from those graphs?
 
 
