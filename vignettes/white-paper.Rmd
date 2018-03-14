@@ -180,6 +180,14 @@ then just one click to retrieve the full pipeline, clean and consistent
 
 **Business value**
 
+Data pipeline is developed in steps. Each step requires a certain number
+of iterations when the desired form of that step is discovered. This is
+the automation: write the full data pipeline in the repo and then retrieve
+its final (or other as desired) form and write it back into the permanent
+project repository.
+
+
+
 ## Version Everything
 
 Durin the development phase of the data project it's important to version

@@ -20,6 +20,9 @@ Error: global environment is not empty, cannot restore commit, aborting
 
 * Missing:
   - what if a plot is sent to another device? e.g. png() or pdf()
+  - capture objects present in .Last.value - most probably they're used to print out
+    a summary or other information of some kind; capture (show?) their printout along
+    with the data
 
 
 
