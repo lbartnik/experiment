@@ -1,0 +1,142 @@
+---
+title: "Supporting Data Processing with an Object Repository"
+author: "Lukasz A. Bartnik"
+date: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Versioning Data Objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", prompt = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.align = 'center')
+knitr::opts_chunk$set(out.width='65%')
+
+```
+
+
+```{r message=FALSE}
+library(readr)
+library(lubridate)
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(modelr)
+library(forecast)
+library(tidyr)
+```
+
+
+# Example
+
+## Iterative
+
+Iterate over a single idea, fix errors in the expression, generate a number
+of versions of the object and plots, finally choose objects that should make
+it to the persistent storage.
+
+
+### Iterate over a model
+
+```{r, message=FALSE,warning=FALSE}
+data <- read_csv('site_10.csv')
+
+means <-
+  data %>%
+  group_by(hour = hour(time), wday = wday(time, label = TRUE)) %>%
+  summarise(usage = mean(usage, na.rm = TRUE))
+
+ggplot(means, aes(x = hour, y = usage)) + geom_point() + facet_wrap(~wday)
+
+data %<>%
+  mutate(hour = as.factor(hour(time)),
+         wday = wday(time, label = TRUE))
+
+m <- lm(usage ~ hour:wday, data)
+glance(m)
+
+data %<>% mutate(lm_resid = residuals(m), lm_fitted = fitted(m))
+
+acf(data$lm_resid)
+
+acf(diff(data$lm_resid))
+
+t <- arfima(data$lm_resid)
+data %<>% mutate(ts_resid = residuals(t), ts_fitted = fitted(t),
+                 fitted = lm_fitted + ts_fitted)
+
+1 - var(data$fitted)/var(data$usage)
+
+data %>%
+  group_by(hour = hour(time), wday = wday(time, label = TRUE)) %>%
+  summarise(usage = mean(usage, na.rm = TRUE),
+            fitted = mean(fitted, na.rm = TRUE)) %>%
+  gather(type, value, usage, fitted) %>%
+  ggplot(aes(x = hour, y = value, color = type)) + geom_point() + facet_wrap(~wday)
+
+```
+
+
+
+### Explore the history
+
+
+```{r eval=FALSE}
+tracker$history
+#> m: data
+#>    data <- read_csv('site_10.csv')
+#> l: data means
+#>    means <- data %>% group_by(hour = hour(time),  ...
+#> k: data means [plot]
+#>    ggplot(means, aes(x = hour, y = usage)) + geom ...
+#> j: data means
+#>    data %<>% mutate(hour = as.factor(hour(time)), ...
+#> i: data m means
+#>    m <- lm(usage ~ hour:wday, data)
+#> h: data m means [print]
+#>    glance(m)
+#> g: data m means
+#>    data %<>% mutate(lm_resid = residuals(m), lm_fi...
+#> f: data m means [plot]
+#>    acf(data$lm_resid)
+#> e: data m means [plot]
+#>    acf(diff(data$lm_resid))
+#> d: data m means t
+#>    t <- arfima(data$lm_resid)
+#> c: data m means t
+#>    data %<>% mutate(ts_resid = residuals(t), ts_fi...
+#> b: data m means t [print]
+#>    1 - var(data$fitted)/var(data$usage)
+#> a: data m means t [plot]
+#>    data %>% group_by(hour = hour(time), wday = w ...
+
+```
+
+
+
+Choose the object to store in the persistent store; browse history
+
+
+## Repeat the Sequence
+
+Look back, change input, generate two new models for two other buildings;
+use `repeat`
+
+
+Browse new branches, choose the two new models and store them persistently
+
+
+## Browse the Tree of Understanding
+
+Look at the branches stored in the persistent store, this time presented
+according to their origin
+
+
+
