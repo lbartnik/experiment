@@ -144,12 +144,22 @@ glance(m)
 
 
 
-### Explore the history
+### Browse the history
+
+Up to this point the session cache collected a number of artifacts.
+Let's see the summary of the session cache.
+
+```{r eval=FALSE}
+tracker
+#> Tracker :  ON
+#> Branch  :  "default"
+#> Commits :  15 in branch, 15 total
+```
+
 
 This is what the history graph looks like. First, in the dimension of
 time, that is, where nodes are connected according to the order in
 which they were created.
-
 
 \begin{figure}[h]
 \centering
@@ -161,7 +171,6 @@ which they were created.
 Another way to look at the history is the dimension of origin, that is,
 the parent-child relationship between artifacts.
 
-
 \begin{figure}[h]
 \centering
 \includesvg[width=400pt]{plot-2}
@@ -169,44 +178,114 @@ the parent-child relationship between artifacts.
 \end{figure}
 
 
+The information depicted in the first graph can be accessed in R session
+via the `tracker$history` facility. The example below follows up on our
+sample R session. Commits recorded in the session repository are printed
+out starting with the oldest. The most recent commit is assigned index
+`a`, the one before is assigned index `b` and so on. Indices can be used
+to point to a specific step in the history. For each step we print out
+the list of artifact names and the expression abbreviated to one line.
+
+In actual R session variables which are introduced or replaced are printed
+in green.
+
 
 ```{r eval=FALSE}
-tracker$history
-#> m: data
-#>    data <- read_csv('site_10.csv')
-#> l: data means
-#>    means <- data %>% group_by(hour = hour(time),  ...
-#> k: data means [plot]
-#>    ggplot(means, aes(x = hour, y = usage)) + geom ...
-#> j: data means
-#>    data %<>% mutate(hour = as.factor(hour(time)), ...
-#> i: data m means
-#>    m <- lm(usage ~ hour:wday, data)
-#> h: data m means [print]
+tracker$history(n = 50)
+#> o: file
+#>    file <- 'site_10.csv'
+#> n: data file
+#>    data <- read_csv(file)
+#> m: data file [plot]
+#>    ggplot(data, aes(x = time, y = usage)) + geom_line()
+#> l: data file m
+#>    m <- data %>% mutate(month = as.factor(month(time, ...
+#> k: data file m [printout]
 #>    glance(m)
-#> g: data m means
-#>    data %<>% mutate(lm_resid = residuals(m), lm_fi...
-#> f: data m means [plot]
-#>    acf(data$lm_resid)
-#> e: data m means [plot]
-#>    acf(diff(data$lm_resid))
-#> d: data m means t
-#>    t <- arfima(data$lm_resid)
-#> c: data m means t
-#>    data %<>% mutate(ts_resid = residuals(t), ts_fi...
-#> b: data m means t [print]
-#>    1 - var(data$fitted)/var(data$usage)
-#> a: data m means t [plot]
-#>    data %>% group_by(hour = hour(time), wday = w ...
-
+#> j: data file m
+#>    m <- data %>% mutate(wday = wday(time, label = TRUE)) ...
+#> i: data file m [printout]
+#>    glance(m)
+#> h: data file m [printout]
+#>    tidy(m)
+#> g: data file m
+#>    m <- data %>% mutate(hour = as.factor(hour(time))) ...
+#> f: data file m [printout]
+#>    glance(m)
+#> e: data file m [plot]
+#>    data %>% group_by(hour = hour(time), wday = wday(time, ...
+#> d: data file m
+#>    m <- data %>% mutate(hour = as.factor(hour(time)), ...
+#> c: data file m [printout]
+#>    glance(m)
+#> b: data file m
+#>    m <- data %>% mutate(hour = as.factor(hour(time)), ...
+#> a: data file m [printout]
+#>    glance(m)
 ```
 
 
+Each commit can be printed in more detail. This is where the letters-indices
+come in handy.
 
-Choose the object to store in the persistent store; browse history
+```{r eval=FALSE}
+tracker$history$b
+#> Commit afb67ad6
+#> data :  data.frame[8784, 2]
+#> file :  character(1)
+#> m    :  lm(formula = usage ~ month + hour:wday, data = .)
+#>
+#>   m <-
+#>    data %>%
+#>    mutate(hour = as.factor(hour(time)), wday = wday(time, label = TRUE),
+#>           month = as.factor(month(time))) %>%
+#>    {lm(usage ~ month + hour:wday, .)}
+```
+
+
+Since we have found an interesting artifact, we can now instruct `tracker`
+to store it in the persistent repository of artifacts. We point to one
+object but the whole sequence of objects required to create it is copied
+from the session repository to the persistent one. If any of the objects
+is already present in the persistent repository (`session cache` vs `repository`)
+the ends are connected and a consistent graph of artifacts is maintained.
+
+
+
+```{r eval=FALSE}
+tracker$history$b$m %>% persist
+#> Persisted 3 objects: m, data, file
+```
 
 
 ## Repeat the Sequence
+
+Another useful tool is the `replay` function. It accepts a list of objects
+that were changed, finds their originals, and re-computes all nodes descendant
+in the `data` view. In our example we replace the data file name and then
+ask R to recalculate all object below it. It creates a new branch in the
+session cache and names it `"replay(file) #1"`.
+
+
+```{r eval=FALSE}
+file <- 'site_11.csv'
+replay(file)
+#> Objects changed: file
+#> Recalculating: 6 objects, 2 plots, and 6 printouts.
+#> Branch name: "replay(file) #1"
+```
+
+
+Let's look at the state of the tracker.
+
+```{r eval=FALSE}
+tracker
+#> Tracker :  ON
+#> Branch  :  "replay(file) #1"
+#> Commits :  15 in branch, 30 total
+```
+
+
 
 Look back, change input, generate two new models for two other buildings;
 use `repeat`
