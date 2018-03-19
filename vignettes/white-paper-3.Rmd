@@ -48,6 +48,19 @@ library(tidyr)
 ```
 
 
+# Dictionary
+
+* `data project`
+* `R session`
+* `tracker`
+* `session cache` (cache)
+* `project repository` (repository)
+* `artifact`
+* `commit`
+* `branch`
+* `time view`
+* `data view`
+
 # Example
 
 ## Iterative
@@ -258,6 +271,15 @@ tracker$history$b$m %>% persist
 ```
 
 
+Let's all persist the final profile plot.
+
+```{r eval=FALSE}
+tracker$history$e$`[plot]` %>% persist
+#> Persisted 1 plot.
+```
+
+
+
 ## Repeat the Sequence
 
 Another useful tool is the `replay` function. It accepts a list of objects
@@ -268,7 +290,7 @@ session cache and names it `"replay(file) #1"`.
 
 
 ```{r eval=FALSE}
-file <- 'site_11.csv'
+file <- 'site_88.csv'
 replay(file)
 #> Objects changed: file
 #> Recalculating: 6 objects, 2 plots, and 6 printouts.
@@ -286,6 +308,45 @@ tracker
 ```
 
 
+The current R session contains a new model, built with the same pipeline
+but for a different data set. Let's take a look at the model and compare
+it to the one already stored in the project repository. The new model:
+
+```{r eval=FALSE}
+glance(m)
+```
+```{r echo=FALSE}
+file <- 'site_88.csv'
+data <- read_csv(file)
+m2 <-
+  data %>%
+  mutate(hour = as.factor(hour(time)), wday = wday(time, label = TRUE),
+         month = as.factor(month(time))) %>%
+  {lm(usage ~ month + hour:wday, .)}
+glance(m2)
+```
+
+The model built for __site 10__:
+
+```{r eval=FALSE}
+glance(tracker$repository$m)
+```
+```{r echo=FALSE}
+glance(m)
+```
+
+Let's also take a look at the final profile plot for __site 88__. In the
+session history it can be accessed via:
+
+```{r eval=FALSE}
+tracker$history$e$`[plot]`
+```
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+data %>%
+  group_by(hour = hour(time), wday = wday(time, label = TRUE)) %>%
+  summarise(usage = mean(usage, na.rm = TRUE)) %>%
+  ggplot(aes(x = hour, y = usage)) + geom_point() + facet_wrap(~wday)
+```
 
 Look back, change input, generate two new models for two other buildings;
 use `repeat`

@@ -17,6 +17,7 @@
 /examples
 /extdata
 work
+svg-inkscape
 
 # knitr
 vignettes/white-paper-3_cache/
