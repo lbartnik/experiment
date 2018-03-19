@@ -151,7 +151,6 @@ time, that is, where nodes are connected according to the order in
 which they were created.
 
 
-
 \begin{figure}[h]
 \centering
 \includesvg[width=140pt]{plot-1}
@@ -161,6 +160,13 @@ which they were created.
 
 Another way to look at the history is the dimension of origin, that is,
 the parent-child relationship between artifacts.
+
+
+\begin{figure}[h]
+\centering
+\includesvg[width=400pt]{plot-2}
+\caption{svg image}
+\end{figure}
 
 
 
