@@ -2,12 +2,27 @@
 title: "Supporting Data Processing with an Object Repository"
 author: "Lukasz A. Bartnik"
 date: "`r Sys.Date()`"
-output: rmarkdown::pdf_document
+output:
+  rmarkdown::pdf_document:
+    latex_engine: pdflatex
+    pandoc_args: "--latex-engine-opt=--shell-escape"
+header-includes:
+   - \usepackage{svg}
 vignette: >
   %\VignetteIndexEntry{Versioning Data Objects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!--
+
+Including SVG in PDF generated from RMarkdown:
+
+  https://stackoverflow.com/questions/34064292/is-it-possible-to-include-svg-image-in-pdf-document-rendered-by-rmarkdown
+
+
+-->
+
 
 ```{r setup, include=FALSE}
 library(knitr)
@@ -16,8 +31,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", prompt = FALSE)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(cache = TRUE)
 knitr::opts_chunk$set(fig.width=8, fig.height=6, fig.align = 'center')
-knitr::opts_chunk$set(out.width='65%')
-
+knitr::opts_chunk$set(out.width='50%')
 ```
 
 
@@ -45,47 +59,109 @@ it to the persistent storage.
 
 ### Iterate over a model
 
+Here is a very simple example of what might happen during the initial
+phase of a data project. We load the data, build a few simple models
+and create a few plots to get the initial insights.
+
+
 ```{r, message=FALSE,warning=FALSE}
-data <- read_csv('site_10.csv')
+file <- 'site_10.csv'
+data <- read_csv(file)
+```
 
-means <-
-  data %>%
-  group_by(hour = hour(time), wday = wday(time, label = TRUE)) %>%
-  summarise(usage = mean(usage, na.rm = TRUE))
 
-ggplot(means, aes(x = hour, y = usage)) + geom_point() + facet_wrap(~wday)
+Let's look at the whole data, one year worth of hourly readings.
 
-data %<>%
-  mutate(hour = as.factor(hour(time)),
-         wday = wday(time, label = TRUE))
+```{r, message=FALSE,warning=FALSE}
+ggplot(data, aes(x = time, y = usage)) + geom_line()
+```
 
-m <- lm(usage ~ hour:wday, data)
+
+Let's start with monthly averages.
+
+```{r, message=FALSE,warning=FALSE}
+m <- data %>%
+  mutate(month = as.factor(month(time, label = TRUE))) %>%
+  {lm(usage ~ month, .)}
 glance(m)
+```
 
-data %<>% mutate(lm_resid = residuals(m), lm_fitted = fitted(m))
 
-acf(data$lm_resid)
 
-acf(diff(data$lm_resid))
+There seems to be some regularity in the data.
+Let's see if there average usage depends on the day of the week.
 
-t <- arfima(data$lm_resid)
-data %<>% mutate(ts_resid = residuals(t), ts_fitted = fitted(t),
-                 fitted = lm_fitted + ts_fitted)
+```{r, message=FALSE,warning=FALSE}
+m <- data %>%
+  mutate(wday = wday(time, label = TRUE)) %>%
+  {lm(usage ~ wday, .)}
+glance(m)
+tidy(m)
+```
 
-1 - var(data$fitted)/var(data$usage)
 
+Now let's look at the hourly profile.
+
+```{r, message=FALSE,warning=FALSE}
+m <- data %>%
+  mutate(hour = as.factor(hour(time))) %>%
+  {lm(usage ~ hour, .)}
+glance(m)
+```
+
+Interesting, both day of the week and the hour of the day can be used
+to model the usage. Let's see what happens when we combine them.
+
+
+```{r, message=FALSE,warning=FALSE}
 data %>%
   group_by(hour = hour(time), wday = wday(time, label = TRUE)) %>%
-  summarise(usage = mean(usage, na.rm = TRUE),
-            fitted = mean(fitted, na.rm = TRUE)) %>%
-  gather(type, value, usage, fitted) %>%
-  ggplot(aes(x = hour, y = value, color = type)) + geom_point() + facet_wrap(~wday)
+  summarise(usage = mean(usage, na.rm = TRUE)) %>%
+  ggplot(aes(x = hour, y = usage)) + geom_point() + facet_wrap(~wday)
+```
 
+
+And now a quantitative assessment of the same model.
+
+```{r, message=FALSE,warning=FALSE}
+m <-
+  data %>%
+  mutate(hour = as.factor(hour(time)), wday = wday(time, label = TRUE)) %>%
+  {lm(usage ~ hour:wday, .)}
+glance(m)
+```
+
+Finally, let's combine all three input features of our model.
+
+```{r, message=FALSE,warning=FALSE}
+m <-
+  data %>%
+  mutate(hour = as.factor(hour(time)), wday = wday(time, label = TRUE),
+         month = as.factor(month(time))) %>%
+  {lm(usage ~ month + hour:wday, .)}
+glance(m)
 ```
 
 
 
 ### Explore the history
+
+This is what the history graph looks like. First, in the dimension of
+time, that is, where nodes are connected according to the order in
+which they were created.
+
+
+
+\begin{figure}[h]
+\centering
+\includesvg[width=140pt]{plot-1}
+\caption{svg image}
+\end{figure}
+
+
+Another way to look at the history is the dimension of origin, that is,
+the parent-child relationship between artifacts.
+
 
 
 ```{r eval=FALSE}
