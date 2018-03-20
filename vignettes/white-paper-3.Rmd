@@ -47,8 +47,48 @@ library(forecast)
 library(tidyr)
 ```
 
+# Introduction
 
-# Dictionary
+The solution described in this white paper aims at reducing the overhead
+of data research conducted in R and is designed with a certain model of
+said research process in mind. In this model a researcher transitions
+repeatedly between two distinct phases,  __local__ and __global__. The
+__local__ phase is aimed at answering a specific question about the data
+and consists of a series of tweaks and improvements to R code. It is often
+a trial-and-error process in which the desired order and kind of data
+transformations is established, bugs are ironed out, and which leads to
+a model or plot that reveals enough to initiate a subsequent __local__
+phase. The __global__ phase centers around building a narrative about the
+research done so far which combines outcomes of multiple __local__ iterations.
+It is also where specific __local__ questions are formulated and prioritized.
+
+In the context of R, during the __local__ phase we define a sequence of R
+commands which form a data pipeline. Conversely, during the __global__ phase
+the notable findings are preserved in the form of source code (R scripts and
+packages), data files (text-based and binary) and reports (various document
+formats, e.g. RMarkdown). The solution described in this white paper
+provides tools aimed at reducing overhead of either of these phases and,
+additionally, aimed at reducing the overhead of transitioning between them.
+
+The next section describes the basic notions that characterize the R
+runtime envionment like __R session__ and __R object__ and introduces
+the notions of a __data artifact__, a __commit__ and a __branch__.
+We then describe the __repository of artifacts__ and two ways of visualizing
+its contents: the __time view__ and the __data view__. Finally, we
+introduce two specific kinds of the __artifact repository__: the
+__session cache__ and the __project repository__. Section 4 contains
+a simplified, yet versatile, example of the __local__ and the __global__
+phases of data research and shows how certain types of overhead can be
+removed by leveraging the `experiment` package (TODO: describe).
+
+
+# Basic notions
+
+Data research in this context
+means any activity whose aim is predictive or descriptive modelling. In
+the course of data research, an input data set is loaded, cleaned,
+transformed and fed into one or model numerical models. The findings are
+often reported in 
 
 * `data project`
 * `R session`
@@ -63,7 +103,7 @@ library(tidyr)
 
 # Example
 
-## Iterative
+## The Local Phase
 
 Iterate over a single idea, fix errors in the expression, generate a number
 of versions of the object and plots, finally choose objects that should make
