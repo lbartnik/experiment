@@ -49,6 +49,41 @@ library(tidyr)
 
 # Introduction
 
+`experiment`, the package described in this white paper is aimed at
+
+removing overhead
+
+improving certain aspects of data research. By __data research__ we
+understand any activity where data is explored which often involved
+cleaning, transforming and modelling one or mode data set. A __data
+project__ is a time- and scope-limited instance of data research.
+
+`experiment` assumes a certain model of data research performed by means
+of __R session__. Objects, functions, plots and console printouts are the
+__artifacts__ which comprise the state of R session. That state is
+iteratively modified as the user executes commands in the form of
+__R expressions__. Each time the artifacts are modified a new __commit__
+is created, which holds the current state of R session (all artifacts),
+the last R expression, and a pointer to the parent commit. A sequence
+of commits form a __branch__. A single branch can fit entirely into a
+single R session or span multiple sessions where each subsequent session
+restores (`load`s) the state persisted (`save`d) by the previous one.
+A sample (simplified) R session is presented below.
+
+```{r eval=FALSE}
+x <- 1
+z <- 100
+y <- x + 2
+z <- z + x * y
+```
+
+This sequence of commands results in 4 commits which contain the
+following objects, respectively: `(x = 1)`, `(x = 1, z = 100)`,
+`(x = 1, y = 3, z = 100)` and `(x = 1, y = 3, z = 103)`.
+
+
+
+
 The solution described in this white paper aims at reducing the overhead
 of data research conducted in R and is designed with a certain model of
 said research process in mind. In this model a researcher transitions
@@ -72,7 +107,7 @@ additionally, aimed at reducing the overhead of transitioning between them.
 
 The next section describes the basic notions that characterize the R
 runtime envionment like __R session__ and __R object__ and introduces
-the notions of a __data artifact__, a __commit__ and a __branch__.
+the notions of a __research artifact__, a __commit__ and a __branch__.
 We then describe the __repository of artifacts__ and two ways of visualizing
 its contents: the __time view__ and the __data view__. Finally, we
 introduce two specific kinds of the __artifact repository__: the
@@ -84,11 +119,25 @@ removed by leveraging the `experiment` package (TODO: describe).
 
 # Basic notions
 
-Data research in this context
-means any activity whose aim is predictive or descriptive modelling. In
-the course of data research, an input data set is loaded, cleaned,
-transformed and fed into one or model numerical models. The findings are
-often reported in 
+__Data research__ in the context of this white paper is a very broad
+category which denotes any activity where data is cleaned, explored
+or modelled. A __data project__ is an instance of data research with
+a defined scope and conducted within certain time and effort limits.
+In the course of a data project, one or more input data sets are loaded,
+cleaned, explored and transformed, and finally fed into one or more
+numerical models. The findings are often reported back to a specific
+consumer: a business decision maker, a fellow researcher, or a community.
+
+A __research artifact__ can be anything produced during data project
+that is of value to the researcher, and can take a form of data set
+(e.g. various transformations of the original input data set), a plot,
+a model (final or intermediate), a summary (e.g. a data aggregate or
+model score on the test data set), or a printout. It is in fact
+any intermediate result that a researcher decides to store and possibly
+consult later to continue the project.
+
+
+
 
 * `data project`
 * `R session`
