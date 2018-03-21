@@ -47,28 +47,51 @@ library(forecast)
 library(tidyr)
 ```
 
+# Abstract
+
+`experiment`, the package described in this white paper, is aimed at
+reducing overhead of certain operations typical for data-oriented
+research, especially as conducted in R. It keeps track of the history
+of data and code changes across multiple R sessions and provides tools
+to effectively work with that history: repeat and modify sequences of
+R commands of arbitrary length and browse historical objects and code.
+The next section gives an overview of the package design and the
+conceptual model of data-oriented reserach which it is based on.
+Section 3 follows-up with a sample R session and explains how
+`experiment` can be used to reduce certain types of operational
+overhead.
+
+
 # Introduction
 
-`experiment`, the package described in this white paper is aimed at
+`experiment` has been designed with a certain model of __data research__
+in mind which in this paper means any activity where one or more data
+set are cleaned, transformed and possibly modelled. During that process
+numerous __artifacts__ are created, inspected and organized into a
+knowledge base. Those artifacts include but are not limited to: plots,
+models, data sets, code, summaries and printouts. A __data project__
+is a time- and scope-limited instance of data research.
 
-removing overhead
-
-improving certain aspects of data research. By __data research__ we
-understand any activity where data is explored which often involved
-cleaning, transforming and modelling one or mode data set. A __data
-project__ is a time- and scope-limited instance of data research.
 
 `experiment` assumes a certain model of data research performed by means
-of __R session__. Objects, functions, plots and console printouts are the
-__artifacts__ which comprise the state of R session. That state is
-iteratively modified as the user executes commands in the form of
-__R expressions__. Each time the artifacts are modified a new __commit__
-is created, which holds the current state of R session (all artifacts),
-the last R expression, and a pointer to the parent commit. A sequence
-of commits form a __branch__. A single branch can fit entirely into a
-single R session or span multiple sessions where each subsequent session
-restores (`load`s) the state persisted (`save`d) by the previous one.
-A sample (simplified) R session is presented below.
+of R. __R session__ is both an artifact container and an interface to
+interact with those artifacts. `experiment` keeps track of all changes
+made to artifacts stored in R session and upon each change records a
+snapshot of all objects stored in R session, namely in the
+__global environment__, the most recent __R expression__, the plot or
+console printout, should either of them be modified, and a pointer to
+the previous (parent) snapshot.
+
+
+In the `experiment` package such snapshot is called a `commit` and the
+tree of commits organizes the history of the data project in the
+__time view__, ordered according to their parent-child relationship.
+Although it is possible to view the graph of commits and restore any
+recorded state of R session, such level of detail becomes confusing if
+the historical data is not recent enough. Otherwise, more appropriate is
+the __data view__, which organizes artifacts according to their origin.
+Both views can be better understood and compared by looking at the
+following sample R session.
 
 ```{r eval=FALSE}
 x <- 1
@@ -77,9 +100,35 @@ y <- x + 2
 z <- z + x * y
 ```
 
-This sequence of commands results in 4 commits which contain the
-following objects, respectively: `(x = 1)`, `(x = 1, z = 100)`,
-`(x = 1, y = 3, z = 100)` and `(x = 1, y = 3, z = 103)`.
+This sequence of commands results in 4 commits:
+
+1. `(x = 1)`
+1. `(x = 1, z = 100)`
+1. `(x = 1, y = 3, z = 100)`
+1. `(x = 1, y = 3, z = 103)`.
+
+When viewed in the __time view__, they form a linear graph shown in
+figure 1a. Conversely, the __data view__ is shown in figure 1b. 
+
+\begin{figure}[h]
+\centering
+\includesvg[width=400pt]{plots/01-view}
+\caption{The __time view__ (a) and the __data view__ (b) of a sample R session.}
+\end{figure}
+
+
+
+
+. Objects, functions, plots and console printouts are the
+__artifacts__ which comprise the state of R session. That state is
+iteratively modified as the user executes commands in the form of
+__R expressions__. Each time the artifacts are modified a new __commit__
+is created, which holds the current state of R session (all artifacts),
+the last R expression, and a pointer to the parent commit. A sequence
+of commits form a __branch__. A single branch can fit entirely into a
+single R session or span multiple sessions where each subsequent session
+restores (`load`s) the state persisted (`save`d) by the previous one.
+
 
 
 
