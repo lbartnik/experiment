@@ -62,7 +62,7 @@ Section 3 follows-up with a sample R session and explains how
 overhead.
 
 
-# Introduction
+# The Basic Model of Data Research
 
 `experiment` has been designed with a certain model of __data research__
 in mind which in this paper means any activity where one or more data
@@ -117,75 +117,42 @@ figure 1a. Conversely, the __data view__ is shown in figure 1b.
 \end{figure}
 
 
+A sequence of commits is called a __branch__. Since `experiment` allows
+the user to go back to any of the recorded commits and continue their
+work from there, there can be multiple branches in the __time view__.
 
 
-. Objects, functions, plots and console printouts are the
-__artifacts__ which comprise the state of R session. That state is
-iteratively modified as the user executes commands in the form of
-__R expressions__. Each time the artifacts are modified a new __commit__
-is created, which holds the current state of R session (all artifacts),
-the last R expression, and a pointer to the parent commit. A sequence
-of commits form a __branch__. A single branch can fit entirely into a
-single R session or span multiple sessions where each subsequent session
-restores (`load`s) the state persisted (`save`d) by the previous one.
+# Local and Global Phases of Data Research
 
-
-
-
-
-The solution described in this white paper aims at reducing the overhead
-of data research conducted in R and is designed with a certain model of
-said research process in mind. In this model a researcher transitions
-repeatedly between two distinct phases,  __local__ and __global__. The
+Given the basic model of data research with `experiment` we can introduce
+the local and the global phases of data research. Most data projects go
+through multiple transitions between these phases or modes of work. The
+__global__ phase centers around building a narrative about the research
+done so far which combines outcomes of multiple local iterations. It is
+also where specific local questions are formulated and prioritized. The
 __local__ phase is aimed at answering a specific question about the data
-and consists of a series of tweaks and improvements to R code. It is often
-a trial-and-error process in which the desired order and kind of data
-transformations is established, bugs are ironed out, and which leads to
-a model or plot that reveals enough to initiate a subsequent __local__
-phase. The __global__ phase centers around building a narrative about the
-research done so far which combines outcomes of multiple __local__ iterations.
-It is also where specific __local__ questions are formulated and prioritized.
+and is often a trial-and-error process which establishes the desired order
+and kind of data transformations. It is concluded when enough new insight
+is gained to pose new questions and initiate a subsequent local phase.
 
-In the context of R, during the __local__ phase we define a sequence of R
-commands which form a data pipeline. Conversely, during the __global__ phase
-the notable findings are preserved in the form of source code (R scripts and
-packages), data files (text-based and binary) and reports (various document
-formats, e.g. RMarkdown). The solution described in this white paper
-provides tools aimed at reducing overhead of either of these phases and,
-additionally, aimed at reducing the overhead of transitioning between them.
+In the context of R, the local is focused on a sequence of R commands
+which form a __data pipeline__. That sequence is iteratively improved,
+expanded and debugged, until a set of artifacts that answer the question
+at hand is successfully produced. Conversely, during the global phase
+the notable findings are preserved in a variety of ways (R scripts, text
+and binary data files, plots and reports).
 
-The next section describes the basic notions that characterize the R
-runtime envionment like __R session__ and __R object__ and introduces
-the notions of a __research artifact__, a __commit__ and a __branch__.
-We then describe the __repository of artifacts__ and two ways of visualizing
-its contents: the __time view__ and the __data view__. Finally, we
-introduce two specific kinds of the __artifact repository__: the
-__session cache__ and the __project repository__. Section 4 contains
-a simplified, yet versatile, example of the __local__ and the __global__
-phases of data research and shows how certain types of overhead can be
-removed by leveraging the `experiment` package (TODO: describe).
+
+Here maybe about __session cache__ and __project repository__ and how
+time view and data view are designed for them?
+
+
+The solution described in this
+white paper is aimed at reducing the time and effort overhead of either
+of these phases and of transitioning between them.
 
 
 # Basic notions
-
-__Data research__ in the context of this white paper is a very broad
-category which denotes any activity where data is cleaned, explored
-or modelled. A __data project__ is an instance of data research with
-a defined scope and conducted within certain time and effort limits.
-In the course of a data project, one or more input data sets are loaded,
-cleaned, explored and transformed, and finally fed into one or more
-numerical models. The findings are often reported back to a specific
-consumer: a business decision maker, a fellow researcher, or a community.
-
-A __research artifact__ can be anything produced during data project
-that is of value to the researcher, and can take a form of data set
-(e.g. various transformations of the original input data set), a plot,
-a model (final or intermediate), a summary (e.g. a data aggregate or
-model score on the test data set), or a printout. It is in fact
-any intermediate result that a researcher decides to store and possibly
-consult later to continue the project.
-
-
 
 
 * `data project`
