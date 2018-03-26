@@ -117,6 +117,8 @@ store_environment <- function (store, env, expr)
     id <- storage::compute_id(obj)
     if (storage::os_exists(store, id)) return(id)
 
+    # TODO add the "parent objects" tag using "defer"
+
     tags <- auto_tags(obj)
     storage::os_write(store, obj, id = id, tags = tags)
   })

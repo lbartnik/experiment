@@ -66,6 +66,8 @@ write_commit <- function (store, commit)
     stop("commit already exists, aborting")
   }
 
+  # TODO: update objects' tags: set parent commit id
+
   # store list of object pointers + basic 'history' tags
   id <- storage::os_write(store, list(objects = commit$object_ids, expr = commit$expr),
                           tags = list(class = class(commit), parent = commit$parent),
@@ -75,7 +77,7 @@ write_commit <- function (store, commit)
 }
 
 
-
+# TODO rename to read_commit
 commit_restore <- function (id, store, .data = TRUE)
 {
   stopifnot(is_nonempty_character(id), storage::is_object_store(store))
