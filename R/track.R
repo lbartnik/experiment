@@ -86,15 +86,19 @@ task_callback <- function (expr, result, successful, printed)
 update_current_commit <- function (state, env, plot, expr)
 {
   # prepare the list of objects
-  env <- as.list(env)
-  env$.plot <- plot_as_svg(plot)
+  .plot <- plot_as_svg(plot)
 
-  # if the current plot look sthe same as the last one, do not update at all
-  if (svg_equal(env$.plot, state$last_commit$objects$.plot)) {
-    env$.plot <- state$last_commit$objects$.plot
+  # TODO if it looks the same maybe it should be NULLed entirely?
+  # if the current plot looks the same as the last one, do not update at all
+  if (svg_equal(.plot, state$last_commit$objects$.plot)) {
+    .plot <- state$last_commit$objects$.plot
   }
 
   # TODO can both, env and plot, change as a result of a single command?
+
+  objects <- store_environment(state$stash, env, expr)
+
+  env <- as.list(env)
 
   # now create and process the commit
   co <- commit(env, expr)
@@ -111,30 +115,70 @@ update_current_commit <- function (state, env, plot, expr)
 }
 
 
-#' Returns a base64-encoded, SVG plot.
-#'
-#' @param pl Plot recorded by [recordPlot()].
-#' @return `character` string, base64-encoded SVG plot.
-#' @import jsonlite
-#'
-plot_as_svg <- function (pl)
+
+#' @rdname store_environment
+store_environment <- function (store, env, expr)
 {
-  if (is.null(pl)) return(NULL)
+  stopifnot(is.environment(env))
+  stopifnot(storage::is_object_store(store))
 
-  # TODO use svglite::stringSVG
+  ids <- lapply(as.list(env), function (obj) {
+    obj  <- strip_object(obj)
+    id <- storage::compute_id(obj)
+    if (storage::os_exists(store, id)) return(id)
 
-  path <- tempfile(fileext = ".svg")
+    tags <- auto_tags(obj)
+    storage::os_write(store, obj, id = id, tags = tags)
+  })
 
-  # TODO if `pl` has been recorded without dev.control("enable"), the
-  #      plot might be empty; it might be necessary to check for that
-
-  svg(path)
-  replayPlot(pl)
-  dev.off()
-
-  contents <- readBin(path, "raw", n = file.size(path))
-  jsonlite::base64_enc(contents)
+  ids
 }
+
+
+#' Removes references to environments.
+#'
+#' Some objects (e.g. formula, lm) store references to environments
+#' in which they were created. This function replaces each such reference
+#' with a reference to `emptyenv()`.
+#'
+#' As much as possible, this function tries not to make any copies of
+#' the original data. This is because the address of the object might
+#' be used to determine whether object's identifier needs to be computed
+#' which might be a costly operation.
+#'
+#' @param obj Object to be processed.
+#' @return `obj` with environment references replaced by `emptyenv()`
+#'
+#' @rdname store_environment
+#'
+strip_object <- function (obj)
+{
+  if (is.symbol(obj)) return(obj)
+
+  # TODO should we disregard any environment?
+  if (is.environment(obj)) return(emptyenv())
+
+  attrs <- if (!is.null(attributes(obj))) lapply(attributes(obj), strip_object)
+
+  if (is.list(obj)) {
+    obj_tmp <- lapply(obj, strip_object)
+    # use stripped object only if stripping actually changed something
+    obj_lst <- lapply(obj, function(x)x)
+    if (!identical(obj_tmp, obj_lst)) {
+      obj <- obj_tmp
+    }
+  }
+  if (!identical(attributes(obj), attrs)) {
+    attributes(obj) <- attrs
+  }
+
+  obj
+}
+
+
+
+
+
 
 
 #' Restore a snapshot from history.

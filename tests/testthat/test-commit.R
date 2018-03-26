@@ -43,5 +43,5 @@ test_that("restore data", {
 
 test_that("clean-up works for edge cases", {
   # empty symbol
-  expect_equal(cleanup_object(bquote()), bquote())
+  expect_equal(strip_object(bquote()), bquote())
 })

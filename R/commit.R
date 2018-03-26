@@ -64,7 +64,7 @@ commit_store <- function (commit, store)
 
   # name -> ID in object store
   store_object <- function (o, id) {
-    o  <- cleanup_object(o)
+    o  <- strip_object(o)
     if (is.null(id) || is.na(id)) id <- storage::compute_id(o)
     if (storage::os_exists(store, id)) return(id)
 
@@ -123,6 +123,7 @@ commit_restore_data <- function (co, store)
 }
 
 
+# TODO commit should have its own timestamp
 commit_timestamp <- function (co, store)
 {
   stopifnot(is_commit(co))
@@ -132,42 +133,6 @@ commit_timestamp <- function (co, store)
   }, integer(1)))
   as.POSIXct(time, tz = 'UTC', origin = '1970-01-01')
 }
-
-
-# TODO could be turned into a S3 method
-auto_tags <- function (obj)
-{
-  list(class = class(obj), time = Sys.time())
-}
-
-
-#' Removes references to environments.
-#'
-#' Some objects (e.g. formula, lm) store references to environments
-#' in which they were created. This function replaces each such reference
-#' with a reference to `emptyenv()`.
-#'
-#' @param obj Object to be processed.
-#' @return `obj` with environment references replaced by `emptyenv()`
-#'
-cleanup_object <- function (obj)
-{
-  if (is.symbol(obj)) return(obj)
-
-  # TODO should we disregard any environment?
-  if (is.environment(obj)) return(emptyenv())
-
-  attrs <- lapply(attributes(obj), cleanup_object)
-
-  if (is.list(obj))
-  {
-    obj <- lapply(obj, cleanup_object)
-  }
-
-  attributes(obj) <- attrs
-  obj
-}
-
 
 
 

@@ -1,6 +1,36 @@
 context("track")
 
 
+test_that("store environment", {
+  m <- storage::memory()
+  e <- as.environment(list(a = 1, b = 2, c = iris))
+
+  i <- store_environment(m, e, bquote())
+  expect_named(i, names(e))
+  expect_length(storage::os_list(m), 3)
+})
+
+
+test_that("object is stripped of environments", {
+  m <- lm(Sepal.Length ~ Species, iris)
+  n <- strip_object(m)
+
+  this_env <- environment()
+  expect_identical(attr(m$terms, '.Environment'), this_env)
+  expect_identical(attr(n$terms, '.Environment'), emptyenv())
+})
+
+
+test_that("stripping preserves address", {
+  skip_if_not_installed("data.table")
+
+  stripped <- strip_object(iris)
+  expect_identical(stripped, iris)
+  expect_identical(data.table::address(stripped), data.table::address(iris))
+})
+
+
+
 test_that("recognize stores", {
   st1 <- filled_store(tempdir())
   on.exit(remove_store(st1), add = TRUE)
