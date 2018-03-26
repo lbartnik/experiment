@@ -6,22 +6,20 @@
 \alias{print.commit}
 \title{Creates a new commit object.}
 \usage{
-commit(contents, expression, parent, id, object_ids)
+commit(artifacts, expression, parent, id = NA_character_)
 
 is_commit(x)
 
 \method{print}{commit}(x, simple = FALSE, header = TRUE, ..., store)
 }
 \arguments{
-\item{contents}{An environment or a list of objects.}
+\item{artifacts}{A named \code{list} of object ids.}
 
 \item{expression}{Expression associated with this commit.}
 
 \item{parent}{Identifier of the parent commit.}
 
 \item{id}{Identifier of this commit.}
-
-\item{object_ids}{Identifiers of objects passed in \code{contents}.}
 
 \item{x}{Object to be tested or printed.}
 

@@ -48,6 +48,12 @@ not_null <- function (...)
 }
 
 
+first_not_null <- function (...) {
+  nn <- not_null(...)
+  nth(nn, 1)
+}
+
+
 crc32 <- function (x) digest::digest(x, algo = 'crc32')
 
 

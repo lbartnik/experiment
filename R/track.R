@@ -85,30 +85,20 @@ task_callback <- function (expr, result, successful, printed)
 #'
 update_current_commit <- function (state, env, plot, expr)
 {
-  # prepare the list of objects
-  .plot <- plot_as_svg(plot)
-
-  # TODO if it looks the same maybe it should be NULLed entirely?
-  # if the current plot looks the same as the last one, do not update at all
-  if (svg_equal(.plot, state$last_commit$objects$.plot)) {
-    .plot <- state$last_commit$objects$.plot
-  }
-
-  # TODO can both, env and plot, change as a result of a single command?
-
   objects <- store_environment(state$stash, env, expr)
 
-  env <- as.list(env)
+  # if the current plot looks the same as the last one, do not update at all
+  .plot <- plot_as_svg(plot)
+  if (!is.null(.plot) && !svg_equal(.plot, state$last_commit$objects$.plot)) {
+    objects$.plot <- store_plot(state$stash, .plot, expr)
+  }
 
   # now create and process the commit
-  co <- commit(env, expr)
+  co <- commit(objects, expr, state$last_commit$id)
 
-  # if there is new data...
-  if (!commit_equal(co, state$last_commit))
-  {
-    # ... and then write down actual data
-    parent(co) <- state$last_commit$id
-    state$last_commit <- commit_store(co, state$stash)
+  # if there are new artifacts, store a new commit
+  if (!commit_equal(co, state$last_commit, "artifacts-only")) {
+    state$last_commit <- write_commit(state$stash, co)
   }
 
   invisible(state$last_commit$id)
@@ -132,6 +122,13 @@ store_environment <- function (store, env, expr)
   })
 
   ids
+}
+
+
+#' @rdname store_environment
+store_plot <- function (store, plot, expr)
+{
+
 }
 
 

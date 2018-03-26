@@ -249,11 +249,11 @@ commit_to_steps <- function (commit, objects)
   }
 
   # define the TRUE/FALSE filter
-  filter <- names(commit$objects) %in% objects
+  filter <- names(commit$object_ids) %in% objects
 
-  names <- names(commit$objects)[filter]
+  names <- names(commit$object_ids)[filter]
   ids <- as.character(commit$object_ids)[filter]
-  objects <- commit$objects[filter]
+  objects <- lapply(names, function(n) commit$objects[[n]])
   tags <- commit$tags[filter]
 
   # get all steps
@@ -281,12 +281,12 @@ commit_to_steps <- function (commit, objects)
 introduced_in <- function (graph, id)
 {
   c <- graph[[id]]
-  if (is.na(c$parent)) return(names(c$objects))
+  if (is.na(c$parent)) return(names(c$object_ids))
 
   p <- graph[[c$parent]]
   new_objs <- Filter(function (n) {
-    is.na(match(n, names(p$objects))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
-  }, setdiff(names(c$objects), '.plot'))
+    is.na(match(n, names(p$object_ids))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
+  }, setdiff(names(c$object_ids), '.plot'))
 
   # there is a plot (first condition) and it's different from
   # what was there before (second condition)

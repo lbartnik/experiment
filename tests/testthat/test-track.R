@@ -169,7 +169,9 @@ test_that("reattach with merge", {
 test_that("reattach with choice", {
   state <- empty_state()
   store <- commit_filesystem_store()
-  commit_store(commit(list(x = 2), bquote(), 'a', 'e', list(x = 't')), store)
+
+  storage::os_write(store, 1, auto_tags(1), 't')
+  write_commit(store, commit(list(x = 't'), bquote(), 'a', 'e'))
   env   <- new.env()
 
   mockery::stub(reattach_to_store, 'showChoiceDialog', 'e')

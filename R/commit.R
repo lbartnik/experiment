@@ -1,27 +1,22 @@
 
 #' Creates a new commit object.
 #'
-#' @param contents An environment or a list of objects.
+#' @param artifacts A named `list` of object ids.
 #' @param expression Expression associated with this commit.
 #' @param parent Identifier of the parent commit.
 #' @param id Identifier of this commit.
-#' @param object_ids Identifiers of objects passed in `contents`.
 #'
 #' @rdname commit
 #'
-commit <- function (contents, expression, parent, id, object_ids)
+commit <- function (artifacts, expression, parent, id = NA_character_)
 {
-  objects <- as.list(contents)
-  stopifnot(all_named(objects))
+  stopifnot(is.list(artifacts), all_named(artifacts))
 
-  if (missing(parent)) parent <- NA_character_
   if (missing(id)) id <- NA_character_
+  tags <- lapply(artifacts, function (x) list())
 
-  if (missing(object_ids)) object_ids <- lapply(contents, function (x) NA_character_)
-  tags <- lapply(contents, function (x) list())
-
-  structure(list(id = id, objects = objects, object_ids = object_ids, tags = tags,
-                 expr = expression, parent = parent),
+  structure(list(id = id, object_ids = artifacts, objects = list(),
+                 tags = tags, expr = expression, parent = parent),
             class = 'commit')
 }
 
@@ -31,61 +26,44 @@ commit <- function (contents, expression, parent, id, object_ids)
 is_commit <- function (x) inherits(x, 'commit')
 
 
-`parent<-` <- function (co, value)
-{
-  co$parent <- value
-  co
-}
-
-
 # it has to be optimizd in case commits are bulky
-commit_equal <- function (a, b)
+commit_equal <- function (a, b, method = "artifacts-only")
 {
   stopifnot(is_commit(a), is_commit(b))
 
-  an <- names(a$objects)
-  bn <- names(b$objects)
-  if (!setequal(an, bn)) return(FALSE)
+  if (identical(method, "artifacts-only")) {
+    # name and its assigned identifier must match
+    an <- sort(first_not_null(names(a$object_ids), character()))
+    bn <- sort(first_not_null(names(b$object_ids), character()))
+    return(identical(a$object_ids[an], b$object_ids[bn]))
+  }
 
-  identical(a$objects[an], b$objects[bn])
+  stop("unknown comparison method: ", method)
 }
 
 
 
 #' Write commit to an object store.
 #'
-#' @param commit A [commit] object.
-#' @param store An object store, e.g. [storage::filesystem].
+#' An assumption is made that all objects are already stored and only
+#' the commit itself needs to be written to the object store.
 #'
-commit_store <- function (commit, store)
+#' @param store An object store, e.g. [storage::filesystem].
+#' @param commit A [commit] object.
+#'
+write_commit <- function (store, commit)
 {
   stopifnot(is_commit(commit))
   stopifnot(storage::is_object_store(store))
 
-  # name -> ID in object store
-  store_object <- function (o, id) {
-    o  <- strip_object(o)
-    if (is.null(id) || is.na(id)) id <- storage::compute_id(o)
-    if (storage::os_exists(store, id)) return(id)
-
-    tg <- auto_tags(o)
-    storage::os_write(store, o, id = id, tags = tg)
-  }
-  commit$object_ids <- mapply(store_object, o = commit$objects,
-                              id = not_null(commit$object_ids, list(NULL)),
-                              SIMPLIFY = FALSE)
-
-  if (is.na(commit$id))
-  {
+  if (is.na(commit$id)) {
     commit$id <- storage::compute_id(commit)
   }
 
-  # this should never happen because hash is computed from
-  # both objects and parent id; if it does happen, something
-  # is seriously broken
-  if (storage::os_exists(store, commit$id))
-  {
-    stop("commit already exists, aborting", call. = FALSE)
+  # this should never happen because hash is computed from both objects
+  # and parent id; if it does happen, something is SERIOUSLY broken
+  if (storage::os_exists(store, commit$id)) {
+    stop("commit already exists, aborting")
   }
 
   # store list of object pointers + basic 'history' tags
@@ -100,18 +78,13 @@ commit_store <- function (commit, store)
 
 commit_restore <- function (id, store, .data = TRUE)
 {
-  stopifnot(is_nonempty_character(id),
-            storage::is_object_store(store))
+  stopifnot(is_nonempty_character(id), storage::is_object_store(store))
 
-  co <- storage::os_read(store, id)
-  objects <- lapply(co$object$objects, function (id) NA_character_)
+  raw <- storage::os_read(store, id)
+  co <- commit(raw$object$objects, raw$object$expr, raw$tags$parent, id)
 
-  co <- commit(objects, co$object$expr, co$tags$parent, id, co$object$objects)
-  if (isTRUE(.data)) {
-    co <- commit_restore_data(co, store)
-  }
-
-  co
+  if (!isTRUE(.data)) return(co)
+  commit_restore_data(co, store)
 }
 
 
