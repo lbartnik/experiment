@@ -128,7 +128,11 @@ store_environment <- function (store, env, expr)
 #' @rdname store_environment
 store_plot <- function (store, plot, expr)
 {
+  id <- storage::compute_id(plot)
+  if (storage::os_exists(store, id)) return(id)
 
+  tags <- auto_tags(plot)
+  storage::os_write(store, plot, id = id, tags = tags)
 }
 
 

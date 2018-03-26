@@ -33,8 +33,8 @@ commit_equal <- function (a, b, method = "artifacts-only")
 
   if (identical(method, "artifacts-only")) {
     # name and its assigned identifier must match
-    an <- sort(first_not_null(names(a$object_ids), character()))
-    bn <- sort(first_not_null(names(b$object_ids), character()))
+    an <- sort(not_null(names(a$object_ids), character()))
+    bn <- sort(not_null(names(b$object_ids), character()))
     return(identical(a$object_ids[an], b$object_ids[bn]))
   }
 

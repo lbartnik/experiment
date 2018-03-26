@@ -38,6 +38,7 @@ is_error <- function (x) inherits(x, 'try-error')
 isFALSE <- function (x) !isTRUE(x)
 
 
+# returns the first non-null element in args (...)
 not_null <- function (...)
 {
   x <- list(...)
@@ -45,12 +46,6 @@ not_null <- function (...)
   p <- match(FALSE, n)
   stopifnot(!is.na(p))
   x[[p]]
-}
-
-
-first_not_null <- function (...) {
-  nn <- not_null(...)
-  nth(nn, 1)
 }
 
 
