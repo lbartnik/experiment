@@ -1,6 +1,21 @@
 context("track")
 
 
+test_that("parents are extracted", {
+  e <- as.environment(list(a = 1, b = 2))
+  p <- extract_parents('a', e, bquote(a <- b))
+  expect_equal(p, 'b')
+
+  e <- as.environment(list(a = 1, b = 2, c = 3))
+  p <- extract_parents('a', e, bquote(a <- b + c))
+  expect_equal(p, c('b', 'c'))
+
+  e <- as.environment(list(a = 1, b = 2, c = 3, f = function(x)x**2))
+  p <- extract_parents('a', e, bquote(a <- f(b + c)))
+  expect_equal(p, c('b', 'c', 'f'))
+})
+
+
 test_that("store environment", {
   m <- storage::memory()
   e <- as.environment(list(a = 1, b = 2, c = iris))
@@ -8,6 +23,14 @@ test_that("store environment", {
   i <- store_environment(m, e, bquote())
   expect_named(i, names(e))
   expect_length(storage::os_list(m), 3)
+
+  # store and extract parents
+  m <- storage::memory()
+  e <- as.environment(list(a = 2, b = 1))
+
+  i <- store_environment(m, e, bquote(a <- b + 1))
+  t <- storage::os_read_tags(m, storage::compute_id(2))
+  expect_equivalent(t$parents, storage::compute_id(1))
 })
 
 
@@ -28,7 +51,6 @@ test_that("stripping preserves address", {
   expect_identical(stripped, iris)
   expect_identical(data.table::address(stripped), data.table::address(iris))
 })
-
 
 
 test_that("recognize stores", {

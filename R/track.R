@@ -116,14 +116,35 @@ store_environment <- function (store, env, expr)
     obj  <- strip_object(obj)
     id <- storage::compute_id(obj)
     if (storage::os_exists(store, id)) return(id)
+    storage::os_write(store, obj, id = id, tags = auto_tags(obj))
+  })
 
-    # TODO add the "parent objects" tag using "defer"
+  # assign parents
+  lapply(names(env), function (name) {
+    tags <- storage::os_read_tags(store, ids[[name]])
+    if ('parents' %in% names(tags)) return()
 
-    tags <- auto_tags(obj)
-    storage::os_write(store, obj, id = id, tags = tags)
+    parents <- extract_parents(name, env, expr)
+    tags$parents <-
+      if (length(parents)) vapply(parents, function (n) ids[[n]], character(1))
+      else NA_character_
+    storage::os_update_tags(store, ids[[name]], tags)
   })
 
   ids
+}
+
+
+extract_parents <- function (what, env, expr)
+{
+  # add the "parent objects" tag using "defer"
+  fn <- function(){}; body(fn) <- expr
+
+  df <- defer::defer_(fn, .caller_env = env, .extract = TRUE)
+  ev <- defer::extract_variables(df)
+  ef <- defer::extract_functions(df)
+
+  c(names(ev), setdiff(names(ef), 'entry'))
 }
 
 
