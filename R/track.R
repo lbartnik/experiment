@@ -90,7 +90,7 @@ update_current_commit <- function (state, env, plot, expr)
   # if the current plot looks the same as the last one, do not update at all
   .plot <- plot_as_svg(plot)
   if (!is.null(.plot) && !svg_equal(.plot, state$last_commit$objects$.plot)) {
-    objects$.plot <- store_plot(state$stash, .plot, expr)
+    objects$.plot <- store_plot(state$stash, .plot, env, expr)
   }
 
   # now create and process the commit
@@ -124,6 +124,7 @@ store_environment <- function (store, env, expr)
     tags <- storage::os_read_tags(store, id)
     if ('parents' %in% names(tags)) return()
 
+    # TODO this can get confused if the expression changes multiple objects
     parents <- extract_parents(env, expr)
     tags$parents <-
       if (length(parents)) vapply(parents, function (n) ids[[n]], character(1))
@@ -135,6 +136,20 @@ store_environment <- function (store, env, expr)
 }
 
 
+#' @rdname store_environment
+store_plot <- function (store, plot, env, expr)
+{
+  id <- storage::compute_id(plot)
+  if (storage::os_exists(store, id)) return(id)
+
+  tags <- auto_tags(plot)
+  # TODO this can get confused if the expression changes multiple objects
+  tags$parents <- extract_parents(env, expr)
+  storage::os_write(store, plot, id = id, tags = tags)
+}
+
+
+#' @rdname store_environment
 extract_parents <- function (env, expr)
 {
   # add the "parent objects" tag using "defer"
@@ -145,17 +160,6 @@ extract_parents <- function (env, expr)
   ef <- defer::extract_functions(df)
 
   c(names(ev), setdiff(names(ef), 'entry'))
-}
-
-
-#' @rdname store_environment
-store_plot <- function (store, plot, expr)
-{
-  id <- storage::compute_id(plot)
-  if (storage::os_exists(store, id)) return(id)
-
-  tags <- auto_tags(plot)
-  storage::os_write(store, plot, id = id, tags = tags)
 }
 
 

@@ -34,6 +34,16 @@ test_that("store environment", {
 })
 
 
+test_that("store plot", {
+  m <- storage::memory()
+  e <- as.environment(list(a = 2, b = 1))
+
+  i <- store_plot(m, dummy_plot(), e, bquote(plot(a, b)))
+  t <- storage::os_read_tags(m, i)
+  expect_equal(t$parents, c('a', 'b'))
+})
+
+
 test_that("object is stripped of environments", {
   m <- lm(Sepal.Length ~ Species, iris)
   n <- strip_object(m)
