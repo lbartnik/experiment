@@ -4,14 +4,17 @@
 \alias{store_environment}
 \alias{store_plot}
 \alias{extract_parents}
+\alias{names_to_ids}
 \alias{strip_object}
 \title{Removes references to environments.}
 \usage{
 store_environment(store, env, expr)
 
-store_plot(store, plot, env, expr)
+store_plot(store, plot, env, expr, ids)
 
 extract_parents(env, expr)
+
+names_to_ids(what, mapping)
 
 strip_object(obj)
 }
@@ -22,6 +25,12 @@ strip_object(obj)
 \code{obj} with environment references replaced by \code{emptyenv()}
 }
 \description{
+\code{names_to_ids} is a simple helper function that maps
+names to identifiers and makes sure all requested names are mapped.
+Important details is to keep the vector of parents named: only this
+way an object/plot can be re-computed; without names there is no way
+to match object ids into the associated expression.
+
 Some objects (e.g. formula, lm) store references to environments
 in which they were created. This function replaces each such reference
 with a reference to \code{emptyenv()}.

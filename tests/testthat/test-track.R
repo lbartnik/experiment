@@ -1,6 +1,8 @@
 context("track")
 
 
+# --- basics -----------------------------------------------------------
+
 test_that("parents are extracted", {
   e <- as.environment(list(a = 1, b = 2))
   p <- extract_parents(e, bquote(a <- b))
@@ -30,17 +32,17 @@ test_that("store environment", {
 
   i <- store_environment(m, e, bquote(a <- b + 1))
   t <- storage::os_read_tags(m, storage::compute_id(2))
-  expect_equivalent(t$parents, storage::compute_id(1))
+  expect_equal(t$parents, c(b = storage::compute_id(1)))
 })
 
 
 test_that("store plot", {
   m <- storage::memory()
-  e <- as.environment(list(a = 2, b = 1))
+  e <- as.environment(list(a = 'id1', b = 'id2'))
 
-  i <- store_plot(m, dummy_plot(), e, bquote(plot(a, b)))
+  i <- store_plot(m, dummy_plot(), e, bquote(plot(a, b)), as.list(e))
   t <- storage::os_read_tags(m, i)
-  expect_equal(t$parents, c('a', 'b'))
+  expect_equal(t$parents, c(a = 'id1', b = 'id2'))
 })
 
 
@@ -61,6 +63,25 @@ test_that("stripping preserves address", {
   expect_identical(stripped, iris)
   expect_identical(data.table::address(stripped), data.table::address(iris))
 })
+
+
+# --- replay -----------------------------------------------------------
+
+test_that("events are replayed", {
+  m <- commit_memory_store()
+  add_commit(m, list(y = 101), bquote(y <- x + 1), 'e', 'f') # replayed
+  add_commit(m, list(x = 100L), bquote(x <- 100L), 'd', 'e') # substitution
+
+  b <- tracker_replay(x)
+
+  # should create a new branch with 3 new commits:
+  # 1. load the substitute
+  # 2. replay z
+  # 3. replay y
+})
+
+
+
 
 
 test_that("recognize stores", {

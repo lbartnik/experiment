@@ -90,7 +90,7 @@ update_current_commit <- function (state, env, plot, expr)
   # if the current plot looks the same as the last one, do not update at all
   .plot <- plot_as_svg(plot)
   if (!is.null(.plot) && !svg_equal(.plot, state$last_commit$objects$.plot)) {
-    objects$.plot <- store_plot(state$stash, .plot, env, expr)
+    objects$.plot <- store_plot(state$stash, .plot, env, expr, objects)
   }
 
   # now create and process the commit
@@ -126,9 +126,8 @@ store_environment <- function (store, env, expr)
 
     # TODO this can get confused if the expression changes multiple objects
     parents <- extract_parents(env, expr)
-    tags$parents <-
-      if (length(parents)) vapply(parents, function (n) ids[[n]], character(1))
-      else NA_character_
+    tags$parents <- names_to_ids(parents, ids)
+
     storage::os_update_tags(store, id, tags)
   })
 
@@ -137,14 +136,16 @@ store_environment <- function (store, env, expr)
 
 
 #' @rdname store_environment
-store_plot <- function (store, plot, env, expr)
+store_plot <- function (store, plot, env, expr, ids)
 {
   id <- storage::compute_id(plot)
   if (storage::os_exists(store, id)) return(id)
 
   tags <- auto_tags(plot)
   # TODO this can get confused if the expression changes multiple objects
-  tags$parents <- extract_parents(env, expr)
+  parents <- extract_parents(env, expr)
+  tags$parents <- names_to_ids(parents, ids)
+
   storage::os_write(store, plot, id = id, tags = tags)
 }
 
@@ -152,6 +153,8 @@ store_plot <- function (store, plot, env, expr)
 #' @rdname store_environment
 extract_parents <- function (env, expr)
 {
+  stopifnot(is.environment(env))
+
   # add the "parent objects" tag using "defer"
   fn <- function(){}; body(fn) <- expr
 
@@ -160,6 +163,20 @@ extract_parents <- function (env, expr)
   ef <- defer::extract_functions(df)
 
   c(names(ev), setdiff(names(ef), 'entry'))
+}
+
+
+#' @description `names_to_ids` is a simple helper function that maps
+#' names to identifiers and makes sure all requested names are mapped.
+#' Important details is to keep the vector of parents named: only this
+#' way an object/plot can be re-computed; without names there is no way
+#' to match object ids into the associated expression.
+#'
+#' @rdname store_environment
+names_to_ids <- function (what, mapping)
+{
+  stopifnot(all(what %in% names(mapping)))
+  vapply(what, function (n) mapping[[n]], character(1))
 }
 
 
@@ -233,6 +250,9 @@ strip_object <- function (obj)
 #'
 tracker_replay <- function (...)
 {
+  # A new branch is created that is accessible by browser (GUI/text) but
+  # does not replace the current session.
+
   # 1. extract details from ...
   #    - handle output and replace TODO?
   #    - make sure ... are named or point to a symbol
@@ -262,10 +282,20 @@ tracker_replay <- function (...)
   #      on an earlier substitution; fail or show a warning
   #    - finally, commands will create one of the expected products; re-evaluate
   #      and store its output
-  #
-  #
-  # A new branch is created that is accessible by browser (GUI/text) but
-  # does not replace the current session.
+
+  # determine what gets re-evaluated and what is injected into the replay
+  output <- character() # ALL
+  replace <- list(x = 100)
+
+
+  # examine the path in commit graph
+  full <- graph(internal_state$stash, TRUE)
+  path <- graph_path(full, internal_state$last_commit$id, 'root')
+
+  for (commit in path) {
+
+  }
+
 }
 
 

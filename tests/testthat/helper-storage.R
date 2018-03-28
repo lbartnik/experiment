@@ -39,16 +39,16 @@ fill_commits <- function (store)
   storage::os_write(store, '3', auto_tags('3'), 'r')
   storage::os_write(store,  1,  auto_tags(1),   's')
 
-  c <- commit(list(x = 'p'), bquote(), NA_character_, 'a')
+  c <- commit(list(x = 'p'), bquote(x <- 1), NA_character_, 'a')
   write_commit(store, c)
 
-  c <- commit(list(x = 'p', y = 'q'), bquote(), 'a', 'b')
+  c <- commit(list(x = 'p', y = 'q'), bquote(y <- 2L), 'a', 'b')
   write_commit(store, c)
 
-  c <- commit(list(x = 'r', y = 'q'), bquote(), 'b', 'c')
+  c <- commit(list(x = 'r', y = 'q'), bquote(x <- as.character(x + y)), 'b', 'c')
   write_commit(store, c)
 
-  c <- commit(list(x = 'r', y = 'q', z = 's'), bquote(), 'c', 'd')
+  c <- commit(list(x = 'r', y = 'q', z = 's'), bquote(z <- as.numeric(x)), 'c', 'd')
   write_commit(store, c)
 
   store
@@ -77,6 +77,16 @@ sample_steps <- function (.data = TRUE)
 empty_steps <- function ()
 {
   structure(list(steps = list(), links = list()), class = 'steps')
+}
+
+
+add_commit <- function (store, objects, expr, parent_id, id)
+{
+  ids <- lapply(objects, function (o) {
+    storage::os_write(store, o, auto_tags(o))
+  })
+
+  write_commit(store, commit(ids, expr, parent_id, id))
 }
 
 
