@@ -191,6 +191,29 @@ print.steps <- function(x, ...)
 #'   the `objects` filter
 #' * `links` which defines links (graph edges) between `steps`
 #'
+#' @details The value returned by `commit_to_steps` is a `list` that
+#' contains two named elements: `steps` and `links`, whose values are
+#' again `list`s. The `steps` list holds description of objects present
+#' in the commit that also matched the filter defined in the argument
+#' `objects`. The `links` list defines graph edges among `steps`; edges
+#' are arbitrary as all objects are actually created in the same commit.
+#'
+#' Each element in the `steps` list is itself a `list` that represents
+#' either an R object or a plot. Both alternatives share the following
+#' keys:
+#' * `type` - either `'object'` or `'plot'`
+#' * `id` - object's identifier in the repository (sha1)
+#' * `expr` - expression that produced this object (assigned to its parent [commit])
+#' * `parent` - id (sha1) of this object's parent commit
+#'
+#' If `type` is equal to `'object'`, the followin keys are also present:
+#' * `name` - name of the variable in the commit (R's `environment`) which the object was assigned to
+#' * `desc` - textual description, auto-generated
+#'
+#' Alternatively, if `type` is equal to `'plot'`, the followin key is
+#' also present:
+#' * `contents` - base64-encoded graphics
+#'
 #' @param commit A [commit()] object.
 #' @param objects Filter for objects present in the commit.
 #' @return `commit_to_steps` returns a `list` of `steps` and `links`.
@@ -226,11 +249,11 @@ commit_to_steps <- function (commit, objects)
   }
 
   # define the TRUE/FALSE filter
-  filter <- names(commit$objects) %in% objects
+  filter <- names(commit$object_ids) %in% objects
 
-  names <- names(commit$objects)[filter]
+  names <- names(commit$object_ids)[filter]
   ids <- as.character(commit$object_ids)[filter]
-  objects <- commit$objects[filter]
+  objects <- lapply(names, function(n) commit$objects[[n]])
   tags <- commit$tags[filter]
 
   # get all steps
@@ -258,12 +281,12 @@ commit_to_steps <- function (commit, objects)
 introduced_in <- function (graph, id)
 {
   c <- graph[[id]]
-  if (is.na(c$parent)) return(names(c$objects))
+  if (is.na(c$parent)) return(names(c$object_ids))
 
   p <- graph[[c$parent]]
   new_objs <- Filter(function (n) {
-    is.na(match(n, names(p$objects))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
-  }, setdiff(names(c$objects), '.plot'))
+    is.na(match(n, names(p$object_ids))) || !identical(c$object_ids[[n]], p$object_ids[[n]])
+  }, setdiff(names(c$object_ids), '.plot'))
 
   # there is a plot (first condition) and it's different from
   # what was there before (second condition)

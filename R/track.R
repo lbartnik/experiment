@@ -85,56 +85,189 @@ task_callback <- function (expr, result, successful, printed)
 #'
 update_current_commit <- function (state, env, plot, expr)
 {
-  # prepare the list of objects
-  env <- as.list(env)
-  env$.plot <- plot_as_svg(plot)
+  objects <- store_environment(state$stash, env, expr)
 
-  # if the current plot look sthe same as the last one, do not update at all
-  if (svg_equal(env$.plot, state$last_commit$objects$.plot)) {
-    env$.plot <- state$last_commit$objects$.plot
+  # if the current plot looks the same as the last one, do not update at all
+  .plot <- plot_as_svg(plot)
+  if (!is.null(.plot) && !svg_equal(.plot, state$last_commit$objects$.plot)) {
+    objects$.plot <- store_plot(state$stash, .plot, env, expr)
   }
 
-  # TODO can both, env and plot, change as a result of a single command?
-
   # now create and process the commit
-  co <- commit(env, expr)
+  co <- commit(objects, expr, state$last_commit$id)
 
-  # if there is new data...
-  if (!commit_equal(co, state$last_commit))
-  {
-    # ... and then write down actual data
-    parent(co) <- state$last_commit$id
-    state$last_commit <- commit_store(co, state$stash)
+  # if there are new artifacts, store a new commit
+  if (!commit_equal(co, state$last_commit, "artifacts-only")) {
+    state$last_commit <- write_commit(state$stash, co)
   }
 
   invisible(state$last_commit$id)
 }
 
 
-#' Returns a base64-encoded, SVG plot.
-#'
-#' @param pl Plot recorded by [recordPlot()].
-#' @return `character` string, base64-encoded SVG plot.
-#' @import jsonlite
-#'
-plot_as_svg <- function (pl)
+
+#' @rdname store_environment
+store_environment <- function (store, env, expr)
 {
-  if (is.null(pl)) return(NULL)
+  stopifnot(is.environment(env))
+  stopifnot(storage::is_object_store(store))
 
-  # TODO use svglite::stringSVG
+  ids <- lapply(as.list(env), function (obj) {
+    obj  <- strip_object(obj)
+    id <- storage::compute_id(obj)
+    if (storage::os_exists(store, id)) return(id)
+    storage::os_write(store, obj, id = id, tags = auto_tags(obj))
+  })
 
-  path <- tempfile(fileext = ".svg")
+  # assign parents
+  lapply(ids, function (id) {
+    tags <- storage::os_read_tags(store, id)
+    if ('parents' %in% names(tags)) return()
 
-  # TODO if `pl` has been recorded without dev.control("enable"), the
-  #      plot might be empty; it might be necessary to check for that
+    # TODO this can get confused if the expression changes multiple objects
+    parents <- extract_parents(env, expr)
+    tags$parents <-
+      if (length(parents)) vapply(parents, function (n) ids[[n]], character(1))
+      else NA_character_
+    storage::os_update_tags(store, id, tags)
+  })
 
-  svg(path)
-  replayPlot(pl)
-  dev.off()
-
-  contents <- readBin(path, "raw", n = file.size(path))
-  jsonlite::base64_enc(contents)
+  ids
 }
+
+
+#' @rdname store_environment
+store_plot <- function (store, plot, env, expr)
+{
+  id <- storage::compute_id(plot)
+  if (storage::os_exists(store, id)) return(id)
+
+  tags <- auto_tags(plot)
+  # TODO this can get confused if the expression changes multiple objects
+  tags$parents <- extract_parents(env, expr)
+  storage::os_write(store, plot, id = id, tags = tags)
+}
+
+
+#' @rdname store_environment
+extract_parents <- function (env, expr)
+{
+  # add the "parent objects" tag using "defer"
+  fn <- function(){}; body(fn) <- expr
+
+  df <- defer::defer_(fn, .caller_env = env, .extract = TRUE)
+  ev <- defer::extract_variables(df)
+  ef <- defer::extract_functions(df)
+
+  c(names(ev), setdiff(names(ef), 'entry'))
+}
+
+
+#' Removes references to environments.
+#'
+#' Some objects (e.g. formula, lm) store references to environments
+#' in which they were created. This function replaces each such reference
+#' with a reference to `emptyenv()`.
+#'
+#' As much as possible, this function tries not to make any copies of
+#' the original data. This is because the address of the object might
+#' be used to determine whether object's identifier needs to be computed
+#' which might be a costly operation.
+#'
+#' @param obj Object to be processed.
+#' @return `obj` with environment references replaced by `emptyenv()`
+#'
+#' @rdname store_environment
+#'
+strip_object <- function (obj)
+{
+  if (is.symbol(obj)) return(obj)
+
+  # TODO should we disregard any environment?
+  if (is.environment(obj)) return(emptyenv())
+
+  attrs <- if (!is.null(attributes(obj))) lapply(attributes(obj), strip_object)
+
+  if (is.list(obj)) {
+    obj_tmp <- lapply(obj, strip_object)
+    # use stripped object only if stripping actually changed something
+    obj_lst <- lapply(obj, function(x)x)
+    if (!identical(obj_tmp, obj_lst)) {
+      obj <- obj_tmp
+    }
+  }
+  if (!identical(attributes(obj), attrs)) {
+    attributes(obj) <- attrs
+  }
+
+  obj
+}
+
+
+
+#' Repeat a sequence of commands.
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' # initial sequence
+#' x <- 1
+#' y <- x + 2
+#' z <- y ** 2
+#' w <- sqrt(y)
+#'
+#' # alterations: explicit value
+#' tracker_replay(x = 2)
+#' # alterations: replace the same object
+#' x <- 2
+#' tracker_replay(x)
+#' # alterations: name substitution
+#' v <- 3
+#' tracker_replay(x = v)
+#' # alterations: only some objects; w is not replayed
+#' tracker_replay(output(z), replace(x = 4))
+#'
+#' # show all branches created in those replays
+#' tracker$branch
+#' }
+#'
+tracker_replay <- function (...)
+{
+  # 1. extract details from ...
+  #    - handle output and replace TODO?
+  #    - make sure ... are named or point to a symbol
+  # 2. create substitution aggregate
+  # 3. consult aggregate with commits in a straight line from last to root
+  #    - verify which objects are being substituted and which serves as
+  #      substitutes
+  #    - compare names
+  #    - compare expressions; what is the measure of similarity? TODO?
+  # 4. objects which serve as substitutes can be tracked to their commits of
+  #    origin by their ids; the earliest commit where a substitute is defined
+  #    ends the replay pipeline
+  # 5. identify commits where the originals appear; we will start replaying
+  #    with the earliest original and stop just before the first substitution
+  # 6. place commits that inject substitution just after each commit where
+  #    an original appears/is created
+  # 7. if there is an output filter defined, apply it to the sequence of
+  #    commits; most probably only a few will be filtered out as we replay
+  #    both the commit where the desired object is created and the whole path
+  #    of objects that lead to it
+  # 8. stepping from the first substituted, replay commands:
+  #    - if commit is either an origin of replayed output or on a path to one,
+  #      re-evaluate
+  #    - if command creates an object that is supposed to be substituted, it
+  #      should result in the same object being created; otherwise this might
+  #      be a user error - specifying a substitute for an object that depends
+  #      on an earlier substitution; fail or show a warning
+  #    - finally, commands will create one of the expected products; re-evaluate
+  #      and store its output
+  #
+  #
+  # A new branch is created that is accessible by browser (GUI/text) but
+  # does not replace the current session.
+}
+
 
 
 #' Restore a snapshot from history.

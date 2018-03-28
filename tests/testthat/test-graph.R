@@ -89,7 +89,7 @@ test_that("convert graph", {
 test_that("unique step ids", {
   # when two commits contain object of the same id
   m <- commit_memory_store()
-  commit_store(commit(list(x = '3'), bquote(), 'a', 'e', list(x = 'r')), m)
+  write_commit(m, commit(list(x = 'r'), bquote(), 'a', 'e'))
 
   # extracting steps
   s <- graph_to_steps(graph(m))

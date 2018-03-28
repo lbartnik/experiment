@@ -2,7 +2,7 @@ empty_state <- function (where = tempdir())
 {
   as.environment(list(
     stash       = empty_store(where),
-    last_commit = commit(list(), bquote())
+    last_commit = commit(list(), bquote(), NA_character_)
   ))
 }
 
@@ -34,17 +34,22 @@ filled_store <- function (where = tempdir())
 
 fill_commits <- function (store)
 {
-  c <- commit(list(x = 1), bquote(), NA_character_, 'a', list(x = 'p'))
-  commit_store(c, store)
+  storage::os_write(store,  1,  auto_tags(1),   'p')
+  storage::os_write(store,  2L, auto_tags(2L),  'q')
+  storage::os_write(store, '3', auto_tags('3'), 'r')
+  storage::os_write(store,  1,  auto_tags(1),   's')
 
-  c <- commit(list(x = 1, y = 2L), bquote(), 'a', 'b', list(x = 'p', y = 'q'))
-  commit_store(c, store)
+  c <- commit(list(x = 'p'), bquote(), NA_character_, 'a')
+  write_commit(store, c)
 
-  c <- commit(list(x = '3', y = 2L), bquote(), 'b', 'c', list(x = 'r', y = 'q'))
-  commit_store(c, store)
+  c <- commit(list(x = 'p', y = 'q'), bquote(), 'a', 'b')
+  write_commit(store, c)
 
-  c <- commit(list(x = '3', y = 2L, z = 1), bquote(), 'c', 'd', list(x = 'r', y = 'q', z = 's'))
-  commit_store(c, store)
+  c <- commit(list(x = 'r', y = 'q'), bquote(), 'b', 'c')
+  write_commit(store, c)
+
+  c <- commit(list(x = 'r', y = 'q', z = 's'), bquote(), 'c', 'd')
+  write_commit(store, c)
 
   store
 }

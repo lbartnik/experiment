@@ -1,6 +1,68 @@
 context("track")
 
 
+test_that("parents are extracted", {
+  e <- as.environment(list(a = 1, b = 2))
+  p <- extract_parents(e, bquote(a <- b))
+  expect_equal(p, 'b')
+
+  e <- as.environment(list(a = 1, b = 2, c = 3))
+  p <- extract_parents(e, bquote(a <- b + c))
+  expect_equal(p, c('b', 'c'))
+
+  e <- as.environment(list(a = 1, b = 2, c = 3, f = function(x)x**2))
+  p <- extract_parents(e, bquote(a <- f(b + c)))
+  expect_equal(p, c('b', 'c', 'f'))
+})
+
+
+test_that("store environment", {
+  m <- storage::memory()
+  e <- as.environment(list(a = 1, b = 2, c = iris))
+
+  i <- store_environment(m, e, bquote())
+  expect_named(i, names(e))
+  expect_length(storage::os_list(m), 3)
+
+  # store and extract parents
+  m <- storage::memory()
+  e <- as.environment(list(a = 2, b = 1))
+
+  i <- store_environment(m, e, bquote(a <- b + 1))
+  t <- storage::os_read_tags(m, storage::compute_id(2))
+  expect_equivalent(t$parents, storage::compute_id(1))
+})
+
+
+test_that("store plot", {
+  m <- storage::memory()
+  e <- as.environment(list(a = 2, b = 1))
+
+  i <- store_plot(m, dummy_plot(), e, bquote(plot(a, b)))
+  t <- storage::os_read_tags(m, i)
+  expect_equal(t$parents, c('a', 'b'))
+})
+
+
+test_that("object is stripped of environments", {
+  m <- lm(Sepal.Length ~ Species, iris)
+  n <- strip_object(m)
+
+  this_env <- environment()
+  expect_identical(attr(m$terms, '.Environment'), this_env)
+  expect_identical(attr(n$terms, '.Environment'), emptyenv())
+})
+
+
+test_that("stripping preserves address", {
+  skip_if_not_installed("data.table")
+
+  stripped <- strip_object(iris)
+  expect_identical(stripped, iris)
+  expect_identical(data.table::address(stripped), data.table::address(iris))
+})
+
+
 test_that("recognize stores", {
   st1 <- filled_store(tempdir())
   on.exit(remove_store(st1), add = TRUE)
@@ -139,7 +201,9 @@ test_that("reattach with merge", {
 test_that("reattach with choice", {
   state <- empty_state()
   store <- commit_filesystem_store()
-  commit_store(commit(list(x = 2), bquote(), 'a', 'e', list(x = 't')), store)
+
+  storage::os_write(store, 1, auto_tags(1), 't')
+  write_commit(store, commit(list(x = 't'), bquote(), 'a', 'e'))
   env   <- new.env()
 
   mockery::stub(reattach_to_store, 'showChoiceDialog', 'e')
@@ -167,15 +231,15 @@ test_that("commit is updated", {
 test_that("plot is cached", {
   state <- empty_state()
 
-  update_current_commit(state, list(x = 1), NULL, bquote(x <- 1))
-  update_current_commit(state, list(x = 1), dummy_plot(), bquote(plot(1)))
-  update_current_commit(state, list(x = 2), NULL, bquote(x <- 2))
+  update_current_commit(state, as.environment(list(x = 1)), NULL, bquote(x <- 1))
+  update_current_commit(state, as.environment(list(x = 1)), dummy_plot(), bquote(plot(1)))
+  update_current_commit(state, as.environment(list(x = 2)), NULL, bquote(x <- 2))
 
   last <- state$last_commit
-  expect_identical(last$objects, list(x = 2))
+  expect_identical(last$object_ids, list(x = storage::compute_id(2)))
 
   prev <- commit_restore(last$parent, state$stash)
-  expect_named(prev$objects, c('x', '.plot'), ignore.order = TRUE)
+  expect_named(prev$object_ids, c('x', '.plot'), ignore.order = TRUE)
 
   root <- commit_restore(prev$parent, state$stash)
   expect_identical(root$objects, list(x = 1))
@@ -185,19 +249,19 @@ test_that("plot is cached", {
 test_that("multiple plots", {
   state <- empty_state()
 
-  update_current_commit(state, list(x = 1), NULL, bquote(x <- 1))
-  update_current_commit(state, list(x = 2), random_plot(), bquote(plot(1)))
-  update_current_commit(state, list(x = 3), random_plot(), bquote(plot(1)))
-  update_current_commit(state, list(x = 4), NULL, bquote(x <- 2))
+  update_current_commit(state, as.environment(list(x = 1)), NULL, bquote(x <- 1))
+  update_current_commit(state, as.environment(list(x = 2)), random_plot(), bquote(plot(1)))
+  update_current_commit(state, as.environment(list(x = 3)), random_plot(), bquote(plot(1)))
+  update_current_commit(state, as.environment(list(x = 4)), NULL, bquote(x <- 2))
 
-  last <- state$last_commit
+  last <- commit_restore(state$last_commit$id, state$stash, .data = TRUE)
   expect_identical(last$objects, list(x = 4))
 
-  prev <- commit_restore(last$parent, state$stash)
+  prev <- commit_restore(last$parent, state$stash, .data = TRUE)
   expect_named(prev$objects, c('x', '.plot'), ignore.order = TRUE)
   expect_equal(prev$objects$x, 3)
 
-  prv2 <- commit_restore(prev$parent, state$stash)
+  prv2 <- commit_restore(prev$parent, state$stash, .data = TRUE)
   expect_named(prev$objects, c('x', '.plot'), ignore.order = TRUE)
   expect_false(identical(prev$objects$.plot, prv2$objects$.plot))
   expect_equal(prv2$objects$x, 2)

@@ -100,4 +100,33 @@ key
 \details{
 \code{graph_to_steps} is the main function that orchestrates the
 transformation.
+
+The value returned by \code{commit_to_steps} is a \code{list} that
+contains two named elements: \code{steps} and \code{links}, whose values are
+again \code{list}s. The \code{steps} list holds description of objects present
+in the commit that also matched the filter defined in the argument
+\code{objects}. The \code{links} list defines graph edges among \code{steps}; edges
+are arbitrary as all objects are actually created in the same commit.
+
+Each element in the \code{steps} list is itself a \code{list} that represents
+either an R object or a plot. Both alternatives share the following
+keys:
+\itemize{
+\item \code{type} - either \code{'object'} or \code{'plot'}
+\item \code{id} - object's identifier in the repository (sha1)
+\item \code{expr} - expression that produced this object (assigned to its parent \link{commit})
+\item \code{parent} - id (sha1) of this object's parent commit
+}
+
+If \code{type} is equal to \code{'object'}, the followin keys are also present:
+\itemize{
+\item \code{name} - name of the variable in the commit (R's \code{environment}) which the object was assigned to
+\item \code{desc} - textual description, auto-generated
+}
+
+Alternatively, if \code{type} is equal to \code{'plot'}, the followin key is
+also present:
+\itemize{
+\item \code{contents} - base64-encoded graphics
+}
 }

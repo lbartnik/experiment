@@ -38,6 +38,7 @@ is_error <- function (x) inherits(x, 'try-error')
 isFALSE <- function (x) !isTRUE(x)
 
 
+# returns the first non-null element in args (...)
 not_null <- function (...)
 {
   x <- list(...)
@@ -55,3 +56,38 @@ is_knitr <- function () getOption("knitr.in.progress", FALSE)
 
 
 cat0 <- function (..., sep = '') cat(..., sep = sep)
+
+
+
+#' Returns a base64-encoded, SVG plot.
+#'
+#' @param pl Plot recorded by [recordPlot()].
+#' @return `character` string, base64-encoded SVG plot.
+#' @import jsonlite
+#'
+plot_as_svg <- function (pl)
+{
+  if (is.null(pl)) return(NULL)
+
+  # TODO use svglite::stringSVG
+
+  path <- tempfile(fileext = ".svg")
+
+  # TODO if `pl` has been recorded without dev.control("enable"), the
+  #      plot might be empty; it might be necessary to check for that
+
+  svg(path)
+  replayPlot(pl)
+  dev.off()
+
+  contents <- readBin(path, "raw", n = file.size(path))
+  jsonlite::base64_enc(contents)
+}
+
+
+# TODO could be turned into a S3 method
+auto_tags <- function (obj)
+{
+  list(class = class(obj), time = Sys.time())
+}
+
