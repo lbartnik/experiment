@@ -120,22 +120,22 @@ store_environment <- function (store, env, expr)
   })
 
   # assign parents
-  lapply(names(env), function (name) {
-    tags <- storage::os_read_tags(store, ids[[name]])
+  lapply(ids, function (id) {
+    tags <- storage::os_read_tags(store, id)
     if ('parents' %in% names(tags)) return()
 
-    parents <- extract_parents(name, env, expr)
+    parents <- extract_parents(env, expr)
     tags$parents <-
       if (length(parents)) vapply(parents, function (n) ids[[n]], character(1))
       else NA_character_
-    storage::os_update_tags(store, ids[[name]], tags)
+    storage::os_update_tags(store, id, tags)
   })
 
   ids
 }
 
 
-extract_parents <- function (what, env, expr)
+extract_parents <- function (env, expr)
 {
   # add the "parent objects" tag using "defer"
   fn <- function(){}; body(fn) <- expr
