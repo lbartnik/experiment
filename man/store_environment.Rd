@@ -3,12 +3,15 @@
 \name{store_environment}
 \alias{store_environment}
 \alias{store_plot}
+\alias{extract_parents}
 \alias{strip_object}
 \title{Removes references to environments.}
 \usage{
 store_environment(store, env, expr)
 
-store_plot(store, plot, expr)
+store_plot(store, plot, env, expr)
+
+extract_parents(env, expr)
 
 strip_object(obj)
 }

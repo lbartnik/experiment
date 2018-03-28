@@ -205,7 +205,68 @@ strip_object <- function (obj)
 
 
 
-
+#' Repeat a sequence of commands.
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' # initial sequence
+#' x <- 1
+#' y <- x + 2
+#' z <- y ** 2
+#' w <- sqrt(y)
+#'
+#' # alterations: explicit value
+#' tracker_replay(x = 2)
+#' # alterations: replace the same object
+#' x <- 2
+#' tracker_replay(x)
+#' # alterations: name substitution
+#' v <- 3
+#' tracker_replay(x = v)
+#' # alterations: only some objects; w is not replayed
+#' tracker_replay(output(z), replace(x = 4))
+#'
+#' # show all branches created in those replays
+#' tracker$branch
+#' }
+#'
+tracker_replay <- function (...)
+{
+  # 1. extract details from ...
+  #    - handle output and replace TODO?
+  #    - make sure ... are named or point to a symbol
+  # 2. create substitution aggregate
+  # 3. consult aggregate with commits in a straight line from last to root
+  #    - verify which objects are being substituted and which serves as
+  #      substitutes
+  #    - compare names
+  #    - compare expressions; what is the measure of similarity? TODO?
+  # 4. objects which serve as substitutes can be tracked to their commits of
+  #    origin by their ids; the earliest commit where a substitute is defined
+  #    ends the replay pipeline
+  # 5. identify commits where the originals appear; we will start replaying
+  #    with the earliest original and stop just before the first substitution
+  # 6. place commits that inject substitution just after each commit where
+  #    an original appears/is created
+  # 7. if there is an output filter defined, apply it to the sequence of
+  #    commits; most probably only a few will be filtered out as we replay
+  #    both the commit where the desired object is created and the whole path
+  #    of objects that lead to it
+  # 8. stepping from the first substituted, replay commands:
+  #    - if commit is either an origin of replayed output or on a path to one,
+  #      re-evaluate
+  #    - if command creates an object that is supposed to be substituted, it
+  #      should result in the same object being created; otherwise this might
+  #      be a user error - specifying a substitute for an object that depends
+  #      on an earlier substitution; fail or show a warning
+  #    - finally, commands will create one of the expected products; re-evaluate
+  #      and store its output
+  #
+  #
+  # A new branch is created that is accessible by browser (GUI/text) but
+  # does not replace the current session.
+}
 
 
 
