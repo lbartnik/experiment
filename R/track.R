@@ -222,7 +222,13 @@ strip_object <- function (obj)
 
 
 
-#' Repeat a sequence of commands.
+# --- tracker ----------------------------------------------------------
+
+#' Work with commands recorded in the current R session.
+#'
+#' @description `tracker_replay` repeats a sequence of commands.
+#'
+#' @rdname tracker
 #'
 #' @export
 #' @examples
@@ -288,7 +294,7 @@ tracker_replay <- function (..., store, last_id)
   # TODO this is a stop-gap; obtain the real values passed via ...
   # determine what gets re-evaluated and what is injected into the replay
   output <- character() # ALL
-  replace <- list(objects = list(x = 100), originals = list()) # names point to originals
+  replace <- list(objects = list(x = 100L), originals = list()) # names point to originals
   replace$pointers <- lapply(replace$objects, function(o) list(id = storage::compute_id(o)))
 
   # obtain the path from the current R session to root; it we be repeatedly
@@ -296,23 +302,25 @@ tracker_replay <- function (..., store, last_id)
   full <- graph(store, TRUE)
   path <- graph_subset(full, 'path', last_id, 'root')
 
+  replace_ids <- vapply(replace$pointers, `[[`, i = 'id', character(1))
+  browser()
+
   # 1. examine the path: match output objects to their commits of origin
   for (commit in path) {
-    intro <- introduced_in(full, commit$id)
-    intro_ids <- commit$object_ids[intro]
+    intro_nms <- introduced_in(full, commit$id)
+    intro_ids <- as.character(commit$object_ids[intro_nms])
 
     # objects introduced in this commit: id match
-    ii <- intro_ids %in% vapply(replace$pointers, `[[`, i = 'id', character(1))
-    for (i in ii) {
+    ii <- grep(intro_ids, replace_ids, fixed = TRUE)
+    for (name in intro_nms[ii]) {
       # only if the commit hasn't been found yet; use the most recent
       # commit of replacement
-      if (!is.null(replace$pointers[[i]]$commit_id)) {
-        replace$pointers[[i]]$commit_id <- commit$id
+      if (is.null(replace$pointers[[name]]$commit_id)) {
+        replace$pointers[[name]]$commit_id <- commit$id
       }
     }
   }
 
-  browser()
 
   # 2. match the replace object with their originals; look at the commit
   #    path in the reverse order
@@ -325,6 +333,212 @@ tracker_replay <- function (..., store, last_id)
 
   replace
 }
+
+
+#' @description `tracker_session` works with the current R session and
+#' shows its summary; It returns a `"tracked"` object which can be printed
+#' (console) and plotted (Shiny widget).
+#'
+#' @rdname tracker
+#'
+#' @export
+#'
+tracker_session <- function ()
+{
+  tracker_session_(internal_state$stash)
+}
+
+
+#' @description `tracker_session_` is a non-interactive alternative
+#' which can work with historical R sessions.
+#'
+#' @rdname tracker
+#'
+#' @export
+#'
+tracker_session_ <- function (store)
+{
+  with_class(graph(store, TRUE), "tracked_session")
+}
+
+
+#' @description `tracker_sequence` shows a sequence of commands leading
+#' from the most current to the very beginning of the current R session.
+#' It can be printed (console) and plotted (Shiny widget).
+#'
+#' @rdname tracker
+#'
+#' @export
+#'
+tracker_sequence <- function ()
+{
+  tracker_sequence_(internal_state$stash, internal_state$last_commit$id)
+}
+
+
+#' @description `tracker_sequence_` is a non-interactive alternative
+#' which can work with historical R sessions.
+#'
+#' @rdname tracker
+#'
+#' @export
+#'
+tracker_sequence_ <- function (store, last_id)
+{
+  with_class(graph_subset(graph(store, TRUE), 'path', last_id, 'root'),
+             "tracked_sequence")
+}
+
+
+
+# --- tracked sequence -------------------------------------------------
+
+# TODO rename tracked_sequence to recording or recorded_sequence or recorded
+
+#' @rdname tracked_sequence
+#' @name tracked_sequence
+#'
+#' @title Sequence of R commands.
+#'
+#' @description A `tracked_sequence` object represents a part of the
+#' history of R session as recorded by the [tracker]. It can be printed
+#' to the console, plotted via a `Shiny` widget but, most importantly,
+#' it can be *replayed* in a variety of ways, including arbitrary
+#' substitutions of objects created or stored in any of the past states
+#' of R session.
+#'
+#' @examples
+#' \dontrun{
+#' x <- 1
+#' y <- x + 1
+#' v <- y + 100
+#' z <- (x + 2) * z
+#'
+#' s <- tracker_sequence()
+#' print(s)
+#' summary(s)
+#' plot(s)
+#'
+#' # replay the whole sequence replacing x in the initial commit (a) with 100
+#' t <- s(a:x = 100)
+#' print(t)
+#'
+#' # show the object x in commit a
+#' t$a$x
+#'
+#' # export all data as a tibble
+#' as_tibble(t)
+#' }
+
+
+#' @rdname tracked_sequence
+#' @export
+print.tracked_sequence <- function (x, ...)
+{
+  stopifnot(is_graph(x))
+
+  cat('<tracked sequence>\n\n')
+
+  # TODO use for both tree and sequence; print info about branches;
+  #      print the full sequence of the main branch (the one which
+  #      belongs to the current R session)
+
+  # TODO sequence can be longer than letters
+  mapply(commit = rev(x), letter = letters[seq_along(x)],
+         function (commit, letter)
+  {
+    new <- introduced_in(x, commit$id)
+    old <- setdiff(names(commit$object_ids), new)
+
+    ccat0('silver', letter, ': ')
+    ccat('green', new)
+    if (length(new) && length(old)) cat(' ')
+    cat(old, '\n')
+
+    ccat('white', strwrap(format_expression(commit$expr), indent = 3))
+    cat('\n')
+  })
+
+  ccat('silver', '\nSee ?tracked_sequence for more info.')
+
+  invisible(x)
+}
+
+
+#' @rdname tracked_sequence
+#' @export
+summary.tracked_sequence <- function (x, ...)
+{
+  stopifnot(is_graph(x))
+
+  cat('<tracked sequence>\n\n')
+  cat('  possible substitutions ')
+  ccat('silver', '(commit:name <original value>)')
+  cat(' :\n')
+
+  mapply(commit = x, letter = letters[seq_along(x)],
+         function (commit, letter)
+  {
+    mapply(name = names(commit$objects), object = commit$objects,
+           function (name, object)
+    {
+      ccat0('white', '   ', letter, ':')
+      cat(name, '  ')
+      printout <- format(object)
+      if (length(printout) > 1 || nchar(printout) > 20) printout <- pillar::obj_sum(object)
+      ccat0('silver', printout, '\n')
+    })
+  })
+
+  invisible(x)
+}
+
+
+#' @rdname tracked_sequence
+#' @export
+plot.tracked_sequence <- function (x, ...)
+{
+  stopifnot(is_graph(x))
+  render_steps(graph_to_steps(x))
+  invisible(x)
+}
+
+
+#' @rdname tracked_sequence
+#' @export
+as_tibble.tracked_sequence <- function (x, ...)
+{
+  stopifnot(is_graph(x))
+
+  objects <- lapply(x, `[[`, i = 'objects')
+  objects <- lapply(objects, function (o) {
+    tibble(name = names(o), object = unname(o))
+  })
+
+  tibble::tibble(commit_id = names(x), objects)
+}
+
+
+#' @rdname tracked_sequence
+#' @export
+.DollarNames.tracked_sequence <- function (x, pattern = "")
+{
+  stopifnot(is_graph(x))
+  grep(pattern, names(x), value = TRUE)
+}
+
+
+#' @rdname tracked_sequence
+#' @export
+`$.tracked_sequence` <- function (x, i)
+{
+  stopifnot(is_graph(x))
+  stopifnot(i %in% names(x))
+  x[[i]]
+}
+
+
+# ----------------------------------------------------------------------
 
 
 #' Restore a snapshot from history.

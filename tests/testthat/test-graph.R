@@ -28,6 +28,7 @@ test_that("graph subset", {
   g <- sample_graph()
   h <- graph_subset(g, 'path', 'd', 'root')
 
+  expect_s3_class(h, 'graph')
   expect_named(h, c('d', 'c', 'b', 'a'))
   expect_true(all(vapply(h, class, character(1)) == 'commit'))
 })

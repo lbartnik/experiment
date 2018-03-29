@@ -78,8 +78,12 @@ graph_subset <- function (g, type, from, to)
 {
   stopifnot(is_graph(g))
   stopifnot(identical(type, 'path'))
+
+  if (!length(g)) return(g)
+
   stopifnot(from %in% names(g))
   stopifnot(identical(to, 'root'))
+
 
   path <- g[from]
   ct <- g[[from]]
@@ -89,7 +93,7 @@ graph_subset <- function (g, type, from, to)
     ct <- g[[ct$parent]]
   }
 
-  path
+  with_class(path, "graph")
 }
 
 

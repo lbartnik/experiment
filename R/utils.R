@@ -49,6 +49,16 @@ not_null <- function (...)
 }
 
 
+with_class <- function (x, ...)
+{
+  classes <- list(...)
+  stopifnot(all(vapply(classes, is.character, logical(1))))
+
+  class(x) <- c(as.character(classes), class(x))
+  x
+}
+
+
 crc32 <- function (x) digest::digest(x, algo = 'crc32')
 
 
@@ -91,3 +101,15 @@ auto_tags <- function (obj)
   list(class = class(obj), time = Sys.time())
 }
 
+
+ccat <- function (color, ..., sep = ' ')
+{
+  if (identical(color, 'default'))
+    cat(..., sep = sep)
+  else {
+    color <- get(color, envir = asNamespace("crayon"), inherits = FALSE)
+    cat(color(paste(..., sep = sep)))
+  }
+}
+
+ccat0 <- function (color, ...) ccat(color, ..., sep = '')
