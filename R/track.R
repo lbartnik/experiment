@@ -469,25 +469,36 @@ print.tracked_sequence <- function (x, ...)
 #' @export
 summary.tracked_sequence <- function (x, ...)
 {
+  # TODO this should return a summary object and the current body should
+  #      go into a print for that summary, e.g. print.recorded_summary
   stopifnot(is_graph(x))
 
   cat('<tracked sequence>:')
   ccat('green', 'possible substitutions\n\n')
   ccat_(list(silver = '(', white = 'commit:', default = 'name', silver = ' <original value>):\n'))
 
-  mapply(commit = x, letter = letters[seq_along(x)],
+  delim <- ':'
+  subs <- mapply(commit = x, letter = letters[seq_along(x)],
          function (commit, letter)
   {
     mapply(name = names(commit$objects), object = commit$objects,
            function (name, object)
     {
-      ccat0('white', '   ', letter, ':')
+      ccat0('white', '   ', letter, delim)
       cat(name, '  ')
       printout <- format(object)
       if (length(printout) > 1 || nchar(printout) > 20) printout <- pillar::obj_sum(object)
       ccat0('silver', printout, '\n')
     })
+
+    paste0(letter, delim, names(commit$objects))
   })
+
+  subs <- unlist(subs)
+  subs <- unique(c(first(subs), last(subs)))
+  subs <- paste(subs, '=', sample(1e5, length(subs)), collapse = ', ')
+
+  ccat0('silver', '\nExample: tracker_execute(x, ', subs, ')\n')
 
   invisible(x)
 }
