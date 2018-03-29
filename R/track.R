@@ -437,7 +437,7 @@ print.tracked_sequence <- function (x, ...)
 {
   stopifnot(is_graph(x))
 
-  cat('<tracked sequence>\n\n')
+  ccat_(list(default = '<tracked sequence>:', green = 'main branch', default = '\n\n'))
 
   # TODO use for both tree and sequence; print info about branches;
   #      print the full sequence of the main branch (the one which
@@ -471,10 +471,9 @@ summary.tracked_sequence <- function (x, ...)
 {
   stopifnot(is_graph(x))
 
-  cat('<tracked sequence>\n\n')
-  cat('  possible substitutions ')
-  ccat('silver', '(commit:name <original value>)')
-  cat(' :\n')
+  cat('<tracked sequence>:')
+  ccat('green', 'possible substitutions\n\n')
+  ccat_(list(silver = '(', white = 'commit:', default = 'name', silver = ' <original value>):\n'))
 
   mapply(commit = x, letter = letters[seq_along(x)],
          function (commit, letter)
