@@ -74,6 +74,25 @@ graph_leaves <- function (g)
 }
 
 
+graph_subset <- function (g, type, from, to)
+{
+  stopifnot(is_graph(g))
+  stopifnot(identical(type, 'path'))
+  stopifnot(from %in% names(g))
+  stopifnot(identical(to, 'root'))
+
+  path <- g[from]
+  ct <- g[[from]]
+
+  while (!is.na(ct$parent)) {
+    path <- append(path, g[ct$parent])
+    ct <- g[[ct$parent]]
+  }
+
+  path
+}
+
+
 #' Transform a graph of commits into a graph of steps.
 #'
 #' A step is an introduction of a new object or a new plot to the

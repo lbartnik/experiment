@@ -69,10 +69,10 @@ test_that("stripping preserves address", {
 
 test_that("events are replayed", {
   m <- commit_memory_store()
-  add_commit(m, list(y = 101), bquote(y <- x + 1), 'e', 'f') # replayed
-  add_commit(m, list(x = 100L), bquote(x <- 100L), 'd', 'e') # substitution
+  add_commit(m, list(y = 101), bquote(y <- x + 1), 'd', 'e') # replayed
+  add_commit(m, list(x = 100L), bquote(x <- 100L), 'e', 'f') # substitution
 
-  b <- tracker_replay(x)
+  b <- tracker_replay(x, store = m, last_id = 'f')
 
   # should create a new branch with 3 new commits:
   # 1. load the substitute

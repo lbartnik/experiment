@@ -24,6 +24,14 @@ test_that("assign children", {
   expect_equivalent(children, c('b', 'c', 'd'))
 })
 
+test_that("graph subset", {
+  g <- sample_graph()
+  h <- graph_subset(g, 'path', 'd', 'root')
+
+  expect_named(h, c('d', 'c', 'b', 'a'))
+  expect_true(all(vapply(h, class, character(1)) == 'commit'))
+})
+
 
 test_that("filter", {
   g <- sample_graph()

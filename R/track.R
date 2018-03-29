@@ -248,7 +248,7 @@ strip_object <- function (obj)
 #' tracker$branch
 #' }
 #'
-tracker_replay <- function (...)
+tracker_replay <- function (..., store, last_id)
 {
   # A new branch is created that is accessible by browser (GUI/text) but
   # does not replace the current session.
@@ -283,21 +283,48 @@ tracker_replay <- function (...)
   #    - finally, commands will create one of the expected products; re-evaluate
   #      and store its output
 
+  if (missing(store)) store <- internal_state$stash
+
+  # TODO this is a stop-gap; obtain the real values passed via ...
   # determine what gets re-evaluated and what is injected into the replay
   output <- character() # ALL
-  replace <- list(x = 100)
+  replace <- list(objects = list(x = 100), originals = list()) # names point to originals
+  replace$pointers <- lapply(replace$objects, function(o) list(id = storage::compute_id(o)))
 
+  # obtain the path from the current R session to root; it we be repeatedly
+  # examined during the 'replay' procedure
+  full <- graph(store, TRUE)
+  path <- graph_subset(full, 'path', last_id, 'root')
 
-  # examine the path in commit graph
-  full <- graph(internal_state$stash, TRUE)
-  path <- graph_path(full, internal_state$last_commit$id, 'root')
-
+  # 1. examine the path: match output objects to their commits of origin
   for (commit in path) {
+    intro <- introduced_in(full, commit$id)
+    intro_ids <- commit$object_ids[intro]
 
+    # objects introduced in this commit: id match
+    ii <- intro_ids %in% vapply(replace$pointers, `[[`, i = 'id', character(1))
+    for (i in ii) {
+      # only if the commit hasn't been found yet; use the most recent
+      # commit of replacement
+      if (!is.null(replace$pointers[[i]]$commit_id)) {
+        replace$pointers[[i]]$commit_id <- commit$id
+      }
+    }
   }
 
-}
+  browser()
 
+  # 2. match the replace object with their originals; look at the commit
+  #    path in the reverse order
+  for (commit in rev(path)) {
+    nm <- intersect(names(replace$objects) %in% introduced_in(full, commit$id))
+    lapply(nm, function (n) {
+      replace$originals[[n]] <- list(commit_id = commit$id, id = commit$object_ids[[n]])
+    })
+  }
+
+  replace
+}
 
 
 #' Restore a snapshot from history.
