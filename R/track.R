@@ -431,6 +431,9 @@ tracker_sequence_ <- function (store, last_id)
 #' }
 
 
+is_tracked_sequence <- function(x) inherits(x, 'tracked_sequence')
+
+
 #' @rdname tracked_sequence
 #' @export
 print.tracked_sequence <- function (x, ...)
@@ -491,7 +494,7 @@ summary.tracked_sequence <- function (x, ...)
       ccat0('silver', printout, '\n')
     })
 
-    paste0(letter, delim, names(commit$objects))
+    paste0(letter, '.', names(commit$objects))
   })
 
   subs <- unlist(subs)
@@ -545,6 +548,14 @@ as_tibble.tracked_sequence <- function (x, ...)
   stopifnot(is_graph(x))
   stopifnot(i %in% names(x))
   x[[i]]
+}
+
+
+#' @export
+tracker_execute <- function (x, ...)
+{
+  stopifnot(is_tracked_sequence(x))
+  rlang::enquos(...)
 }
 
 

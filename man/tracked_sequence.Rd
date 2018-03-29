@@ -2,6 +2,7 @@
 % Please edit documentation in R/track.R
 \name{tracked_sequence}
 \alias{tracked_sequence}
+\alias{is_tracked_sequence}
 \alias{print.tracked_sequence}
 \alias{summary.tracked_sequence}
 \alias{plot.tracked_sequence}
@@ -10,6 +11,8 @@
 \alias{$.tracked_sequence}
 \title{Sequence of R commands.}
 \usage{
+is_tracked_sequence(x)
+
 \method{print}{tracked_sequence}(x, ...)
 
 \method{summary}{tracked_sequence}(x, ...)
