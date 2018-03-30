@@ -93,9 +93,82 @@ graph_subset <- function (g, type, from, to)
     ct <- g[[ct$parent]]
   }
 
-  with_class(path, "graph")
+  path <- with_class(path, "graph")
+  assign_children(path, find_root_id(path), 1)
 }
 
+
+is_path <- function (x)
+{
+  if (!is_graph(x)) return(FALSE)
+
+  extract_children_no <- function(c) {
+    c(length(c$children), unlist(lapply(c$children, extract_children_no)))
+  }
+
+  t <- as.list(table(extract_children_no(graph_to_tree(x))))
+  identical(t[['0']], 1L) && identical(t[['1']], length(x)-1L)
+}
+
+
+
+graph_find_repeats <- function (g)
+{
+  # is sorted and the root is at the end
+  stopifnot(is_path(g))
+
+  # TODO use graph_to_tree
+
+  # check every last commit against the whole path
+  # if match is found, remember; move tail by one towards the head
+  # if match is not found, this is the first commit that will not be replayed
+
+  matches <- list()
+  for (tail in g) {
+    # names and ids of objects introduced in the current tail
+    names <- introduced_in(g, tail$id)
+    ids   <- as.character(tail$object_ids[names])
+    stopifnot(length(names) == 1) # TODO right now we handle only single objects
+
+    for (original in splice(g, after = tail$id)) {
+      if (names %in% introduced_in(g, original$id)) {
+        cid <- original$id
+        oid <- original$object_ids[[names]]
+        matches[[pack(cid, oid)]] <- ids
+        break
+      }
+    }
+
+    # if this is why the inner loop stopped, break here too
+    if (identical(original, last(g))) break
+  }
+
+  matches
+}
+
+
+#' Turn a graph of `commit`s into a tree.
+#'
+#' Used mainly when preparing a printout of a sequence or actual tree of
+#' `commit`s.
+#'
+graph_to_tree <- function (g)
+{
+  stopifnot(is_graph(g))
+
+  root <- nth(g, find_root_id(g))
+  with_children <- function (commit) {
+    children_id <- commit$children
+    commit$children <- lapply(children_id, function (child_id) with_children(nth(g, child_id)))
+    names(commit$children) <- children_id
+    commit
+  }
+
+  with_children(root)
+}
+
+
+# --- steps ------------------------------------------------------------
 
 #' Transform a graph of commits into a graph of steps.
 #'

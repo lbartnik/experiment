@@ -303,7 +303,6 @@ tracker_replay <- function (..., store, last_id)
   path <- graph_subset(full, 'path', last_id, 'root')
 
   replace_ids <- vapply(replace$pointers, `[[`, i = 'id', character(1))
-  browser()
 
   # 1. examine the path: match output objects to their commits of origin
   for (commit in path) {
@@ -325,7 +324,7 @@ tracker_replay <- function (..., store, last_id)
   # 2. match the replace object with their originals; look at the commit
   #    path in the reverse order
   for (commit in rev(path)) {
-    nm <- intersect(names(replace$objects) %in% introduced_in(full, commit$id))
+    nm <- intersect(names(replace$objects) %in% introduced_in(path, commit$id))
     lapply(nm, function (n) {
       replace$originals[[n]] <- list(commit_id = commit$id, id = commit$object_ids[[n]])
     })
@@ -386,7 +385,7 @@ tracker_sequence <- function ()
 tracker_sequence_ <- function (store, last_id)
 {
   with_class(graph_subset(graph(store, TRUE), 'path', last_id, 'root'),
-             "tracked_sequence")
+             "recorded")
 }
 
 
@@ -395,12 +394,12 @@ tracker_sequence_ <- function (store, last_id)
 
 # TODO rename tracked_sequence to recording or recorded_sequence or recorded
 
-#' @rdname tracked_sequence
-#' @name tracked_sequence
+#' @rdname recorded
+#' @name recorded
 #'
 #' @title Sequence of R commands.
 #'
-#' @description A `tracked_sequence` object represents a part of the
+#' @description A `recorded` object represents a part of the
 #' history of R session as recorded by the [tracker]. It can be printed
 #' to the console, plotted via a `Shiny` widget but, most importantly,
 #' it can be *replayed* in a variety of ways, including arbitrary
@@ -431,16 +430,16 @@ tracker_sequence_ <- function (store, last_id)
 #' }
 
 
-is_tracked_sequence <- function(x) inherits(x, 'tracked_sequence')
+is_recorded <- function(x) inherits(x, 'recorded')
 
 
-#' @rdname tracked_sequence
+#' @rdname recorded
 #' @export
-print.tracked_sequence <- function (x, ...)
+print.recorded <- function (x, ...)
 {
   stopifnot(is_graph(x))
 
-  ccat_(list(default = '<tracked sequence>:', green = 'main branch', default = '\n\n'))
+  ccat_(list(default = '<recorded sequence>:', green = 'main branch', default = '\n\n'))
 
   # TODO use for both tree and sequence; print info about branches;
   #      print the full sequence of the main branch (the one which
@@ -462,21 +461,21 @@ print.tracked_sequence <- function (x, ...)
     cat('\n')
   })
 
-  ccat('silver', '\nSee ?tracked_sequence for more info.')
+  ccat('silver', '\nSee ?recorded for more info.')
 
   invisible(x)
 }
 
 
-#' @rdname tracked_sequence
+#' @rdname recorded
 #' @export
-summary.tracked_sequence <- function (x, ...)
+summary.recorded <- function (x, ...)
 {
   # TODO this should return a summary object and the current body should
   #      go into a print for that summary, e.g. print.recorded_summary
   stopifnot(is_graph(x))
 
-  cat('<tracked sequence>:')
+  cat('<recorded sequence>:')
   ccat('green', 'possible substitutions\n\n')
   ccat_(list(silver = '(', white = 'commit:', default = 'name', silver = ' <original value>):\n'))
 
@@ -507,9 +506,9 @@ summary.tracked_sequence <- function (x, ...)
 }
 
 
-#' @rdname tracked_sequence
+#' @rdname recorded
 #' @export
-plot.tracked_sequence <- function (x, ...)
+plot.recorded <- function (x, ...)
 {
   stopifnot(is_graph(x))
   render_steps(graph_to_steps(x))
@@ -517,9 +516,9 @@ plot.tracked_sequence <- function (x, ...)
 }
 
 
-#' @rdname tracked_sequence
+#' @rdname recorded
 #' @export
-as_tibble.tracked_sequence <- function (x, ...)
+as_tibble.recorded <- function (x, ...)
 {
   stopifnot(is_graph(x))
 
@@ -532,18 +531,18 @@ as_tibble.tracked_sequence <- function (x, ...)
 }
 
 
-#' @rdname tracked_sequence
+#' @rdname recorded
 #' @export
-.DollarNames.tracked_sequence <- function (x, pattern = "")
+.DollarNames.recorded <- function (x, pattern = "")
 {
   stopifnot(is_graph(x))
   grep(pattern, names(x), value = TRUE)
 }
 
 
-#' @rdname tracked_sequence
+#' @rdname recorded
 #' @export
-`$.tracked_sequence` <- function (x, i)
+`$.recorded` <- function (x, i)
 {
   stopifnot(is_graph(x))
   stopifnot(i %in% names(x))
@@ -552,9 +551,33 @@ as_tibble.tracked_sequence <- function (x, ...)
 
 
 #' @export
+knit2Rmd <- function (x)
+{
+  stopifnot(is_graph(x))
+
+  print_subtree <- function (commit) {
+    cat('```{r}\n', file = output)
+    cat(format_expression(commit$expr), file = output)
+    cat('\n```\n\n', file = output)
+
+    lapply(commit$children, print_subtree)
+  }
+
+  path <- tempfile(pattern = 'recorded_', fileext = '.Rmd')
+  output <- file(path, 'w')
+
+  print_subtree(graph_to_tree(x))
+
+  close(output)
+  rstudioapi::navigateToFile(path)
+}
+
+
+
+#' @export
 tracker_execute <- function (x, ...)
 {
-  stopifnot(is_tracked_sequence(x))
+  stopifnot(is_recorded(x))
   rlang::enquos(...)
 }
 

@@ -24,16 +24,6 @@ test_that("assign children", {
   expect_equivalent(children, c('b', 'c', 'd'))
 })
 
-test_that("graph subset", {
-  g <- sample_graph()
-  h <- graph_subset(g, 'path', 'd', 'root')
-
-  expect_s3_class(h, 'graph')
-  expect_named(h, c('d', 'c', 'b', 'a'))
-  expect_true(all(vapply(h, class, character(1)) == 'commit'))
-})
-
-
 test_that("filter", {
   g <- sample_graph()
   expect_equal(introduced_in(g, 'b'), 'y')
@@ -47,6 +37,51 @@ test_that("filter on plots", {
                                object_ids = list())))
   expect_equal(introduced_in(g, 'a'), '.plot')
 })
+
+
+test_that("graph subset", {
+  g <- sample_graph()
+  h <- graph_subset(g, 'path', 'd', 'root')
+
+  expect_true(is_graph(h))
+  expect_named(h, c('d', 'c', 'b', 'a'))
+  expect_true(all(vapply(h, class, character(1)) == 'commit'))
+  expect_true(is_path(h))
+})
+
+test_that("find repeats", {
+  # a: x <- 1
+  # b: y <- 2L
+  # c: x <- as.character(x+y)
+  # d: z <- as.numeric(x)
+  # e: w <- x + 1
+  # f: x <- 100L
+  g <- graph_subset(expanded_graph(), 'path', 'f', 'root')
+
+  r <- graph_find_repeats(g)
+  expect_named(r, "c::r")
+  expect_equal(first(r), 'u')
+})
+
+test_that("graph to tree", {
+  t <- graph_to_tree(sample_graph())
+
+  expect_s3_class(t, 'commit')
+  expect_named(t$children, 'b')
+
+  b <- t$children$b
+  expect_s3_class(b, 'commit')
+  expect_named(b$children, 'c')
+
+  c <- b$children$c
+  expect_s3_class(c, 'commit')
+  expect_named(c$children, 'd')
+
+  d <- c$children$d
+  expect_s3_class(d, 'commit')
+  expect_length(d$children, 0)
+})
+
 
 
 test_that("convert commit", {

@@ -61,6 +61,10 @@ with_class <- function (x, ...)
 
 crc32 <- function (x) digest::digest(x, algo = 'crc32')
 
+pack <- function (...) paste(list(...), collapse = '::')
+
+unpack <- function (x) stringi::stri_split_fixed(x, '::')
+
 
 is_knitr <- function () getOption("knitr.in.progress", FALSE)
 
@@ -123,3 +127,18 @@ ccat_ <- function (chunks, sep = ' ')
     ccat0(color, paste(chunk, collapse = sep))
   })
 }
+
+
+
+splice <- function (x, ...)
+{
+  args <- list(...)
+  stopifnot(names(args) == 'after')
+
+  i <- which(names(x) == args$after)
+  stopifnot(length(i) == 1)
+
+  x[seq(i+1, length(x))]
+}
+
+

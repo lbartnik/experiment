@@ -68,6 +68,24 @@ sample_graph <- function (.data = TRUE)
 }
 
 
+expanded_graph <- function (.data = TRUE)
+{
+  store <- commit_memory_store()
+
+  storage::os_write(store, 101,  auto_tags(101),  't')
+  storage::os_write(store, 100L, auto_tags(100L), 'u')
+
+  c <- commit(list(x = 'r', y = 'q', z = 's', w = 't'),
+              bquote(w <- as.numeric(x) + 1), 'd', 'e')
+  write_commit(store, c)
+
+  c <- commit(list(x = 'u', y = 'q', z = 's', w = 't'), bquote(x <- 100L), 'e', 'f')
+  write_commit(store, c)
+
+  graph(store, .data = .data)
+}
+
+
 sample_steps <- function (.data = TRUE)
 {
   graph_to_steps(sample_graph(.data))
