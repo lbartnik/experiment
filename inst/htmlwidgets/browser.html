@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<script src="lib/jquery-3.2.1/jquery.js"></script>
+
+<script type="text/javascript" src="lib/browser/data.js"></script>
+<script type="text/javascript" src="lib/browser/history.js"></script>
+<script type="text/javascript" src="lib/browser/utils.js"></script>
+
+<link id="browser-1-attachment" rel="attachment" href="lib/browser/html/step.html">
+
+
+<link id="data-data-attachment" rel="attachment" href="data-1/data.json"/>
+<link id="plots-934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e-attachment" rel="attachment" href="plots-1/934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e_min.png"/>
+<link id="plots-70d45777477da8efe93e0ff1d3f759223239232c-attachment" rel="attachment" href="plots-1/70d45777477da8efe93e0ff1d3f759223239232c_min.png"/>
+<link id="plots-ceeb8af0c88583913b18e9cd4c3f09431ba94b43-attachment" rel="attachment" href="plots-1/ceeb8af0c88583913b18e9cd4c3f09431ba94b43_min.png"/>
+<link id="plots-a22cc734625c717eb7dddf9e8e7437b6b65def09-attachment" rel="attachment" href="plots-1/a22cc734625c717eb7dddf9e8e7437b6b65def09_min.png"/>
+<link id="plots-e4cb516abc4cac664a98ca1d96f66eb6940770b0-attachment" rel="attachment" href="plots-1/e4cb516abc4cac664a98ca1d96f66eb6940770b0_min.png"/>
+<link id="plots-bbdaf223e97ac275ad91d3a966783f3c35e86124-attachment" rel="attachment" href="plots-1/bbdaf223e97ac275ad91d3a966783f3c35e86124_min.png"/>
+
+</head>
+<body style="background-color:white;">
+
+<div id="canvas" class="main-container" style="border: 1px solid black;"></div>
+
+<script type="text/javascript">
+//log.enable(true);
+
+historyBrowser = new HistoryBrowser('#canvas');
+
+$.ajax($("#data-data-attachment").attr("href")).done( function (data) {
+  historyBrowser.setData(new Data(data));
+  historyBrowser.render();
+});
+</script>
+
+</body>
+</html>
