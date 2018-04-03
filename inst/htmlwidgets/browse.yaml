@@ -1,0 +1,13 @@
+dependencies:
+  - name: jquery
+    version: 3.2.1
+    src: htmlwidgets/lib/jquery-3.2.1
+    script:
+      - jquery.js
+  - name: browser
+    version: 0.1
+    src: htmlwidgets/lib/browser
+    script:
+      - data.js
+      - history.js
+      - utils.js

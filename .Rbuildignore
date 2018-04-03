@@ -16,5 +16,11 @@ TODO
 # JS
 .babelrc
 
+# JS development files
+inst/htmlwidgets/data-1
+inst/htmlwidgets/plots-1
+inst/htmlwidgets/*.html
+inst/htmlwidgets/data.json
+
 # other
 noninst
