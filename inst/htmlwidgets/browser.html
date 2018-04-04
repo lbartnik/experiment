@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <script src="lib/jquery-3.2.1/jquery.js"></script>
+<script src="lib/d3-4.11.0/d3.min.js"></script>
 
 <script type="text/javascript" src="lib/browser/data.js"></script>
 <script type="text/javascript" src="lib/browser/history.js"></script>
@@ -29,9 +30,11 @@
 
 historyBrowser = new HistoryBrowser('#canvas');
 
-$.ajax($("#data-data-attachment").attr("href")).done( function (data) {
+$.ajax("data-1/path.json").done( function (data) {
+//  console.log(data);
   historyBrowser.setData(new Data(data));
   historyBrowser.render();
+  window.x = new Data(data);
 });
 </script>
 

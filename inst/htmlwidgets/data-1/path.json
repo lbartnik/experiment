@@ -1,0 +1,114 @@
+{
+  "steps": [
+    {
+      "name": "input",
+      "type": "object",
+      "id": "03b243092a94b5b6f2b00fe862d4190e150d3aff",
+      "expr": ["input <- system.file(\"extdata/block_62.csv\", package = \"experiment\") %>% ", "    readr::read_csv(na = \"Null\") %>% dplyr::rename(meter = LCLid, ", "    timestamp = tstp, usage = energy_kWh) %>% dplyr::filter(meter %in% ", "    c(\"MAC004929\", \"MAC000010\", \"MAC004391\"), lubridate::year(timestamp) == ", "    2013)"],
+      "desc": "data.frame [52560, 3]",
+      "time": 100
+    },
+    {
+      "name": "input",
+      "type": "object",
+      "id": "40692a8b662cc0327e12076193c13a8b730d2fc0",
+      "expr": ["input %<>% dplyr::mutate(timestamp = lubridate::floor_date(timestamp, ", "    \"hours\")) %>% dplyr::group_by(meter, timestamp) %>% dplyr::summarise(usage = sum(usage))"],
+      "desc": "data.frame [26280, 3]",
+      "time": 200
+    },
+    {
+      "name": "input",
+      "type": "object",
+      "id": "65af20fa90b5430c2312017e5693b35ea1506d7c",
+      "expr": "input %<>% dplyr::filter(meter == \"MAC004929\")",
+      "desc": "data.frame [8760, 3]",
+      "time": 300
+    },
+    {
+      "type": "plot",
+      "id": "ceeb8af0c88583913b18e9cd4c3f09431ba94b43",
+      "expr": "with(input, plot(timestamp, usage, type = \"p\", pch = \".\"))",
+      "time": 400
+    },
+    {
+      "name": "x",
+      "type": "object",
+      "id": "8fbe2516c93ded910f93341ee314ec0b7115b12d",
+      "expr": ["x <- input %>% dplyr::mutate(hour = lubridate::hour(timestamp), ", "    dow = lubridate::wday(timestamp, label = TRUE)) %>% dplyr::mutate_at(dplyr::vars(hour, ", "    dow), dplyr::funs(as.factor)) %>% dplyr::group_by(hour, dow) %>% ", "    dplyr::summarise(usage = mean(usage, na.rm = TRUE))"],
+      "desc": "data.frame [168, 3]",
+      "time": 500
+    },
+    {
+      "type": "plot",
+      "id": "934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e",
+      "expr": "with(x, plot(hour, usage))",
+      "time": 600
+    },
+    {
+      "type": "plot",
+      "id": "70d45777477da8efe93e0ff1d3f759223239232c",
+      "expr": ["ggplot2::ggplot(x) + ggplot2::geom_point(ggplot2::aes(x = hour, ", "    y = usage)) + ggplot2::facet_wrap(~dow)"],
+      "time": 700
+    },
+    {
+      "name": "x",
+      "type": "object",
+      "id": "5e71c61588c960f4e73806de1160b196b440c7a2",
+      "expr": ["x <- input %>% dplyr::mutate(hour = lubridate::hour(timestamp), ", "    dow = lubridate::wday(timestamp)) %>% dplyr::mutate_at(dplyr::vars(hour, ", "    dow), dplyr::funs(as.factor))"],
+      "desc": "data.frame [8760, 5]",
+      "time": 800
+    },
+    {
+      "type": "plot",
+      "id": "bbdaf223e97ac275ad91d3a966783f3c35e86124",
+      "expr": ["ggplot2::ggplot(x) + ggplot2::geom_boxplot(ggplot2::aes(x = hour, ", "    y = usage)) + ggplot2::facet_wrap(~dow)"],
+      "time": 900
+    },
+    {
+      "name": "m",
+      "type": "object",
+      "id": "57fbe7553e11c7b0149040f5781c209b266ed637",
+      "expr": "m <- stats::lm(usage ~ hour:dow, x)",
+      "desc": "adj R2: 0.33 AIC:  7164 df:  168",
+      "time": 1000
+    }
+  ],
+  "links": [
+    {
+      "source": "8fbe2516c93ded910f93341ee314ec0b7115b12d",
+      "target": "934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e"
+    },
+    {
+      "source": "70d45777477da8efe93e0ff1d3f759223239232c",
+      "target": "5e71c61588c960f4e73806de1160b196b440c7a2"
+    },
+    {
+      "source": "40692a8b662cc0327e12076193c13a8b730d2fc0",
+      "target": "65af20fa90b5430c2312017e5693b35ea1506d7c"
+    },
+    {
+      "source": "934d42cd1567c3b5ee01dd0d2fa3647e5d0c2d0e",
+      "target": "70d45777477da8efe93e0ff1d3f759223239232c"
+    },
+    {
+      "source": "ceeb8af0c88583913b18e9cd4c3f09431ba94b43",
+      "target": "8fbe2516c93ded910f93341ee314ec0b7115b12d"
+    },
+    {
+      "source": "65af20fa90b5430c2312017e5693b35ea1506d7c",
+      "target": "ceeb8af0c88583913b18e9cd4c3f09431ba94b43"
+    },
+    {
+      "source": "bbdaf223e97ac275ad91d3a966783f3c35e86124",
+      "target": "57fbe7553e11c7b0149040f5781c209b266ed637"
+    },
+    {
+      "source": "03b243092a94b5b6f2b00fe862d4190e150d3aff",
+      "target": "40692a8b662cc0327e12076193c13a8b730d2fc0"
+    },
+    {
+      "source": "5e71c61588c960f4e73806de1160b196b440c7a2",
+      "target": "bbdaf223e97ac275ad91d3a966783f3c35e86124"
+    }
+  ]
+}

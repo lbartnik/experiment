@@ -9,19 +9,83 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var Data;
 
   Data = function () {
-    function Data() {
+    // The Data object owns the @raw data passed to it.
+
+    function Data(raw) {
       _classCallCheck(this, Data);
+
+      this.raw = raw;
+      this.preprocess();
     }
 
+    // Starting with the root, forms an ordered path through the graph.
+    // If there is more than one child at any level, throws an exception.
+
     _createClass(Data, [{
-      key: "contructor",
-      value: function contructor(raw) {
-        this.raw = raw;
-      }
-    }, {
       key: "sequence",
       value: function sequence() {
-        return [];
+        var head, ref, ref1, seq;
+        head = this.treed();
+        seq = [];
+        while (((ref = head.children) != null ? ref.length : void 0) === 1) {
+          seq.push(head);
+          head = head.children[0];
+        }
+        if (((ref1 = head.children) != null ? ref1.length : void 0) > 1) {
+          throw "Node " + head.id + " has more than one child";
+        }
+        seq.push(head);
+        return seq;
+      }
+
+      // Replace target/source identifiers in the @raw.links array with
+      // actual objects.
+
+    }, {
+      key: "preprocess",
+      value: function preprocess() {
+        var stepsMap;
+        stepsMap = d3.map();
+        this.raw.steps.forEach(function (n) {
+          return stepsMap.set(n.id, n);
+        });
+        return this.raw.links.forEach(function (l) {
+          l.source = stepsMap.get(l.source);
+          return l.target = stepsMap.get(l.target);
+        });
+      }
+
+      // Turns the @raw data structure into a d3.stratified hierarchy.
+
+    }, {
+      key: "stratified",
+      value: function stratified() {
+        var parents, stratify;
+        parents = d3.map();
+        this.raw.links.forEach(function (l) {
+          return parents.set(l.target.id, l.source.id);
+        });
+        stratify = d3.stratify().id(function (d) {
+          return d.id;
+        }).parentId(function (d) {
+          return parents.get(d.id);
+        });
+        return stratify(this.raw.steps);
+      }
+
+      // Computes positions in d3.stratified hierarchy assuming nodes
+      // form a tree.
+
+    }, {
+      key: "treed",
+      value: function treed() {
+        var spacing = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 25;
+
+        var stfd, tree;
+        tree = d3.tree().nodeSize([spacing, spacing]);
+        stfd = this.stratified();
+        stfd.sort();
+        return tree(stfd);
       }
     }]);
 
