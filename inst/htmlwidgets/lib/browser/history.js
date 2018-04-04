@@ -9,31 +9,92 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var HistoryBrowser;
 
   HistoryBrowser = function () {
-    function HistoryBrowser(container, data1) {
-      _classCallCheck(this, HistoryBrowser);
+    var initialize;
 
-      this.data = data1;
-      this.container = $(container);
-    }
+    var HistoryBrowser = function () {
+      function HistoryBrowser(container, data1) {
+        _classCallCheck(this, HistoryBrowser);
 
-    _createClass(HistoryBrowser, [{
-      key: "setData",
-      value: function setData(data) {
-        return this.data = data;
+        this.data = data1;
+        this.container = $(container);
+        this.frame = $("<div>", {
+          id: "details-container"
+        }).load($("#browser-1-attachment").attr("href"), null, function () {
+          return console.log('done');
+        });
       }
-    }, {
-      key: "render",
-      value: function render() {
-        var i, len, ref, results, step;
-        ref = this.data.sequence();
-        results = [];
-        for (i = 0, len = ref.length; i < len; i++) {
-          step = ref[i];
-          results.push(this.container.append());
+
+      _createClass(HistoryBrowser, [{
+        key: "setData",
+        value: function setData(data) {
+          return this.data = data;
         }
-        return results;
+      }, {
+        key: "render",
+        value: function render() {
+          var frame, j, len, ref, results, step;
+          ref = this.data.sequence();
+          results = [];
+          for (j = 0, len = ref.length; j < len; j++) {
+            step = ref[j];
+            console.log(step);
+            frame = this.frame.clone();
+            frame.find("code").text(step.expr).each(function (i, block) {
+              return hljs.highlightBlock(block);
+            });
+            results.push(this.container.append(frame));
+          }
+          return results;
+        }
+      }]);
+
+      return HistoryBrowser;
+    }();
+
+    ;
+
+    initialize = function initialize() {
+      var comment, initial;
+      outer.width(width).appendTo(selection).height(height - parseInt(outer.css("top")));
+      if (step.type === "object") {
+        outer.find(".image").remove();
+        outer.find(".name").text(step.name);
+        outer.find(".description").text(step.desc);
+      } else {
+        outer.find(".object").remove();
+        outer.find(".image img").attr("src", plotHref(step)).on('load', function () {
+          return $(this).width(Math.min(width, this.width));
+        });
       }
-    }]);
+      // add code describing this step
+
+      // handle comment
+      comment = outer.find(".comment");
+      comment.on('keydown', function (e) {
+        return e.stopPropagation();
+      }).on('keyup', function (e) {
+        var cb;
+        step.comment = this.value;
+        clearTimeout(this.commentUpdate);
+        cb = function cb() {
+          return commentCallback(step.id, step.comment);
+        };
+        this.commentUpdate = setTimeout(cb, 3000);
+        return e.stopPropagation();
+      });
+      if (step.comment) {
+        return comment.text(step.comment).removeClass("empty");
+      } else {
+        initial = comment.attr("initial");
+        return outer.find(".comment").text(initial).focus(function () {
+          return $(this).text("").removeClass("empty");
+        }).focusout(function () {
+          if (!this.value) {
+            return $(this).addClass("empty").text(initial);
+          }
+        });
+      }
+    };
 
     return HistoryBrowser;
   }();

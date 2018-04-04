@@ -28,13 +28,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         head = this.treed();
         seq = [];
         while (((ref = head.children) != null ? ref.length : void 0) === 1) {
-          seq.push(head);
+          seq.push(head.data);
           head = head.children[0];
         }
         if (((ref1 = head.children) != null ? ref1.length : void 0) > 1) {
           throw "Node " + head.id + " has more than one child";
         }
-        seq.push(head);
+        seq.push(head.data);
         return seq;
       }
 
@@ -49,9 +49,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.raw.steps.forEach(function (n) {
           return stepsMap.set(n.id, n);
         });
-        return this.raw.links.forEach(function (l) {
+        this.raw.links.forEach(function (l) {
           l.source = stepsMap.get(l.source);
           return l.target = stepsMap.get(l.target);
+        });
+        return this.raw.steps.forEach(function (s) {
+          var ref;
+          if (((ref = s.expr) != null ? ref.constructor : void 0) === Array) {
+            return s.expr = s.expr.join('\n');
+          }
         });
       }
 

@@ -11,11 +11,11 @@ class Data
     head = @treed()
     seq = []
     while head.children?.length is 1
-      seq.push(head)
+      seq.push(head.data)
       head = head.children[0]
     if head.children?.length > 1
       throw "Node " + head.id + " has more than one child"
-    seq.push(head)
+    seq.push(head.data)
     seq
 
   # Replace target/source identifiers in the @raw.links array with
@@ -29,6 +29,11 @@ class Data
     @raw.links.forEach (l) ->
       l.source = stepsMap.get(l.source)
       l.target = stepsMap.get(l.target)
+
+    @raw.steps.forEach (s) ->
+      if s.expr?.constructor is Array
+        s.expr = s.expr.join('\n')
+
 
   # Turns the @raw data structure into a d3.stratified hierarchy.
   #
