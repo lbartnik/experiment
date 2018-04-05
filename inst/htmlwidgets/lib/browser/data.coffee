@@ -18,6 +18,11 @@ class Data
     seq.push(head.data)
     seq
 
+  # Getters.
+  #
+  steps: () -> @raw.steps
+  links: () -> @raw.links
+
   # Replace target/source identifiers in the @raw.links array with
   # actual objects.
   #

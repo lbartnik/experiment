@@ -38,6 +38,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return seq;
       }
 
+      // Getters.
+
+    }, {
+      key: "steps",
+      value: function steps() {
+        return this.raw.steps;
+      }
+    }, {
+      key: "links",
+      value: function links() {
+        return this.raw.links;
+      }
+
       // Replace target/source identifiers in the @raw.links array with
       // actual objects.
 
