@@ -56,16 +56,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return suite('Data construction', function () {
         // sample data
         setup(function () {
-          return this.data = JSON.parse(JSON.stringify(sampleData));
+          this.raw = sampleData;
+          return this.data = new Data(JSON.parse(JSON.stringify(sampleData)));
         });
         test('data sanity', function () {
           var step;
-          assert('links' in this.data);
-          assert('steps' in this.data);
-          assert.lengthOf(this.data.steps, 4);
+          assert('links' in this.raw);
+          assert('steps' in this.raw);
+          assert.lengthOf(this.raw.steps, 4);
           assert.sameMembers(unique(function () {
             var i, len, ref, results;
-            ref = this.data.steps;
+            ref = this.raw.steps;
             results = [];
             for (i = 0, len = ref.length; i < len; i++) {
               step = ref[i];
@@ -75,7 +76,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           }.call(this)), [true]);
           return assert.sameMembers(unique(function () {
             var i, len, ref, results;
-            ref = this.data.steps;
+            ref = this.raw.steps;
             results = [];
             for (i = 0, len = ref.length; i < len; i++) {
               step = ref[i];
@@ -85,27 +86,27 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           }.call(this)), ['object', 'string']);
         });
         test('concat expression', function () {
-          var sd, step;
-          sd = new Data(this.data);
+          var step;
           return assert.sameMembers(unique(function () {
             var i, len, ref, results;
-            ref = sd.steps();
+            ref = this.data.steps();
             results = [];
             for (i = 0, len = ref.length; i < len; i++) {
               step = ref[i];
               results.push(_typeof(step.expr));
             }
             return results;
-          }()), ['string']);
+          }.call(this)), ['string']);
         });
-        return test('replace id with object', function () {
-          var sd;
-          sd = new Data(this.data);
-          return sd.links().forEach(function (link) {
+        test('replace id with object', function () {
+          var steps;
+          steps = this.data.steps();
+          return this.data.links().forEach(function (link) {
             assert.hasAllKeys(link, ['target', 'source']);
-            return assert.includeDeepMembers(sd.steps(), [link.target]);
+            return assert.includeDeepMembers(steps, [link.target]);
           });
         });
+        return test('sequence', function () {});
       });
     });
     return null;

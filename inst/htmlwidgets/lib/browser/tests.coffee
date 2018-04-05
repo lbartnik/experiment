@@ -23,24 +23,27 @@ registerTests = (sampleData) ->
     suite 'Data construction', () ->
       # sample data
       setup () ->
-        this.data = JSON.parse(JSON.stringify(sampleData))
+        @raw = sampleData
+        @data = new Data(JSON.parse(JSON.stringify(sampleData)))
 
       test 'data sanity', () ->
-        assert('links' of this.data)
-        assert('steps' of this.data)
-        assert.lengthOf(this.data.steps, 4)
-        assert.sameMembers(unique(step.id isnt undefined for step in this.data.steps), [true])
-        assert.sameMembers(unique(typeof step.expr for step in this.data.steps), ['object', 'string'])
+        assert('links' of @raw)
+        assert('steps' of @raw)
+        assert.lengthOf(@raw.steps, 4)
+        assert.sameMembers(unique(step.id isnt undefined for step in @raw.steps), [true])
+        assert.sameMembers(unique(typeof step.expr for step in @raw.steps), ['object', 'string'])
 
       test 'concat expression', () ->
-        sd = new Data(this.data)
-        assert.sameMembers(unique(typeof step.expr for step in sd.steps()), ['string'])
+        assert.sameMembers(unique(typeof step.expr for step in @data.steps()), ['string'])
 
       test 'replace id with object', () ->
-        sd = new Data(this.data)
-        sd.links().forEach (link) ->
+        steps = @data.steps()
+        @data.links().forEach (link) ->
           assert.hasAllKeys(link, ['target', 'source'])
-          assert.includeDeepMembers(sd.steps(), [link.target])
+          assert.includeDeepMembers(steps, [link.target])
+
+      test 'sequence', () ->
+
 
   return null
 
