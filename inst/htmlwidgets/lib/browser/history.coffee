@@ -9,13 +9,19 @@ class HistoryBrowser
 
   render: () ->
     for step in @data.sequence()
-      console.log(step)
       frame = @frame.clone()
       frame.find("code")
         .text(step.expr)
         .each (i, block) -> hljs.highlightBlock(block)
       @container.append(frame)
 
+      if step.type is "object"
+        frame.find(".image").remove()
+      else
+        frame.find(".object").remove()
+        frame.find(".image img")
+          .attr("src", utils.plotHref(step))
+          .on('load', () -> $(this).width(Math.min(width, @width)))
 
 
   initialize = () ->
@@ -23,15 +29,6 @@ class HistoryBrowser
       .appendTo(selection)
       .height(height - parseInt(outer.css("top")))
 
-    if step.type is "object"
-      outer.find(".image").remove()
-      outer.find(".name").text(step.name)
-      outer.find(".description").text(step.desc)
-    else
-      outer.find(".object").remove()
-      outer.find(".image img")
-        .attr("src", plotHref(step))
-        .on('load', () -> $(this).width(Math.min(width, this.width)))
 
     # add code describing this step
 

@@ -6,8 +6,26 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 (function () {
   var Log;
 
-  window.isShiny = function () {
+  window.utils = {};
+
+  window.utils.isShiny = function () {
     return (typeof HTMLWidgets === "undefined" ? "undefined" : _typeof(HTMLWidgets)) === !'undefined' && HTMLWidgets.shinyMode;
+  };
+
+  // returns:
+  //   - the embedded image, if contents present
+  //   - the image from link, if can be found
+  //   - a grey 30x30 png, if nothing else works
+  window.utils.plotHref = function (step) {
+    var from_id;
+    if (step.contents) {
+      return "data:image/png;base64," + step.contents;
+    }
+    from_id = $("#plots-" + step.id + "-attachment").attr("href");
+    if (from_id) {
+      return from_id;
+    }
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAIAAAC0Ujn1AAAACXBIWXMAAAsTAAALEwEAmpwY\nAAAAB3RJTUUH4gEMEg8VFQkJGwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJ\nTVBkLmUHAAAAKUlEQVRIx+3MMREAAAgEILV/mI9oChcPAtBJ6sbUGbVarVar1Wr1/3oBRm8C\nTEfLR0EAAAAASUVORK5CYII=";
   };
 
   // --- simple logger ----------------------------------------------------

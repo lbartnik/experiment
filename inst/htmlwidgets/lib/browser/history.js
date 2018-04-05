@@ -37,12 +37,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           results = [];
           for (j = 0, len = ref.length; j < len; j++) {
             step = ref[j];
-            console.log(step);
             frame = this.frame.clone();
             frame.find("code").text(step.expr).each(function (i, block) {
               return hljs.highlightBlock(block);
             });
-            results.push(this.container.append(frame));
+            this.container.append(frame);
+            if (step.type === "object") {
+              results.push(frame.find(".image").remove());
+            } else {
+              frame.find(".object").remove();
+              results.push(frame.find(".image img").attr("src", utils.plotHref(step)).on('load', function () {
+                return $(this).width(Math.min(width, this.width));
+              }));
+            }
           }
           return results;
         }
@@ -56,16 +63,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     initialize = function initialize() {
       var comment, initial;
       outer.width(width).appendTo(selection).height(height - parseInt(outer.css("top")));
-      if (step.type === "object") {
-        outer.find(".image").remove();
-        outer.find(".name").text(step.name);
-        outer.find(".description").text(step.desc);
-      } else {
-        outer.find(".object").remove();
-        outer.find(".image img").attr("src", plotHref(step)).on('load', function () {
-          return $(this).width(Math.min(width, this.width));
-        });
-      }
       // add code describing this step
 
       // handle comment
