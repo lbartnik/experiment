@@ -143,6 +143,43 @@ attachStore <- function (path = file.path(getwd(), "project-store"))
 }
 
 
+# --- basic history viewer ---------------------------------------------
+
+historyOutput <- function(outputId, width = '100%', height = '100%') {
+  htmlwidgets::shinyWidgetOutput(outputId, "browse", width, height, package = "experiment")
+}
+
+renderHistory <- function(expr, env = parent.frame(), quoted = FALSE) {
+  if (!quoted) { expr <- substitute(expr) }
+  htmlwidgets::shinyRenderWidget(expr, historyOutput, env, quoted = TRUE)
+}
+
+
+#' @import miniUI
+#' @importFrom shiny browserViewer dialogViewer observeEvent runGadget shinyUI stopApp textOutput
+historyGadget <- function (data = list())
+{
+  ui <- shinyUI(miniPage(
+    gadgetTitleBar(title = "Basic History Browser",
+                   left  = miniTitleBarCancelButton(),
+                   right = miniTitleBarButton("done", "Done", primary = TRUE)),
+    miniContentPanel(historyOutput('viewer'),
+                     textOutput('closeWindow'),
+                     padding = 15, scrollable = TRUE)
+  ))
+
+  server <- function(input, output) {
+    output$viewer <- renderHistory(htmlwidgets::createWidget("browse", list(data = data)))
+
+    observeEvent(input$done, { stopApp(TRUE) })
+    observeEvent(input$cancel, { stopApp(FALSE) })
+  }
+
+  viewer <- dialogViewer("Interactive Browser")
+  runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
+}
+
+
 
 # --- unit tests in browser --------------------------------------------
 
