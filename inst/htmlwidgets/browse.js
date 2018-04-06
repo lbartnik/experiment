@@ -5,8 +5,8 @@ HTMLWidgets.widget({
 
     factory: function (el, width, height) {
 
-        var shiny = isShiny();
-        var widget = HistoryBrowser(el);
+        var shiny = utils.isShiny();
+        var widget = new HistoryBrowser(el);
 
         return {
             renderValue: function (input) {

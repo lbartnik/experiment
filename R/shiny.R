@@ -157,7 +157,7 @@ renderHistory <- function(expr, env = parent.frame(), quoted = FALSE) {
 
 #' @import miniUI
 #' @importFrom shiny browserViewer dialogViewer observeEvent runGadget shinyUI stopApp textOutput
-historyGadget <- function (data = list())
+historyGadget <- function (data = list(), browser = FALSE)
 {
   ui <- shinyUI(miniPage(
     gadgetTitleBar(title = "Basic History Browser",
@@ -175,7 +175,7 @@ historyGadget <- function (data = list())
     observeEvent(input$cancel, { stopApp(FALSE) })
   }
 
-  viewer <- dialogViewer("Interactive Browser")
+  viewer <- if (isTRUE(browser)) browserViewer() else dialogViewer("Interactive Browser")
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
