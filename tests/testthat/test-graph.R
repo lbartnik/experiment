@@ -108,8 +108,8 @@ test_that("convert commit", {
 
   link <- nth(r$links, 1)
   expect_named(link, c('source', 'target'))
-  expect_equal(link$source, 'p')
-  expect_equal(link$target, 'q')
+  expect_equal(link$source, first(r$steps)$id)
+  expect_equal(link$target, last(r$steps)$id)
 })
 
 
