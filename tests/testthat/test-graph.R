@@ -113,6 +113,17 @@ test_that("convert commit", {
 })
 
 
+test_that("many steps from commit", {
+  c <- commit(list(a = '1', b = '2'), bquote(), NA_character_)
+  s <- commit_to_steps(c, c('a', 'b'))
+
+  expect_length(s$links, 1)
+  link <- first(s$links)
+  expect_equal(link$source, first(s$steps)$id)
+  expect_equal(link$target, last(s$steps)$id)
+})
+
+
 test_that("convert graph", {
   g <- sample_graph()
   g <- assign_children(g, find_root_id(g), 1)

@@ -357,6 +357,7 @@ commit_to_steps <- function (commit, objects)
                   SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
   # get links between these teps
+  ids   <- lapply(steps, `[[`, i = 'id')
   links <- mapply(function (source, target) list(source = source, target = target),
                   source = head(ids, -1), target = tail(ids, -1),
                   SIMPLIFY = FALSE, USE.NAMES = FALSE)
