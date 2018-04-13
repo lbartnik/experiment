@@ -7,6 +7,8 @@ class HistoryBrowser
   setData: (data) ->
     @data = data
 
+  setSize: (@width, @height) ->
+
   render: () ->
     for step in @data.sequence()
       frame = @frame.clone()
@@ -18,6 +20,7 @@ class HistoryBrowser
       if step.type is "object"
         frame.find(".image").remove()
       else
+        width = @width
         frame.find(".object").remove()
         frame.find(".image img")
           .attr("src", utils.plotHref(step))

@@ -30,9 +30,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return this.data = data;
         }
       }, {
+        key: "setSize",
+        value: function setSize(width1, height1) {
+          this.width = width1;
+          this.height = height1;
+        }
+      }, {
         key: "render",
         value: function render() {
-          var frame, j, len, ref, results, step;
+          var frame, j, len, ref, results, step, width;
           ref = this.data.sequence();
           results = [];
           for (j = 0, len = ref.length; j < len; j++) {
@@ -45,6 +51,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (step.type === "object") {
               results.push(frame.find(".image").remove());
             } else {
+              width = this.width;
               frame.find(".object").remove();
               results.push(frame.find(".image img").attr("src", utils.plotHref(step)).on('load', function () {
                 return $(this).width(Math.min(width, this.width));

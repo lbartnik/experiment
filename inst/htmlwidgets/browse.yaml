@@ -23,3 +23,5 @@ dependencies:
       - data.js
       - history.js
       - utils.js
+    attachment:
+      - html/step.html
