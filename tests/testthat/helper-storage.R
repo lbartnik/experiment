@@ -6,6 +6,14 @@ empty_state <- function (where = tempdir())
   ))
 }
 
+empty_memory_state <- function ()
+{
+  as.environment(list(
+    stash       = storage::memory(),
+    last_commit = commit(list(), bquote(), NA_character_)
+  ))
+}
+
 remove_store <- function (path)
 {
   if (dir.exists(path)) unlink(path, recursive = TRUE, force = TRUE)

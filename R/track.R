@@ -28,6 +28,7 @@ initiate_state <- function ()
   internal_state$task_callback_id <- NA
   internal_state$old_prompt       <- getOption("prompt")
   internal_state$last_commit      <- commit(list(), bquote(), NA_character_)
+  internal_state$last_plot        <- NA_character_
 }
 
 
@@ -85,16 +86,17 @@ task_callback <- function (expr, result, successful, printed)
 #'
 update_current_commit <- function (state, env, plot, expr)
 {
-  objects <- store_environment(state$stash, env, expr)
+  object_ids <- store_environment(state$stash, env, expr)
 
   # if the current plot looks the same as the last one, do not update at all
   .plot <- plot_as_svg(plot)
-  if (!is.null(.plot) && !svg_equal(.plot, state$last_commit$objects$.plot)) {
-    objects$.plot <- store_plot(state$stash, .plot, env, expr, objects)
+  if (!is.null(.plot) && !svg_equal(.plot, state$last_plot)) {
+    state$last_plot  <- .plot
+    object_ids$.plot <- store_plot(state$stash, .plot, env, expr, objects)
   }
 
   # now create and process the commit
-  co <- commit(objects, expr, state$last_commit$id)
+  co <- commit(object_ids, expr, state$last_commit$id)
 
   # if there are new artifacts, store a new commit
   if (!commit_equal(co, state$last_commit, "artifacts-only")) {
@@ -109,13 +111,20 @@ update_current_commit <- function (state, env, plot, expr)
 #' @rdname store_environment
 store_environment <- function (store, env, expr)
 {
+  guard()
+
   stopifnot(is.environment(env))
   stopifnot(storage::is_object_store(store))
 
-  ids <- lapply(as.list(env), function (obj) {
+  ids <- napply(as.list(env), function (name, obj) {
     obj  <- strip_object(obj)
     id <- storage::compute_id(obj)
-    if (storage::os_exists(store, id)) return(id)
+    if (storage::os_exists(store, id)) {
+      debug("artifact `", name, "` already present in store")
+      return(id)
+    }
+
+    debug("artifact `", name, "` not present, storing")
     storage::os_write(store, obj, id = id, tags = auto_tags(obj))
   })
 
@@ -138,14 +147,20 @@ store_environment <- function (store, env, expr)
 #' @rdname store_environment
 store_plot <- function (store, plot, env, expr, ids)
 {
+  guard()
+
   id <- storage::compute_id(plot)
-  if (storage::os_exists(store, id)) return(id)
+  if (storage::os_exists(store, id)) {
+    debug("plot already present")
+    return(id)
+  }
 
   tags <- auto_tags(plot)
   # TODO this can get confused if the expression changes multiple objects
   parents <- extract_parents(env, expr)
   tags$parents <- names_to_ids(parents, ids)
 
+  debug("storing new plot")
   storage::os_write(store, plot, id = id, tags = tags)
 }
 

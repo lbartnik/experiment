@@ -46,6 +46,20 @@ test_that("store plot", {
 })
 
 
+test_that("recognize old plot", {
+  s <- empty_memory_state()
+
+  cid1 <- update_current_commit(s, as.environment(list(a = 'id')), dummy_plot(), bquote())
+  cid2 <- update_current_commit(s, as.environment(list(b = 'id')), dummy_plot(), bquote())
+
+  c1 <- commit_restore(cid1, s$stash, FALSE)
+  c2 <- commit_restore(cid2, s$stash, FALSE)
+
+  expect_named(c1$object_ids, c('a', '.plot'))
+  expect_named(c2$object_ids, c('b'))
+})
+
+
 test_that("object is stripped of environments", {
   m <- lm(Sepal.Length ~ Species, iris)
   n <- strip_object(m)

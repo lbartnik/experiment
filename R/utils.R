@@ -69,9 +69,6 @@ unpack <- function (x) stringi::stri_split_fixed(x, '::')
 is_knitr <- function () getOption("knitr.in.progress", FALSE)
 
 
-cat0 <- function (..., sep = '') cat(..., sep = sep)
-
-
 
 #' Returns a base64-encoded, SVG plot.
 #'
@@ -106,6 +103,8 @@ auto_tags <- function (obj)
 }
 
 
+cat0 <- function (..., sep = '') cat(..., sep = sep)
+
 ccat <- function (color, ..., sep = ' ')
 {
   if (identical(color, 'default'))
@@ -129,6 +128,28 @@ ccat_ <- function (chunks, sep = ' ')
 }
 
 
+log <- function (level, ...) {
+  ccat0("red", '[', level, '] ', ..., '\n')
+}
+
+debug <- function (...) {
+  if (isTRUE(getOption("experiment.debug"))) log("DEBUG", ...)
+}
+
+guard <- function () {
+  x <- sys.call(-1)[[1]]
+  fname <- if (is.symbol(x)) deparse(x) else '<unnamed>'
+  debug("-> ", fname, '()')
+
+  parent <- sys.frame(sys.parent(1))
+  expr <- substitute(debug(x), list(x = paste0('<- ', fname, '()')))
+  do.call(on.exit, list(expr = expr, add = TRUE), envir = parent)
+
+  invisible()
+}
+
+
+
 
 splice <- function (x, ...)
 {
@@ -140,5 +161,15 @@ splice <- function (x, ...)
 
   x[seq(i+1, length(x))]
 }
+
+
+napply <- function (lst, f, ...) {
+  stopifnot(is.list(lst), all_named(lst))
+  ans <- mapply(name = names(lst), value = lst, function (name, value) f(name, value, ...),
+                SIMPLIFY = FALSE, USE.NAMES = FALSE)
+  names(ans) <- names(lst)
+  ans
+}
+
 
 

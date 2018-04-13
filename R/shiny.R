@@ -157,8 +157,10 @@ renderHistory <- function(expr, env = parent.frame(), quoted = FALSE) {
 
 #' @import miniUI
 #' @importFrom shiny browserViewer dialogViewer observeEvent runGadget shinyUI stopApp textOutput
-historyGadget <- function (data = list(), browser = FALSE)
+historyGadget <- function (g = list(), browser = FALSE)
 {
+  stopifnot(is_graph(g))
+
   ui <- shinyUI(miniPage(
     gadgetTitleBar(title = "Basic History Browser",
                    left  = miniTitleBarCancelButton(),
@@ -168,8 +170,16 @@ historyGadget <- function (data = list(), browser = FALSE)
                      padding = 15, scrollable = TRUE)
   ))
 
+
+  data       <- graph_to_viewer(g)
+  processed  <- plot_to_dependencies(data$steps, is_knitr())
+  data$steps <- processed$steps
+
+  options    <- list(knitr = is_knitr())
+
   server <- function(input, output) {
-    output$viewer <- renderHistory(htmlwidgets::createWidget("browse", list(data = data)))
+    output$viewer <- renderHistory(htmlwidgets::createWidget("browse", list(data = data, options = options),
+                                                             dependencies = processed$html_deps))
 
     observeEvent(input$done, { stopApp(TRUE) })
     observeEvent(input$cancel, { stopApp(FALSE) })
@@ -179,6 +189,23 @@ historyGadget <- function (data = list(), browser = FALSE)
   runGadget(ui, server, viewer = viewer, stopOnCancel = FALSE)
 }
 
+
+graph_to_viewer <- function (g)
+{
+  stopifnot(is_graph(g))
+
+  s <- graph_to_steps(g)
+
+  g <- lapply(g, function (commit) {
+    commit$introduced <- introduced_in(g, commit$id)
+    commit$objects    <- commit$object_ids
+    commit$object_ids <- NULL
+    commit$expr <- format_expression(commit$expr)
+    commit
+  })
+
+  c(list(commits = g), s)
+}
 
 
 # --- unit tests in browser --------------------------------------------

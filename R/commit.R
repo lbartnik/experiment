@@ -178,27 +178,27 @@ toString.commit <- function (x, simple = FALSE, ..., store)
 
 
 #' @export
-`.DollarNames.commit` <- function (x, pattern = "")
-{
-  grep(pattern, c("restore", names(x)), value = TRUE)
-}
+# `.DollarNames.commit` <- function (x, pattern = "")
+# {
+#   grep(pattern, c("restore", names(x)), value = TRUE)
+# }
 
 
 #' @export
-`$.commit` <- function (x, i = "")
-{
-  if (isTRUE(i %in% names(x))) {
-    return(x[[i]])
-  }
-
-  # RStudio calls the operator so we cannot restore directly, but only
-  # after the user confirms the command and its return value is printed
-  if (identical(i, "restore")) {
-    return(structure(list(commit = x), class = 'restorer'))
-  }
-
-  stop("unknown option: ", i, call. = FALSE)
-}
+# `$.commit` <- function (x, i = "")
+# {
+#   if (isTRUE(i %in% names(x))) {
+#     return(x[[i]])
+#   }
+#
+#   # RStudio calls the operator so we cannot restore directly, but only
+#   # after the user confirms the command and its return value is printed
+#   if (identical(i, "restore")) {
+#     return(structure(list(commit = x), class = 'restorer'))
+#   }
+#
+#   stop("unknown option: ", i, call. = FALSE)
+# }
 
 
 #' @export
