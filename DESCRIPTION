@@ -45,6 +45,7 @@ Collate:
   'debug.R'
   'dialogs.R'
   'examples.R'
+  'frame.R'
   'graph.R'
   'package.R'
   'query.R'

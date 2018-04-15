@@ -101,6 +101,7 @@ update_current_commit <- function (state, env, plot, expr)
   # if there are new artifacts, store a new commit
   if (!commit_equal(co, state$last_commit, "artifacts-only")) {
     state$last_commit <- write_commit(state$stash, co)
+    update_parent_commit(state$last_commit, state$stash)
   }
 
   invisible(state$last_commit$id)
@@ -124,20 +125,20 @@ store_environment <- function (store, env, expr)
       return(id)
     }
 
-    debug("artifact `", name, "` not present, storing")
+    debug("artifact `", name, "` not present, storing [", id, "]")
     storage::os_write(store, obj, id = id, tags = auto_tags(obj))
   })
 
   # assign parents
   lapply(ids, function (id) {
     tags <- storage::os_read_tags(store, id)
-    if ('parents' %in% names(tags)) return()
-
-    # TODO this can get confused if the expression changes multiple objects
-    parents <- extract_parents(env, expr)
-    tags$parents <- names_to_ids(parents, ids)
-
-    storage::os_update_tags(store, id, tags)
+    if ('parents' %nin% names(tags)) {
+      # TODO this can get confused if the expression changes multiple objects
+      parents <- extract_parents(env, expr)
+      tags$parents <- names_to_ids(parents, ids)
+      storage::os_update_tags(store, id, tags)
+      debug("artifact [", id, "] adding parents: ", paste(parents, collapse = ", "))
+    }
   })
 
   ids
@@ -156,11 +157,12 @@ store_plot <- function (store, plot, env, expr, ids)
   }
 
   tags <- auto_tags(plot)
+  tags$class <- 'plot'
   # TODO this can get confused if the expression changes multiple objects
   parents <- extract_parents(env, expr)
   tags$parents <- names_to_ids(parents, ids)
 
-  debug("storing new plot")
+  debug("storing new plot [", id, "] with parents: ", paste(parents, collapse = ", "))
   storage::os_write(store, plot, id = id, tags = tags)
 }
 
@@ -235,6 +237,16 @@ strip_object <- function (obj)
   obj
 }
 
+update_parent_commit <- function (commit, store)
+{
+  lapply(commit$object_ids, function (id) {
+    tags <- storage::os_read_tags(store, id)
+    if ('commit' %nin% names(tags)) {
+      tags$commit <- commit$id
+      storage::os_update_tags(store, id, tags)
+    }
+  })
+}
 
 
 # --- tracker ----------------------------------------------------------

@@ -1,3 +1,5 @@
+`%nin%` <- function (x, table) match(x, table, nomatch = 0L) == 0L
+
 nth <- function(x, n) {
   if (!length(x)) return(vector(mode = typeof(x)))
   x[[n]]
