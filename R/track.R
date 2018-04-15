@@ -92,7 +92,7 @@ update_current_commit <- function (state, env, plot, expr)
   .plot <- plot_as_svg(plot)
   if (!is.null(.plot) && !svg_equal(.plot, state$last_plot)) {
     state$last_plot  <- .plot
-    object_ids$.plot <- store_plot(state$stash, .plot, env, expr, objects)
+    object_ids$.plot <- store_plot(state$stash, .plot, env, expr, object_ids)
   }
 
   # now create and process the commit
