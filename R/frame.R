@@ -22,8 +22,8 @@ graph_to_frames <- function (graph)
     # return a frame
     list(
       id         = crc32(commit$id),
-      artifacts  = commit$object_ids,
-      parent     = commit$parent_id,
+      artifacts  = lapply(commit$object_ids, crc32),
+      parent     = crc32(commit$parent),
       introduced = introduced_in(graph, commit$id),
       expression = format_expression(commit$expr)
     )
